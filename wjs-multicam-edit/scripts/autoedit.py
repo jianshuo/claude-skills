@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Director-style auto-edit for N synced cameras (1, 2, or 3+).
+"""Director-style auto-edit for N cameras of the same event.
 
-Per-cam coverage is auto-detected from `<input>.sync.json` sidecars (written
-by sync_partial.py) when present; otherwise full coverage is assumed. CLI
-flag `--coverage CAM:START:END` overrides per-input.
+INPUTS ARE ORIGINAL UNTOUCHED MEDIA. Each input must have a `.sync.json`
+sidecar next to it (written by wjs-multicam-sync). Sidecars provide
+`delta_seconds` (per-cam time offset into the reference timeline) and
+`overlap_in_reference` (per-cam coverage window). No re-encoded
+`*_synced.MOV` files are needed or expected.
 
 Pipeline:
-  1. Extract per-camera mono PCM (16 kHz).
-  2. Compute log-RMS envelope at 1 Hz frame rate.
-  3. Score each camera per second relative to other cams (active-speaker proxy).
-  4. Run editor (rotation or greedy) — only chooses among covered cams; if the
-     active cam exits coverage mid-shot, force a switch.
-  5. Emit EDL JSON.
+  1. Read each input's `.sync.json` for delta + coverage in reference timeline.
+  2. Extract per-cam mono PCM @ 16 kHz from the ORIGINAL file (local time).
+  3. Compute log-RMS envelope at 1 Hz frame rate.
+  4. Shift each per-cam envelope into reference timeline using delta_seconds.
+  5. Score each cam per second relative to others (active-speaker proxy).
+  6. Run editor (rotation / greedy) — only picks among covered cams.
+  7. Emit EDL JSON, including per-cam deltas so render scripts can
+     reapply -itsoffset without re-reading sidecars.
 
 For 1-cam input the output is a single-row EDL covering the full duration.
 """
