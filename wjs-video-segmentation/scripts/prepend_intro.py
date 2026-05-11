@@ -87,9 +87,16 @@ def prepend(ffmpeg, clip_path, cover_path, duration, out_path, target_w, target_
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--segments", required=True)
-    ap.add_argument("--out", required=True)
+    ap = argparse.ArgumentParser(
+        description="Prepend a cover image as a 1.5s title-card to a video.",
+    )
+    # Mode-discriminating args. argparse can't express XOR-of-groups cleanly,
+    # so we validate manually below.
+    ap.add_argument("--segments", help="batch mode: path to segments.json")
+    ap.add_argument("--out", required=True,
+                    help="output dir (batch) or output file (standalone)")
+    ap.add_argument("--clip", help="standalone mode: single input video")
+    ap.add_argument("--cover", help="standalone mode: cover image to prepend")
     ap.add_argument(
         "--duration",
         type=float,
@@ -99,13 +106,32 @@ def main():
     ap.add_argument(
         "--no-burned",
         action="store_true",
-        help="prepend onto the raw clip even if a *_burned.mp4 exists",
+        help="(batch) prepend onto the raw clip even if a *_burned.mp4 exists",
     )
     args = ap.parse_args()
 
+    standalone = bool(args.clip or args.cover)
+    batch = bool(args.segments)
+    if standalone == batch:
+        sys.exit("pass EITHER --segments (batch) OR --clip + --cover (standalone)")
+
+    ffmpeg = find_ffmpeg()
+
+    if standalone:
+        if not (args.clip and args.cover):
+            sys.exit("standalone mode needs both --clip and --cover")
+        clip_in = Path(args.clip).resolve()
+        cover = Path(args.cover).resolve()
+        out_path = Path(args.out).resolve()
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        w, h = probe_resolution(ffmpeg, clip_in)
+        print(f"{clip_in.name} ({w}x{h}) + {cover.name} → {out_path.name}",
+              file=sys.stderr)
+        prepend(ffmpeg, clip_in, cover, args.duration, out_path, w, h)
+        return
+
     cfg = json.loads(Path(args.segments).read_text(encoding="utf-8"))
     out_dir = Path(args.out).resolve()
-    ffmpeg = find_ffmpeg()
 
     for seg in cfg["segments"]:
         sid, slug = seg["id"], seg["slug"]
