@@ -52,21 +52,34 @@ def per_second(env, env_sr, total_sec):
     env = env[:take].reshape(-1, n_per).mean(axis=1)
     return env[:total_sec]
 
-def coverage_from_sidecar(input_path: Path, total: int):
-    """Return (start_sec, end_sec) coverage. Reads <input>.sync.json if
-    present (sync_partial.py format); else full coverage."""
+def read_sidecar(input_path: Path):
+    """Read <input>.sync.json. Returns (delta_seconds, overlap_in_reference,
+    has_sidecar). Falls back to (0.0, None, False) if absent — caller treats
+    this as 'cam is at reference timeline, full coverage'."""
     sidecar = input_path.with_suffix(input_path.suffix + ".sync.json")
-    if sidecar.exists():
-        try:
-            d = json.loads(sidecar.read_text())
-            pre = float(d.get("pre_pad_seconds", 0.0))
-            in_s = float(d.get("input_trim_start", 0.0))
-            in_e = float(d.get("input_trim_end", 0.0))
-            content = max(0.0, in_e - in_s)
-            return (pre, min(total, pre + content))
-        except Exception:
-            pass
-    return (0.0, float(total))
+    if not sidecar.exists():
+        return (0.0, None, False)
+    try:
+        d = json.loads(sidecar.read_text())
+        if d.get("schema_version") != SCHEMA_VERSION:
+            print(f"WARN: {sidecar.name} schema_version != {SCHEMA_VERSION}; "
+                  "attempting to read anyway")
+        delta = float(d["delta_seconds"])
+        ovl = d.get("overlap_in_reference")
+        ovl = (float(ovl[0]), float(ovl[1])) if ovl else None
+        return (delta, ovl, True)
+    except Exception as e:
+        print(f"WARN: failed to parse {sidecar.name}: {e}; using delta=0")
+        return (0.0, None, False)
+
+
+def coverage_from_sidecar(input_path: Path, total: int):
+    """Coverage window in the REFERENCE timeline. Reads new-schema sidecar;
+    falls back to full coverage if absent."""
+    _, ovl, _ = read_sidecar(input_path)
+    if ovl is None:
+        return (0.0, float(total))
+    return (max(0.0, ovl[0]), min(float(total), ovl[1]))
 
 def parse_coverage_flag(flag_values, K, total):
     """Parse --coverage entries like '2:2403.748:4485.887'."""
