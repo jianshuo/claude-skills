@@ -42,6 +42,10 @@ pip install mediapipe opencv-python numpy
 
 (MediaPipe lives outside the standard Python distribution; ffmpeg and ffprobe must be on `PATH`.)
 
+**First-run model download**: MediaPipe 0.10+ uses the Tasks API, which needs a `blaze_face_short_range.tflite` model file (~230 KB). On the first call, `crop.py` downloads it to `~/.claude/skills/wjs-video-crop/models/` and caches it for subsequent runs. The script will fail offline on first run.
+
+**Range limitation**: BlazeFace short-range is tuned for faces within ~2 m of the camera (selfie / podcast / interview distance). Wide event shots with small faces may not detect — sample a frame first to confirm.
+
 ## Crop math
 
 Source aspect = `W / H`. Target aspect = `H / W` (inverted). Compute crop window:
@@ -61,7 +65,7 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 1. **Probe** input dimensions, fps, duration via ffprobe.
 2. **Decide orientation** — auto from aspect (`--target portrait|landscape` to override).
 3. **Sample frames at 2 fps** by piping ffmpeg's `fps=2` filter to a temp directory of JPEGs.
-4. **Face detect** each sampled frame with MediaPipe `face_detection` (model 1 — full-range). Pick the largest face (closest to camera) per frame.
+4. **Face detect** each sampled frame with MediaPipe Tasks `FaceDetector` (BlazeFace short-range model). Pick the largest face (closest to camera) per frame.
 5. **Smooth** the face-center track with a moving-average window (default 5 samples).
 6. **Chunk** into fixed-duration windows (default 3 s). Within each chunk, take the mean smoothed face center → one crop center per chunk.
 7. **Build a ffmpeg piecewise-linear expression** that interpolates the crop-window top-left between chunk midpoints. Hard-clamp to source bounds so the crop never falls off-screen.
