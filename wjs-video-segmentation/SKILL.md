@@ -93,6 +93,67 @@ Stream-copies via `ffmpeg -ss S -to E -c copy`. Falls back to re-encode if a cop
 
 Pass `--reencode` to force re-encode all clips.
 
+## Step 2.5 — Orientation check (ask before continuing)
+
+**Critical decision point — must happen before covers.** Covers are
+generated to match clip dimensions, so converting orientation *after*
+covers means regenerating every cover. Do the orientation conversion
+*before* cover/intro/burn.
+
+Compare source video aspect ratio to the target platform's native
+orientation:
+
+| Platform                  | Native orientation | Aspect |
+|---------------------------|--------------------|--------|
+| 视频号 (WeChat Channels)  | vertical           | 9:16   |
+| 抖音 / TikTok / Reels     | vertical           | 9:16   |
+| 小红书 (Xiaohongshu video)| vertical           | 9:16   |
+| YouTube Shorts            | vertical           | 9:16   |
+| YouTube (regular)         | horizontal         | 16:9   |
+| B站 (Bilibili)            | horizontal         | 16:9   |
+
+Probe source aspect with `ffprobe`:
+
+```bash
+ffprobe -v error -select_streams v:0 \
+  -show_entries stream=width,height \
+  -of csv=p=0 clip_01_*.mp4
+```
+
+If source aspect already matches the platform → **skip this step**,
+proceed to covers.
+
+If mismatch → **ASK THE USER** before converting. Sample phrasing:
+
+> 源视频是横屏 (1920×1080)，平台 视频号 需要竖屏 (9:16)。是否对每段
+> 调用 `/wjs-video-crop` 转成竖屏？(crop 会用 MediaPipe 跟踪正在说话
+> 的人的脸，保持说话人始终在画面中)
+
+If the user confirms, run the crop skill on each clip in place:
+
+```bash
+# Conceptually — invoke the wjs-video-crop skill per clip.
+# It uses MediaPipe face-tracking to keep the active speaker in frame.
+# The skill replaces clip_NN.mp4 with the vertical version (or writes
+# to a new path; pick one convention and stay consistent so later
+# steps find the right file).
+```
+
+The wjs-video-crop skill handles the cropping mechanics (active-speaker
+detection via mouth-aspect-ratio variance, smoothed pan, etc.). This
+skill's only job at Step 2.5 is to **gate** the decision and orchestrate
+the call.
+
+**Skip the prompt only when:**
+- Source aspect already matches target platform.
+- User specified orientation upfront in segments.json's `platform`
+  field AND the source already matches.
+- A previous run in the same session already cropped these clips.
+
+**Never silently skip the check** — getting a horizontal podcast on
+视频号 and finding out only at upload time is a frustrating failure
+mode the skill exists to prevent.
+
 ## Step 3 — Generate covers
 
 ```bash
