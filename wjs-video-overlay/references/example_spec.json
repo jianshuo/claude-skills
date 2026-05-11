@@ -1,0 +1,33 @@
+{
+  "source_video": "../output/clip_01_code-has-no-bugs-only-intent-mismatch_burned_intro.mp4",
+  "duration": 135.4,
+  "size": "1920x1080",
+  "name": "clip_01_animated",
+  "overlays": [
+    {
+      "id": "o1",
+      "type": "quote",
+      "start": 8.0,
+      "duration": 6.0,
+      "position": "top",
+      "lines": ["代码不存在错误", "只存在意图错配"],
+      "accent": [false, true]
+    },
+    {
+      "id": "o2",
+      "type": "custom",
+      "start": 42.0,
+      "duration": 18.0,
+      "html": "overlays/terminal_demo.html"
+    },
+    {
+      "id": "o3",
+      "type": "slogan",
+      "start": 122.0,
+      "duration": 13.4,
+      "position": "bottom",
+      "lines": ["改 prompt", "不改 AI 生成的代码"],
+      "accent": [false, true]
+    }
+  ]
+}

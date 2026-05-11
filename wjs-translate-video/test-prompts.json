@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "scenario": "happy path — single-speaker Chinese subtitle + dub",
+    "prompt": "我有一个西班牙语的瑜伽老师独白视频 entrevista.mp4，请帮我做中文字幕，并配上中文配音。",
+    "expected": "应该:(1) 默认单 voice 不询问多说话人;(2) 走 Whisper --language es → 翻译为简体中文 → 标点边界重切 → 生成 entrevista.zh-CN.srt;(3) 推荐 Volcano gaolengyujie 高冷御姐 + speech_rate=-8(契合冥想/瑜伽语境),没 Volcano 凭据时 fallback 到 edge-tts XiaoxiaoNeural -8% -10Hz;(4) 调用 dub.py + render.py;(5) 提示 Spanish bed 0.18 混音;(6) 不提多说话人复杂度。"
+  },
+  {
+    "id": 2,
+    "scenario": "burn-in subtitles for WeChat (libass quirk)",
+    "prompt": "已有 talk.mp4 和 talk.zh-CN.srt,我要发到微信视频号,字幕需要烧入。",
+    "expected": "应该:(1) 先 ffmpeg -filters | grep subtitles 验证 libass;(2) 如果 brew ffmpeg 没 libass,自动从 evermeet.cx 拉 static build 到 /tmp 而不是 brew reinstall;(3) Fontsize 从 12 起步,渲染后必须 ffmpeg -ss 抽一帧 Read 验证溢出;(4) force_style 内逗号要 \\, 转义;(5) Margin L/R/V 给安全值;(6) 调 render.py。"
+  },
+  {
+    "id": 3,
+    "scenario": "explicit multi-speaker interview",
+    "prompt": "interview.mp4 是两个人的英文访谈,出镜对坐,帮我做中文配音,两个人用不同的声音。",
+    "expected": "应该:(1) 识别 explicit 多说话人触发词 ‘两个人’ ‘访谈’ → 进入 Advanced 章节;(2) 推荐 visual_diarize.py 因为出镜(优于文本猜);(3) 跑 mediapipe + opencv,生成 *.tagged.srt + JSON report;(4) 提示 confidence_ratio<1.5 的 cue 要人工核;(5) dub.py 用 --voice-map A=...,B=... 路由;(6) render.py 用干净(无 [A][B])SRT 烧入避免标签上屏;(7) 推荐成对 timbre 差异大的声音(如 Brian + Andrew)。"
+  }
+]

@@ -1,0 +1,48 @@
+# Working artifacts (regenerable)
+dub_work/
+voice_samples/
+*_dub.mp4
+*_final.mp4
+*_zh.mp4
+*_en.mp4
+
+# Source media — repos shouldn't ship videos
+*.MP4
+*.mp4
+*.mov
+*.MOV
+*.mkv
+*.avi
+*.wav
+*.aac
+*.m4a
+# (mp3 used for voice samples is also covered above by *_dub etc.)
+*.mp3
+
+# Whisper output left in cwd
+[0-9]*.srt
+# Don't ignore .srt that lives in examples/
+!examples/**/*.srt
+
+# Python venv & cache
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Credentials — never commit
+.env
+.env.*
+.volc-tts.env
+*.token
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Distributable but not in this repo's scope
+/tmp/

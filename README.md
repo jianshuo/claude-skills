@@ -9,5 +9,9 @@ the changed skill directory is rsynced here and pushed to GitHub.
 Skills:
 
 - [`jianshuo-wechat-mp-publish/`](./jianshuo-wechat-mp-publish/) — polish + publish WeChat 公众号 articles end-to-end (cover/illustration generation, draft upload via `md2wechat`).
+- [`wjs-multicam/`](./wjs-multicam/) — sync multi-camera footage via audio cross-correlation and auto-edit director-style cuts on speaker / silence / motion changes.
+- [`wjs-translate-video/`](./wjs-translate-video/) — end-to-end video localization: transcribe (Whisper) → translate → SRT → optional burn-in → optional time-aligned voice dub (Volcano / edge-tts).
+- [`wjs-video-overlay/`](./wjs-video-overlay/) — layer animated overlays (title cards, callouts, cutaways, lower-thirds) on top of an existing video via a HyperFrames composition.
+- [`wjs-video-split/`](./wjs-video-split/) — randomly split a video into N segments of varying lengths using ffmpeg stream copy (fast + lossless).
 
 Hook source: `~/.claude/skills-publish-hook.sh`
