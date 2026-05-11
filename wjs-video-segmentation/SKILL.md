@@ -32,7 +32,7 @@ A 5-step pipeline that turns one long video + SRT into multiple stand-alone shor
 | Subtitles burned via libass per clip | Subtitles via overlay or HTML composition |
 | Scripts also runnable standalone (single clip, no segments.json) | Only batch-mode pipeline |
 
-## The pipeline
+## The pipeline — two paths
 
 ```
 long video + SRT
@@ -43,24 +43,50 @@ clip_NN.mp4 + frame_NN.jpg
    ↓     ASK: target platform orientation match source?
    ↓     /wjs-video-crop on each clip (if 16:9 → 9:16, etc.)
    ↓     re-extract frames from cropped clips
-clip_NN.mp4 + frame_NN.jpg    (now in target orientation)
-   ↓     make_cover.py: gpt-image-2 generates cover
-   ↓     --size MUST match clip aspect (vertical → 1024x1536)
-cover_NN.png   (matches clip aspect)
-   ↓     burn_subs.py:  slice SRT + libass burn-in (SLOW — re-encodes body)
-clip_NN_burned.mp4
-   ↓     prepend_intro.py: prepend cover as 1.5s title-card
-   ↓     fast path: concat-demuxer + stream-copy (~1s per clip)
-clip_NN_burned_intro.mp4    ← upload this
+clip_NN.mp4 (now in target orientation) + clip_NN.zh-CN.burn.srt
+   │
+   ├──[Path A: ship now]────────────────┐
+   │   ↓ make_cover.py (cover_NN.png)   │
+   │   ↓ burn_subs.py (SLOW re-encode)  │
+   │   ↓ prepend_intro.py (stream-copy) │
+   │   clip_NN_burned_intro.mp4 ────────┘ ← upload directly
+   │
+   └──[Path B: high-production via hyperframes]
+       ↓ HAND OFF clip_NN.mp4 + clip_NN.zh-CN.burn.srt to hyperframes
+       ↓ hyperframes builds ONE composition with:
+       ↓   • cover as animated title scene (not just a still)
+       ↓   • subs as HTML/CSS text overlays (word-by-word highlight,
+       ↓     kinetic reveal, keyword color/emphasis, custom fonts)
+       ↓   • interstitial title cards, golden-quote callouts
+       ↓   • end-card CTA (订阅王建硕 / 关注 AI 炼金术 etc.)
+       ↓   • scene transitions (crossfade / shader / push)
+       ↓ ONE final ffmpeg encode
+       final.mp4 ← upload
 ```
 
-**Order matters: burn FIRST, prepend LAST.** Burning libass subs into
-video requires re-encoding every frame of the body — unavoidable. But
-prepending the cover doesn't have to re-encode the body if the
-1.5-second cover-clip is encoded to match the body's codec exactly;
-then `ffmpeg -f concat -c copy` stitches them losslessly in seconds.
-Prepending first means burn re-encodes the prepended output anyway,
-wasting that stream-copy savings.
+**Default to Path B when downstream styling is planned.** Path A's
+burn step bakes pixels into the video frames, making every subtitle /
+title decision permanent and forcing a full re-encode. If you'll
+later want word-by-word kinetic highlights, animated callouts, or
+end-card CTAs, you're going to render in hyperframes anyway — so
+hand off the cropped raw clip + the per-segment SRT and let
+hyperframes do cover + subs + animation + CTA in a **single final
+encode**. Avoids generation loss from cascade encodes, and HTML/CSS
+text styling is materially richer than libass.
+
+**Use Path A only when you need to ship immediately** and don't have
+time to author a hyperframes composition. Path A is the "good enough,
+ready-to-upload" output; Path B is the "production-quality, designed
+for retention" output.
+
+### Path A order matters: burn FIRST, prepend LAST
+
+Burning libass subs into video requires re-encoding every frame of
+the body — unavoidable. But prepending the cover doesn't have to
+re-encode the body if the 1.5-second cover-clip is encoded to match
+the body's codec exactly; then `ffmpeg -f concat -c copy` stitches
+them losslessly in seconds. Prepending first means burn re-encodes
+the prepended output anyway, wasting that stream-copy savings.
 
 ## Step 1 — Agent reads SRT, writes `segments.json`
 
