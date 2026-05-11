@@ -30,7 +30,7 @@ The output aspect is the source aspect with width and height swapped — 16:9 �
 | Stable face tracking across frames by center-distance matching | Re-identification across long gaps / occlusions |
 | Speaker-aligned segments with hysteresis to prevent flicker | Frame-by-frame switching on every flicker |
 | `--face-pick speaker` (default) — pick whoever's mouth is moving | `--face-pick largest` (opt-in legacy) — pick largest face |
-| Smooth pan via ffmpeg piecewise-linear crop expression | Cinematic ease-in/ease-out camera moves |
+| **Hard cuts between segments, fixed crop within each segment** (`--motion cut`, default) | Smooth panning that drifts during a speaker's turn (opt-in `--motion smooth`) |
 | Audio stream-copy (bit-exact) | Audio reprocessing / re-encoding |
 | MediaPipe Tasks `FaceLandmarker` (478-pt mesh) at 5 fps sampled via ffmpeg | Per-frame neural inpainting / out-painting |
 | One `ffmpeg crop + scale` pass | Frame-by-frame Python compositor |

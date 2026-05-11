@@ -464,6 +464,11 @@ def main():
     ap.add_argument("--face-pick", choices=["speaker", "largest"], default="speaker",
                     help="speaker = mouth-motion active-speaker; largest = old "
                          "behavior (largest face per frame, no speaker logic)")
+    ap.add_argument("--motion", choices=["cut", "smooth"], default="cut",
+                    help="cut = hard cut between segments, fixed crop within "
+                         "each (default — looks like real editing). smooth = "
+                         "piecewise-linear pan between segment midpoints "
+                         "(can look like an AI artifact in talking-head content)")
     ap.add_argument("--num-faces", type=int, default=5,
                     help="Max faces to track per frame")
     ap.add_argument("--no-face-timeout", type=float, default=10.0)
@@ -525,8 +530,10 @@ def main():
         print(f"    {label}: {d:.1f}s on screen ({100*d/src_dur:.0f}%)")
 
     chunks = segments_to_chunks(segments, tracks, src_w, src_h)
-    crop_x_expr = build_crop_expr(chunks, "cx", crop_w, src_w)
-    crop_y_expr = build_crop_expr(chunks, "cy", crop_h, src_h)
+    expr_builder = build_crop_expr_cut if args.motion == "cut" else build_crop_expr_smooth
+    crop_x_expr = expr_builder(chunks, "cx", crop_w, src_w)
+    crop_y_expr = expr_builder(chunks, "cy", crop_h, src_h)
+    print(f"  motion mode: {args.motion}")
 
     # Sidecar
     sidecar = args.input.with_suffix(args.input.suffix + ".crop.json")
@@ -551,6 +558,7 @@ def main():
         "target_size": [out_w, out_h],
         "crop_window": [crop_w, crop_h],
         "face_pick_mode": args.face_pick,
+        "motion": args.motion,
         "sample_fps": args.sample_fps,
         "mar_var_window_sec": args.mar_var_window_sec,
         "mar_var_threshold": args.mar_var_threshold,
