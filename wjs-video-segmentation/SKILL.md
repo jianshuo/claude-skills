@@ -206,7 +206,22 @@ python3 ~/.claude/skills/wjs-video-segmentation/scripts/make_cover.py \
 
 For each segment, calls `gpt-image-2 images edit` with the frame as ref + a prompt combining `cover_prompt` and explicit typography instructions (bold Heiti, very large, white-with-black-outline, face-clear placement). Output: `output/cover_NN_slug.png` at 16:9 (default 1536×1024).
 
+**Pass `--size` to match clip orientation.** `make_cover.py` defaults
+to `1536x1024` (16:9 horizontal). For vertical clips (post Step 2.5
+crop), pass `--size 1024x1536` so the cover matches 9:16. Mismatched
+size means the cover gets letterboxed when prepended — wastes screen
+real estate in the precious title-card moment.
+
+```bash
+# After cropping to 9:16:
+make_cover.py --segments S.json --out output/ --size 1024x1536
+```
+
 **Always preview segment 1 before generating the rest.** Cover style is the single highest-signal taste decision in the pipeline. `--single N` re-rolls one cover; lock in segment 1, then batch.
+
+**Codex provider can transient-fail** — if make_cover errors on one
+segment mid-batch (e.g. codex CLI returns non-zero), the rest of the
+batch still completes. Retry the failed segment with `--single N`.
 
 **Pillow fallback** (`compose_cover.py`) — use when gpt-image-2 is unavailable OR its Chinese typography is unacceptable. Produces a vertical 4:5 thumbnail from frame + text overlay. Per-platform dimensions in `references/platform_sizes.md`.
 
