@@ -248,10 +248,15 @@ same Fontsize renders much larger on 1920-tall vertical than on
 | Clip aspect       | Recommended `--style`                                          |
 |-------------------|----------------------------------------------------------------|
 | Horizontal 16:9   | `Fontsize=18,MarginV=60` (default)                             |
-| **Vertical 9:16** | `Fontsize=14,MarginL=20,MarginR=20,MarginV=200`                |
+| **Vertical 9:16** | `Fontsize=14,MarginL=20,MarginR=20,MarginV=80`                 |
 
-For vertical, also push `MarginV` up to ~200 to clear the bottom-area
-UI overlaid by 视频号 / 抖音 (likes, comments, share buttons). At
+`MarginV` is **distance from the bottom in libass PlayResY=288 units**
+— `MarginV=80` on a 1920-tall frame places the subtitle baseline at
+`80×1920/288 ≈ 533px` from the bottom (lower-third placement, just
+above the typical 视频号 / 抖音 bottom-UI strip that takes ~300px).
+Counterintuitively, *raising* MarginV pushes subs *up* the frame; do
+not over-shoot to 200+ or subs land in the upper-middle and visually
+collide with the speaker's face. At
 `Fontsize=14` on 1080-wide, ~13-14 Chinese characters fit on one line
 before wrap — which is why **the source SRT cues should already cap
 at ~18 characters** (handled upstream by your assembly logic; see
