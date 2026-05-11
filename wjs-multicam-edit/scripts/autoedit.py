@@ -309,20 +309,28 @@ def main():
         s, e = coverage[k]
         print(f"  cam{k}: {p.name}  coverage [{s:.1f} .. {e:.1f}]s")
 
-    # Active-speaker score relative to others (per second)
+    # Active-speaker score relative to others (per second). Treat -inf
+    # (uncovered) as nan so it doesn't poison the "others" mean.
+    finite = np.where(np.isfinite(per_sec), per_sec, np.nan)
     if K > 1:
-        scores = np.zeros_like(per_sec)
+        scores = np.full_like(per_sec, -np.inf)
         for k in range(K):
-            others = np.delete(per_sec, k, axis=1).mean(axis=1)
-            scores[:, k] = per_sec[:, k] - others
+            others = np.nanmean(np.delete(finite, k, axis=1), axis=1)
+            diff = finite[:, k] - others
+            scores[:, k] = np.where(np.isfinite(diff), diff, -np.inf)
     else:
         scores = per_sec.copy()
 
-    # Audio source: highest dynamic range cam that is mostly covered
+    # Audio source: highest dynamic range cam that is mostly covered.
+    # Compute spread over the cam's COVERED seconds only.
     if args.audio_source is None:
-        spread = np.array([np.percentile(per_sec[:, k], 90) -
-                           np.percentile(per_sec[:, k], 10) for k in range(K)])
-        # Penalize less-covered cams a tiny bit
+        spread = []
+        for k in range(K):
+            v = finite[:, k]
+            v = v[np.isfinite(v)]
+            spread.append(0.0 if len(v) == 0 else
+                          float(np.percentile(v, 90) - np.percentile(v, 10)))
+        spread = np.array(spread)
         cov_pct = np.array([(coverage[k][1] - coverage[k][0]) / max(1, total)
                             for k in range(K)])
         audio_src = int(np.argmax(spread + 0.5 * cov_pct))
