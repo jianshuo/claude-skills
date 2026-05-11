@@ -99,11 +99,15 @@ Both consume the EDL produced by `autoedit.py`. For anything beyond hard cuts, p
 
 ```
 working_dir/
-  cam_a_synced.MOV          # from wjs-multicam-sync
-  cam_b_synced.MOV
-  edl.json                  # from autoedit.py: [{cam, start, end, crop, audio_source}, ...]
+  cam_a.MOV                 # ORIGINAL, untouched
+  cam_a.MOV.sync.json       # from wjs-multicam-sync (delta=0 for the reference)
+  cam_b.MOV                 # ORIGINAL, untouched
+  cam_b.MOV.sync.json       # from wjs-multicam-sync (carries delta_seconds, overlap_in_reference)
+  edl.json                  # from autoedit.py: {inputs, deltas, edl: [{cam, start, end, ...}], ...}
   multicam_render.mp4       # from render_cuts.py OR render_pip.py
 ```
+
+The originals are never modified. Only sidecars and the final render are new files on disk.
 
 ## Common pitfalls
 
