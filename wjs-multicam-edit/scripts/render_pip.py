@@ -93,8 +93,12 @@ def main():
     x_expr = x_expr.format(m=args.pip_margin)
     y_expr = y_expr.format(m=args.pip_margin)
 
+    # Apply per-input -itsoffset so EDL times (reference timeline) work
+    # directly inside the filter graph.
     cmd = ["ffmpeg", "-nostdin", "-y"]
-    for src in inputs:
+    for src, dlt in zip(inputs, deltas):
+        if abs(dlt) > 1e-9:
+            cmd.extend(["-itsoffset", f"{dlt:.6f}"])
         cmd.extend(["-i", src])
 
     # --- 1-cam pass-through ---
