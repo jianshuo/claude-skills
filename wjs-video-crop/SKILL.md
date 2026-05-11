@@ -122,8 +122,11 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 
 ## Common pitfalls
 
-- **No face detected for long stretches** — the script holds the previous chunk's center. If the gap exceeds `--no-face-timeout` (default 10 s), it falls back to source center. Spot-check the output for those stretches.
-- **Two faces moving in opposite directions** — the "largest face" heuristic ping-pongs between them. Pre-segment the video (split at the speaker change) and run this skill per segment, then concat.
+- **Mouth gestures aren't speech** — a yawn, laugh, eating, or sucking-in-air all raise MAR variance. The detector can briefly mistake these for talking. For high-stakes content, eyeball the speaker timeline in the sidecar (the script prints a `face#N: Xs on screen (Y%)` summary) and re-run with a different `--mar-var-threshold` if needed.
+- **Side-profile or down-tilted faces** — when a face is rotated >60° from camera, MediaPipe may fail to land mouth landmarks reliably, so MAR variance flatlines. The speaker fallback to "largest face" kicks in. If you have a long stretch of profile shots, consider `--face-pick largest`.
+- **Two faces with overlapping speech (interruption / talking over)** — both faces have MAR variance, only one wins. The losing face is treated as listener. For accurate per-speaker tracking under crosstalk, use **wjs-multicam-edit** with separate cams.
+- **Long stretches of silence (B-roll, music)** — falls back to largest face. If the largest face is wrong (e.g. a listener stays still while the speaker's mic feeds music), you'll see drift. Pre-segment around music-only sections.
 - **Source has burned-in lower-thirds / subtitles** — for H→V, the lower band gets cropped out; for V→H, it stays but gets stretched. Strip burn-ins before running.
-- **Wide-angle / fish-eye lenses** — face detection misses faces near edges. Pre-correct lens distortion with `ffmpeg lenscorrection` first.
-- **Upscaling artifacts** — `608×1080 → 1080×1920` is a 1.78× upscale and visible on sharp text. If the source has overlays you want sharp, render at native crop dims (`--output-size 608x1080`) and let the platform upscale.
+- **Wide-angle / fish-eye lenses** — landmarks miss faces near edges. Pre-correct distortion with `ffmpeg lenscorrection` first.
+- **Upscaling artifacts** — `608×1080 → 1080×1920` is a 1.78× upscale and visible on sharp text. Render at native crop dims (`--output-size 608x1080`) and let the platform upscale, if you have overlays you want to keep sharp.
+- **Output bitrate > platform limit** — default is `--bitrate 12M`. WeChat Channels (视频号) caps at 10 Mbps; pass `--bitrate 8M` for that target.
