@@ -300,14 +300,17 @@ prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4 [--duration 1.5]
 | Force re-encode | `segment.py … --reencode` |
 | Probe source aspect | `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 IN.mp4` |
 | Convert orientation (ask first) | invoke `/wjs-video-crop` per clip BEFORE covers |
-| AI covers (title baked in) | `make_cover.py --segments S.json --out output/` |
+| AI covers — horizontal 16:9 | `make_cover.py --segments S.json --out output/` (default size) |
+| AI covers — vertical 9:16 | `make_cover.py … --size 1024x1536` |
 | Re-roll one cover | `make_cover.py … --single 3` |
 | Pillow cover (fallback) | `compose_cover.py --segments S.json --out output/` |
-| Prepend cover as 1.5s intro | `prepend_intro.py --segments S.json --out output/` |
-| Prepend one (no segments.json) | `prepend_intro.py --clip A --cover B --out C` |
-| Slice + burn subs | `burn_subs.py --segments S.json --out output/` |
+| Slice + burn subs — horizontal | `burn_subs.py --segments S.json --out output/` |
+| Slice + burn subs — vertical | `burn_subs.py … --style 'Fontsize=14,MarginL=20,MarginR=20,MarginV=200'` |
 | Burn one (no segments.json) | `burn_subs.py --video A --srt B --out C` |
 | Just slice SRTs, don't burn | `burn_subs.py … --no-burn` |
+| Prepend cover (fast, after burn) | `prepend_intro.py --segments S.json --out output/` |
+| Prepend one (no segments.json) | `prepend_intro.py --clip A --cover B --out C` |
+| Force prepend re-encode | `prepend_intro.py … --reencode` |
 
 ## Common mistakes
 
