@@ -22,12 +22,18 @@ def main():
 
     plan = json.loads(args.edl.read_text())
     inputs = plan["inputs"]
+    deltas = plan.get("deltas", [0.0] * len(inputs))
     edl = plan["edl"]
     audio_src = plan["audio_source"]
     W, H = args.width, args.height
 
+    # Apply per-input -itsoffset so each cam's frames carry reference-timeline
+    # timestamps. Then `trim=start=X:end=Y` in the filter graph works directly
+    # with EDL times (which are already in reference timeline).
     cmd = ["ffmpeg", "-nostdin", "-y"]
-    for src in inputs:
+    for src, dlt in zip(inputs, deltas):
+        if abs(dlt) > 1e-9:
+            cmd.extend(["-itsoffset", f"{dlt:.6f}"])
         cmd.extend(["-i", src])
 
     # Build filter graph: per-segment trim+scale+pad, concat. pad needs
