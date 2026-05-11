@@ -228,7 +228,7 @@ burn_subs.py --video in.mp4 --srt in.srt --out out.mp4 [--style '...']
 
 - **wjs-translate-video** — produce the source SRT first if missing; its `*.burn.srt` variant is the preferred input for `burn_subs.py` (hard-wrapped for on-screen reading).
 - **wjs-multicam-edit** — if the source is multi-cam, render the synced single MP4 first, then segment.
-- **wjs-video-crop** — convert any of the cropped clips between 16:9 and 9:16 with face-tracked active-speaker following.
+- **wjs-video-crop** — **call BEFORE covers in Step 2.5** when source orientation doesn't match the target platform. Face-tracked active-speaker following keeps the talker in frame during the crop. Doing this *after* covers wastes a re-render.
 - **gpt-image-2-skill** — make_cover.py wraps `images edit`; standalone gpt-image-2 invocations also work.
 
 ## Files & references
