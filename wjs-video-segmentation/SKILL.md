@@ -363,6 +363,8 @@ prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4 [--duration 1.5]
 - **wjs-multicam-edit** — if the source is multi-cam, render the synced single MP4 first, then segment.
 - **wjs-video-crop** — **call BEFORE covers in Step 2.5** when source orientation doesn't match the target platform. Face-tracked active-speaker following keeps the talker in frame during the crop. Doing this *after* covers wastes a re-render.
 - **gpt-image-2-skill** — make_cover.py wraps `images edit`; standalone gpt-image-2 invocations also work.
+- **hyperframes** — **the preferred downstream for production-quality work** (Path B above). Hand off raw cropped clips + per-segment SRT after Step 2.5; let hyperframes compose cover + subs + animations + CTA in one final encode. Don't burn subs in this skill if hyperframes will follow.
+- **wjs-video-overlay** — alternative to hyperframes if you only need static title cards / lower-thirds / annotations on top of an already-burned clip. Use when the overlay needs are simple (no per-word kinetic styling).
 
 ## Files & references
 
