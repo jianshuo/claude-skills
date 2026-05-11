@@ -26,13 +26,16 @@ The output aspect is the source aspect with width and height swapped — 16:9 �
 
 | Is | Is not |
 |---|---|
-| Single-face track (the largest face per sampled frame) | Per-speaker independent crops |
+| **Visual active-speaker detection** via MAR (mouth-aspect-ratio) variance | Audio-visual fusion (audio energy + lip motion cross-correlated) |
+| Stable face tracking across frames by center-distance matching | Re-identification across long gaps / occlusions |
+| Speaker-aligned segments with hysteresis to prevent flicker | Frame-by-frame switching on every flicker |
+| `--face-pick speaker` (default) — pick whoever's mouth is moving | `--face-pick largest` (opt-in legacy) — pick largest face |
 | Smooth pan via ffmpeg piecewise-linear crop expression | Cinematic ease-in/ease-out camera moves |
 | Audio stream-copy (bit-exact) | Audio reprocessing / re-encoding |
-| MediaPipe Tasks `FaceDetector` (BlazeFace short-range) at 2 fps sampled via ffmpeg | Per-frame neural inpainting / out-painting |
+| MediaPipe Tasks `FaceLandmarker` (478-pt mesh) at 5 fps sampled via ffmpeg | Per-frame neural inpainting / out-painting |
 | One `ffmpeg crop + scale` pass | Frame-by-frame Python compositor |
 
-If you need active-speaker tracking (mic + face fused), it's not in this skill — for now the heuristic is "largest face = main subject".
+Falls back to "largest face" automatically when no one is talking (silence, music-only stretches).
 
 ## Dependencies
 
@@ -42,9 +45,9 @@ pip install mediapipe opencv-python numpy
 
 (MediaPipe lives outside the standard Python distribution; ffmpeg and ffprobe must be on `PATH`.)
 
-**First-run model download**: MediaPipe 0.10+ uses the Tasks API, which needs a `blaze_face_short_range.tflite` model file (~230 KB). On the first call, `crop.py` downloads it to `~/.claude/skills/wjs-video-crop/models/` and caches it for subsequent runs. The script will fail offline on first run.
+**First-run model download**: MediaPipe 0.10+ uses the Tasks API, which needs a `face_landmarker.task` model file (~4 MB). On the first call, `crop.py` downloads it to `~/.claude/skills/wjs-video-crop/models/` and caches it for subsequent runs. The script fails offline on first run.
 
-**Range limitation**: BlazeFace short-range is tuned for faces within ~2 m of the camera (selfie / podcast / interview distance). Wide event shots with small faces may not detect — sample a frame first to confirm.
+**Range limitation**: The bundled landmarker is tuned for faces within ~2 m of the camera (selfie / podcast / interview distance). Wide event shots with small faces may not detect — sample a frame first to confirm.
 
 ## Crop math
 
