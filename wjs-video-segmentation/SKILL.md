@@ -203,6 +203,8 @@ burn_subs.py --video in.mp4 --srt in.srt --out out.mp4 [--style '...']
 |---|---|
 | Cut clips + frames | `segment.py --segments S.json --out output/` |
 | Force re-encode | `segment.py … --reencode` |
+| Probe source aspect | `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 IN.mp4` |
+| Convert orientation (ask first) | invoke `/wjs-video-crop` per clip BEFORE covers |
 | AI covers (title baked in) | `make_cover.py --segments S.json --out output/` |
 | Re-roll one cover | `make_cover.py … --single 3` |
 | Pillow cover (fallback) | `compose_cover.py --segments S.json --out output/` |
