@@ -1,25 +1,29 @@
-"""Prepend each segment's cover as a still title-card intro to its clip.
+"""Prepend a cover image as a still title-card intro to a video.
 
-For each segment with both a cover and a clip in `output/`:
-  - Resize the cover to match the clip's resolution (16:9 letterbox or
-    crop as needed).
-  - Hold the cover as a still for `--duration` seconds (default 1.5).
-  - Concatenate cover-still + clip into `clip_NN_slug_intro.mp4`.
+Two modes:
 
-Audio: the cover-still period plays silence; clip audio starts at the
-exact moment the live footage begins. This makes the cover act as
-both the platform-thumbnail (some platforms grab the very first frame
-as the auto-thumbnail) and a clean editorial title card.
+  BATCH mode (read segments.json):
+    For each segment with both a cover and a clip in `output/`, prepend
+    `cover_NN_slug.png` as a still in front of `clip_NN_slug.mp4`
+    (or its `_burned.mp4` variant if subtitles were already burned).
 
-If a `_burned.mp4` exists for a clip (subtitles already burned in by
-`burn_subs.py`), prepend onto that instead — produces
-`clip_NN_slug_burned_intro.mp4`. Pass `--no-burned` to force using the
-raw clip.
+  STANDALONE mode (single file, no segments.json):
+    Prepend any cover image in front of any clip. Useful when you've
+    cropped/edited a clip outside the segmentation pipeline.
 
-Usage:
+Common: the still period plays silence; the clip's audio starts cleanly
+at the moment the live footage begins. Many short-video platforms grab
+the literal first frame as the auto-thumbnail — by making the cover the
+first frame, you lock in your chosen thumbnail by construction.
+
+Usage (batch):
   python3 prepend_intro.py --segments segments.json --out output/
   python3 prepend_intro.py --segments segments.json --out output/ --duration 2.0
   python3 prepend_intro.py --segments segments.json --out output/ --no-burned
+
+Usage (standalone):
+  python3 prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4
+  python3 prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4 --duration 2.0
 """
 import argparse
 import json
