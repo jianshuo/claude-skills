@@ -40,8 +40,11 @@ long video + SRT
 segments.json
    ↓     segment.py:    cut clips + extract mid-segment frames
 clip_NN.mp4 + frame_NN.jpg
+   ↓     ASK: target platform orientation match source?
+   ↓     /wjs-video-crop on each clip (if 16:9 → 9:16, etc.)
+clip_NN.mp4    (now in target orientation)
    ↓     make_cover.py: gpt-image-2 generates cover (title baked in)
-cover_NN.png
+cover_NN.png   (matches clip aspect)
    ↓     prepend_intro.py: prepend cover as 1.5s title-card
 clip_NN_intro.mp4
    ↓     burn_subs.py:  slice SRT + libass burn-in
