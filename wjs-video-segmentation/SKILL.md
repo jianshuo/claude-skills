@@ -88,6 +88,43 @@ the body's codec exactly; then `ffmpeg -f concat -c copy` stitches
 them losslessly in seconds. Prepending first means burn re-encodes
 the prepended output anyway, wasting that stream-copy savings.
 
+### Path B hand-off package
+
+When stopping after Step 2.5 to hand off to hyperframes, deliver
+EXACTLY these per-segment artifacts:
+
+```
+output/
+  clip_NN_slug.mp4                  # raw cropped clip (target orientation, no subs, no cover)
+  clip_NN_slug.zh-CN.burn.srt       # per-clip SRT, timestamps already shifted to start at 0
+  segments.json                     # for slug/title/summary/cover_prompt metadata
+  frame_NN_slug.jpg                 # midpoint frame (cover reference for hyperframes)
+```
+
+To generate the per-clip SRTs WITHOUT burning them, run:
+
+```bash
+python3 ~/.claude/skills/wjs-video-segmentation/scripts/burn_subs.py \
+    --segments segments.json --out output/ --no-burn
+```
+
+This slices the master SRT to each segment's `[start, end]` and shifts
+timestamps to start at 0 per clip — exactly the input hyperframes
+captions expect (each composition's timeline starts at t=0).
+
+**Why hand off raw, not burned:** hyperframes will compose the cover
+animation, render subtitle text as HTML/CSS (with kinetic word-by-word
+highlights, keyword emphasis, custom fonts, deterministic seekability),
+add interstitial title cards and golden-quote callouts, append an
+end-card CTA, run scene transitions, and produce ONE final encode. If
+you hand off a `_burned.mp4` instead of raw, hyperframes has to render
+on top of pixels that already contain libass subtitles — meaning two
+sets of subs visually colliding. Always hand off raw cropped clip.
+
+**Avoid double subtitle systems.** If hyperframes will render captions
+from the SRT, do NOT also burn libass subs in this skill. Pick one
+caption system per output video.
+
 ## Step 1 — Agent reads SRT, writes `segments.json`
 
 **Don't outsource topic identification to a script.** For each candidate segment, judge:
