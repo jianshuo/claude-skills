@@ -3,13 +3,14 @@
 My Claude Code skills.
 
 Auto-mirrored from `~/.claude/skills/` by a PostToolUse hook —
-every time I edit a `wjs-*` skill (or `jianshuo-wechat-mp-publish`),
-the changed skill directory is rsynced here and pushed to GitHub.
+every time I edit a `wjs-*` skill, the changed skill directory is rsynced
+here and pushed to GitHub.
 
 Skills:
 
-- [`jianshuo-wechat-mp-publish/`](./jianshuo-wechat-mp-publish/) — polish + publish WeChat 公众号 articles end-to-end (cover/illustration generation, draft upload via `md2wechat`).
-- [`wjs-multicam/`](./wjs-multicam/) — sync multi-camera footage via audio cross-correlation and auto-edit director-style cuts on speaker / silence / motion changes.
+- [`wjs-wechat-publish/`](./wjs-wechat-publish/) — polish + publish WeChat 公众号 articles end-to-end (cover/illustration generation, draft upload via `md2wechat`).
+- [`wjs-multicam-sync/`](./wjs-multicam-sync/) — align 2+ recordings of the same event via audio cross-correlation. Output is a `.sync.json` sidecar per input; originals are never re-encoded. Downstream uses `ffmpeg -itsoffset`.
+- [`wjs-multicam-edit/`](./wjs-multicam-edit/) — director-style auto-edit of synced multicam footage: hard cuts, virtual close-ups via crop-zoom, picture-in-picture. Consumes the sidecars produced by `wjs-multicam-sync`.
 - [`wjs-translate-video/`](./wjs-translate-video/) — end-to-end video localization: transcribe (Whisper) → translate → SRT → optional burn-in → optional time-aligned voice dub (Volcano / edge-tts).
 - [`wjs-video-overlay/`](./wjs-video-overlay/) — layer animated overlays (title cards, callouts, cutaways, lower-thirds) on top of an existing video via a HyperFrames composition.
 
