@@ -94,9 +94,9 @@ AI 时代屎山的重新定义...
 
 Mapping:
 - `## NN · <filename>` → which video this block describes
-- `**短标题**` block → YouTube **title** (the skill appends ` | <第二行 of 视频描述 if it contains a series name>` so the title becomes uniquely findable)
-- `**视频描述**` block → YouTube **description**, verbatim, with the `#tag` hashtags retained at the bottom
-- All `#word` tokens in the 视频描述 → comma-separated YouTube **tags** (each # is stripped, the user's channel name 王建硕 is added if missing per global instructions)
+- `**短标题**` (or `**Title**`) block → YouTube **title**, verbatim. Short titles work but consider that YouTube allows up to 100 chars — if you want a richer title with series name, write it that way in `**短标题**`
+- `**视频描述**` (or `**Description**`) block → YouTube **description**, verbatim, with the `#tag` hashtags retained at the bottom
+- All `#word` tokens in the 视频描述 → comma-separated YouTube **tags** (each `#` is stripped; the user's channel name `王建硕` is auto-prepended per global instructions)
 
 Filename in the heading must match an actual file in `--dir`. If a file exists but has no meta block, the script errors loudly — pass `--allow-missing-meta` to upload it with `--title <basename>` and empty description.
 
