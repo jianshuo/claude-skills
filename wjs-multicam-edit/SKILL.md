@@ -1,116 +1,108 @@
 ---
 name: wjs-multicam-edit
-description: Use when the user has multiple already-synced camera angles of the same scene and wants them combined into a single render — director-style hard cuts, virtual close-ups via crop-zoom, picture-in-picture, or a mix. Triggers — "auto-edit multicam", "director cut", "highlight reel from these angles", "switch between cameras", "PiP overlay", "做个剪辑", "切几个机位".
+description: Use when the user has 2+ recordings of the same event (each with a `.sync.json` sidecar from wjs-multicam-sync) and wants them combined into a single MP4 — auto-switching between cams second-by-second on audio energy, with optional picture-in-picture inset. Triggers — "auto-edit multicam", "做个剪辑", "切几个机位", "把这几个视频合成一个", "combine these angles", "PiP overlay".
 ---
 
 # wjs-multicam-edit
 
-Take N synced camera angles and emit a single render that switches between them at moments a human director would pick.
+Combine N synced camera angles into a single rendered MP4. Decisions are audio-energy-driven only — the cam with the loudest mic each second wins. Output is hard cuts (or hard cuts plus a corner PiP).
+
+## What this skill IS — and IS NOT
+
+| Is | Is not |
+|---|---|
+| Audio-energy-driven cam switching | Face / framing detection (no face_recognition, no MediaPipe) |
+| Single-source audio (one cam's mic) | Multi-mic mix / per-speaker gating |
+| Hard cuts, with optional PiP inset | Crossfades / opacity transitions / sliding animations |
+| `ffmpeg` concat + `overlay` filter renders | HyperFrames composition / `<hf-clip>` |
+| Coverage-aware (won't pick a cam outside its sidecar window) | Frame-accurate beat alignment / VAD-edge cuts |
+
+If you need face tracking, fade transitions, captions, or HyperFrames composition, use the **hyperframes** skill on top of this skill's MP4 output.
 
 ## REQUIRED INPUT
 
-**Original camera files (untouched) plus their `.sync.json` sidecars next to them.** No `_synced.MOV` files are needed — and aren't produced anywhere in the pipeline anymore. If sources aren't synced yet, run **wjs-multicam-sync** first to write the sidecars.
+**Original camera files (untouched) plus their `.sync.json` sidecars next to them.** If sources aren't synced yet, run **wjs-multicam-sync** first to write the sidecars. Missing sidecar = cam assumed at delta=0, full coverage.
 
-Each input must have a `<input>.sync.json` next to it (written by wjs-multicam-sync). The sidecar carries `delta_seconds` (how this cam's t=0 maps into the reference timeline) and `overlap_in_reference` (this cam's coverage window). `autoedit.py` reads sidecars automatically and shifts each cam's envelope into reference time before scoring. `render_cuts.py` / `render_pip.py` read the EDL's `deltas[]` array and apply `ffmpeg -itsoffset` per input.
-
-Missing sidecar = cam assumed at delta=0, full coverage (backward-compat for single-source jobs).
+`autoedit.py` reads each sidecar for `delta_seconds` + `overlap_in_reference`, lifts the cam's audio envelope into the reference timeline, and only schedules a cam during its coverage window. `render_cuts.py` / `render_pip.py` apply `ffmpeg -itsoffset` per input using the EDL's `deltas[]` array.
 
 ## When NOT to use
 
-- One source → no switching needed; use **video-segmentation** for clip extraction.
-- Polished edit already exists in an NLE → don't fight the timeline.
-- Final render with overlays / captions / brand transitions — drive **HyperFrames** (`render_pip.py` here scaffolds a HyperFrames composition for that case).
+- One source — nothing to switch between; use **video-segmentation**.
+- Polished NLE timeline already exists — don't fight the editor.
+- Want fade transitions / overlay captions / brand title cards — run this skill first to get the cut-down MP4, then feed it into **wjs-video-overlay** or **hyperframes**.
 
-## Brainstorm with the user before executing
+## Pipeline
 
-This step is open-ended. Confirm before running `autoedit.py`:
+1. Read each input's sidecar → list of `delta_seconds[k]` + `overlap_in_reference[k]`.
+2. Extract per-cam mono PCM @ 16 kHz from the original file.
+3. Log-RMS envelope at 1 Hz frame rate (per-second).
+4. **Lift each envelope into reference timeline** by indexing at `t_ref - delta_k`; uncovered seconds become `-inf` so they're never picked.
+5. **Audio source** = the cam with the largest envelope spread (90th − 10th percentile over its covered seconds), with a small bonus for coverage fraction.
+6. **Score per second**: `cam[k] - mean(other covered cams)`. Highest score = best active-speaker candidate.
+7. **Editor decides EDL** — two modes:
+   - `rotation` (default): random dwell in [`min_dwell=8`, `max_dwell=15`] s, pick best-scoring covered cam (≠ current) at each cut.
+   - `greedy`: hysteresis — hold current unless another cam's lookahead-window score beats it by `--switch-threshold`. Floor `min_dwell=4`, ceiling `max_dwell=18`.
+   Both force-switch if the active cam exits its coverage window mid-shot.
+8. Emit EDL JSON.
 
-- **Style** — talking-heads, performance, interview, vlog?
-- **Pacing** — fast cuts (~3 s holds) or long takes (~15 s)?
-- **PiP** — yes / no? When yes, what pattern? (speaker + listener inset, wide + CU inset)
-- **Audio source** — clean single mic, or per-speaker mix?
+## EDL schema (`edl.json`)
 
-## Audio selection
+```json
+{
+  "_about": "EDL produced by wjs-multicam-edit/autoedit.py. Times in reference timeline. Render scripts apply ffmpeg -itsoffset deltas[k] per input.",
+  "_help": {
+    "inputs":        "Original media paths, in cam-index order (cam 0, cam 1, ...).",
+    "deltas":        "Per-cam delta_seconds from each sidecar. Render uses ffmpeg -itsoffset deltas[k].",
+    "duration_sec":  "Output duration in reference timeline.",
+    "audio_source":  "Cam index whose audio track becomes the master. Single source — not a mix.",
+    "coverage":      "[start, end] per cam in reference timeline.",
+    "edl":           "List of {cam, start, end} segments. Times are reference-timeline seconds."
+  },
+  "inputs":       ["cam_a.MOV", "cam_b.MOV"],
+  "deltas":       [0.0, 12.345],
+  "duration_sec": 4512,
+  "audio_source": 0,
+  "coverage":     [[0.0, 4512.0], [12.345, 4499.835]],
+  "edl":          [{"cam": 0, "start": 0, "end": 13}, {"cam": 1, "start": 13, "end": 28}, ...]
+}
+```
 
-Pick one main audio track. SNR per file = ratio of the 90th to 10th percentile envelope dB during voice-active frames. Highest ratio wins. Verify by listening to a 30 s sample — a high-SNR but distorted track will lose to a slightly noisier but clean one.
-
-Multi-mic per-speaker mixing is overkill unless you have diarization + per-mic energy maps.
-
-## Director HMM
-
-Model the edit as a state machine; each state is a candidate shot (physical cam, virtual crop, or PiP variant). Transition scores from these signals:
-
-| Signal | Favors |
-|---|---|
-| Active-speaker energy | Camera whose mic is loudest (≈ closest to current speaker) |
-| Face / framing score | Cameras with well-framed face (rule-of-thirds, eyes upper third). `face_recognition` or MediaPipe @ 1 fps |
-| Composition variety | Penalize current shot the longer it's held (rises after 8 s, sharp climb after 20 s) |
-| Cut cost | Penalize switching too soon (min cut: 3 s for talking heads, 1.5 s floor for action) |
-| Beat alignment | Prefer cuts on silence boundaries / new-utterance starts (VAD edge transitions) |
-| Reaction-shot bonus | When speaker A talks, occasional ≤4 s cut to listener B |
-
-Combine via Viterbi: per-second emission scores, transition penalty for cut cost. Decoded path = the EDL.
-
-### Hard rules the algorithm encodes
-
-- Open on master / wide for 5–10 s before the first cut.
-- Hold any shot ≥ 3 s.
-- Same pair can't repeat within 8 s (no ping-pong).
-- Force a cut at the next beat after 25 s on one shot, regardless of score.
-- Reaction shots ≤ 4 s; return to active speaker.
-
-Implementation: `scripts/autoedit.py` (skeleton — get hard cuts working with active-speaker scoring alone, listen, *then* add face / composition / PiP).
-
-## Virtual cameras (crop-zoom from a wide shot)
-
-A 1080p+ wide cam yields multiple virtual cams via cropping. Useful when the second physical cam is unavailable or its angle isn't right.
-
-Pre-compute a face track (one box per frame @ 1 fps, interpolated). Crop presets:
-
-- **Wide** — full frame
-- **MCU** — face-centered, 2× face height
-- **CU** — 1.2× face height
-- **2-shot** — bbox of two faces with 20% padding
-
-Smooth crop centers with a 0.5 Hz low-pass to avoid jitter. Render via `ffmpeg crop` filter, scaled back to delivery res (e.g. 1920×1080).
-
-## Picture-in-picture
-
-Treat the inset as another shot in the HMM. Use sparingly — **≤ 15% of total runtime**.
-
-Common patterns:
-- Speaker on main + listener PiP bottom-right (Q&A, interview)
-- Wide on main + CU PiP top-right (performance, demo)
-
-Transitions: 0.3 s opacity fade in, hard cut out (or vice versa). **Avoid sliding animations — they look amateur.**
+`autoedit.py` writes `_about` + `_help` directly into the file so opening the JSON in any editor explains itself.
 
 ## Render
 
-Two paths:
+| Script | What it does |
+|---|---|
+| `scripts/render_cuts.py` | Hard cuts only. `concat` filter graph over per-segment `trim+scale+pad`. Audio = `audio_source` cam, trimmed to first EDL row's start. |
+| `scripts/render_pip.py` | Hard cuts + corner picture-in-picture overlay. Main cam = EDL row's `cam`; PiP cam picked round-robin (or via per-row `pip` field). PiP is scaled to `--pip-width` (default 480 px), placed in a configurable corner with optional white border. **No fade / no opacity — solid block on/off.** |
 
-| Path | Script | When |
-|---|---|---|
-| Pure ffmpeg | `scripts/render_cuts.py` | Hard cuts only, no PiP, no transitions. Fastest. |
-| HyperFrames | `scripts/render_pip.py` | PiP, fade transitions, captions, overlays. Scaffolds an `<hf-clip>` composition; render via `hyperframes-cli render`. |
+Both apply `-itsoffset deltas[k]` per input.
 
-Both consume the EDL produced by `autoedit.py`. For anything beyond hard cuts, prefer HyperFrames — the `hyperframes` skill documents composition patterns.
+## Brainstorm before running
+
+Three real knobs to confirm with the user:
+
+- **Pacing** — `--mode rotation` (varied dwell, easier on the ear) vs `--mode greedy` (energy-following, snappier).
+- **PiP** — yes / no. If yes, which corner + width?
+- **Min cut length** — `--min-dwell` floor. 8 s default for rotation is conservative; talking-heads can go to 4.
+
+`audio_source` is auto-picked; override with `--audio-source <cam-index>` if the auto-pick sounds wrong on a 30 s listen.
 
 ## File layout
 
 ```
 working_dir/
   cam_a.MOV                 # ORIGINAL, untouched
-  cam_a.MOV.sync.json       # from wjs-multicam-sync (delta=0 for the reference)
+  cam_a.MOV.sync.json       # from wjs-multicam-sync
   cam_b.MOV                 # ORIGINAL, untouched
-  cam_b.MOV.sync.json       # from wjs-multicam-sync (carries delta_seconds, overlap_in_reference)
-  edl.json                  # from autoedit.py: {inputs, deltas, edl: [{cam, start, end, ...}], ...}
+  cam_b.MOV.sync.json
+  edl.json                  # from autoedit.py
   multicam_render.mp4       # from render_cuts.py OR render_pip.py
 ```
 
-The originals are never modified. Only sidecars and the final render are new files on disk.
-
 ## Common pitfalls
 
-- **Picking "best" per-second cam without hysteresis ping-pongs.** Min-cut-length + cut-cost terms in the HMM are non-optional.
-- **Skipping the brainstorm step** produces a generic edit that looks like every other AI edit. The style / pacing / PiP choices are where the human taste lives.
-- **Treating `autoedit.py` as a black box.** It's deliberately a skeleton — read it, run it on a 2-min slice, listen, adjust scoring weights. Don't render the full 75 min on the first pass.
+- **Trusting `audio_source` without listening.** Spread + coverage is a proxy. Always sample a 30 s clip before committing — a high-spread track can still be clipped / distorted.
+- **Running `autoedit.py` on the full 75 min before tuning.** Run on a 2-min slice first (`ffmpeg -ss A -t 120` an extract per cam), listen, adjust `--min-dwell` / `--mode`, then commit to full length.
+- **Expecting face-driven framing.** This skill doesn't see the video — only the audio. If one cam is well-framed but quiet, the editor won't favor it. Use `--audio-source` + per-segment `pip` overrides as the manual escape hatch.
+- **Re-rendering when sync was wrong.** EDL bakes in `deltas[]` at autoedit time. If you fix the sidecars later, re-run `autoedit.py` to regenerate the EDL before re-rendering.
