@@ -1,0 +1,25 @@
+{
+  "source_video": "talk.mp4",
+  "source_srt": "talk.zh-CN.srt",
+  "platform": "wechat_channels",
+  "segments": [
+    {
+      "id": 1,
+      "slug": "intent-not-code",
+      "title": "AI 时代不写代码\n而是写意图",
+      "summary": "代码已经从机器码 → 汇编 → 高级语言一路抽象上来，下一层抽象是用自然语言表达意图。AI 把意图编译成代码，人不再去改编译产物。",
+      "start": "00:00:43.460",
+      "end": "00:02:35.220",
+      "cover_prompt": "A developer at a glowing terminal, intent flowing as light into the screen, cinematic vertical composition, modern soft tech aesthetic, rich blues and amber"
+    },
+    {
+      "id": 2,
+      "slug": "code-as-compiled-not-handwritten",
+      "title": "代码是编译产物\n不应再手工修改",
+      "summary": "把 AI 生成的代码当成汇编/机器码——它是从你自然语言 prompt 编译下来的产物，bug 应在 prompt 层修，不在产物层修。",
+      "start": "00:02:35.220",
+      "end": "00:04:30.000",
+      "cover_prompt": "Layers of abstraction stacked vertically — natural language at the top, source code in the middle, machine code at the bottom — connected by glowing arrows, soft schematic style"
+    }
+  ]
+}
