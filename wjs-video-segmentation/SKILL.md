@@ -222,6 +222,7 @@ burn_subs.py --video in.mp4 --srt in.srt --out out.mp4 [--style '...']
 - **Forgetting "no text" in `cover_prompt`** — gpt-image-2 will hallucinate fake glyphs if you don't constrain it. The hardcoded prompt in make_cover.py already handles this; don't undo it in `cover_prompt`.
 - **Pre-generating all covers before showing the user one** — taste is iterative. Always preview segment 1.
 - **Re-encoding when stream-copy works** — segment.py detects black-opening-frame cases automatically; trust the fallback.
+- **Skipping the orientation check (Step 2.5)** — generating a 16:9 cover and burning subs onto a 16:9 clip, only to later realize 视频号/抖音 needs 9:16, means redoing covers/intro/burn from scratch. Always probe source aspect and ask the user *before* covers.
 
 ## Integration with other wjs- skills
 
