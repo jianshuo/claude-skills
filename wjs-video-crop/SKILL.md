@@ -84,24 +84,33 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 
 ```json
 {
-  "_about": "wjs-video-crop crop plan for cam_a.MOV. Source not modified.",
+  "_about": "wjs-video-crop crop plan for cam_a.MOV. Active-speaker detected via MAR variance.",
   "_help": {
-    "source_size":   "[width, height] in pixels.",
-    "target_size":   "[width, height] of the final rendered output.",
-    "crop_window":   "[width, height] of the moving crop in source coords.",
-    "chunks":        "List of {t0, t1, cx, cy} — crop center per time window in source coords."
+    "source_size":     "[width, height] in pixels.",
+    "target_size":     "[width, height] of the final rendered output.",
+    "crop_window":     "[width, height] of the moving crop in source coords.",
+    "chunks":          "Speaker-aligned segments: {t0, t1, cx, cy, speaker_id}.",
+    "face_pick_mode":  "speaker = MAR-variance active-speaker; largest = old behavior.",
+    "speaker_id":      "Stable face track id. null means no face / silence fallback."
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "source": "cam_a.MOV",
   "source_size": [1920, 1080],
   "target": "portrait",
   "target_size": [1080, 1920],
   "crop_window": [608, 1080],
+  "face_pick_mode": "speaker",
+  "sample_fps": 5.0,
+  "mar_var_window_sec": 1.0,
+  "mar_var_threshold": 1.5e-4,
+  "min_segment_sec": 1.5,
   "chunks": [
-    {"t0": 0.0, "t1": 3.0, "cx": 808, "cy": 540},
-    {"t0": 3.0, "t1": 6.0, "cx": 822, "cy": 540}
+    {"t0":  0.0, "t1":  4.2, "cx": 808, "cy": 540, "speaker_id": 0},
+    {"t0":  4.2, "t1": 11.6, "cx": 1182, "cy": 540, "speaker_id": 1},
+    {"t0": 11.6, "t1": 14.0, "cx": 808, "cy": 540, "speaker_id": 0}
   ],
-  "face_sample_count": 1234
+  "face_sample_count": 1234,
+  "track_count": 2
 }
 ```
 
