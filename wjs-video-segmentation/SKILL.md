@@ -99,6 +99,7 @@ output/
   clip_NN_slug.zh-CN.burn.srt       # per-clip SRT, timestamps already shifted to start at 0
   segments.json                     # for slug/title/summary/cover_prompt metadata
   frame_NN_slug.jpg                 # midpoint frame (cover reference for hyperframes)
+  cover_NN_slug.png                 # **regenerate at native target aspect** (see below)
 ```
 
 To generate the per-clip SRTs WITHOUT burning them, run:
@@ -112,6 +113,24 @@ This slices the master SRT to each segment's `[start, end]` and shifts
 timestamps to start at 0 per clip — exactly the input hyperframes
 captions expect (each composition's timeline starts at t=0).
 
+**Cover image aspect — MUST match the composition aspect.** When
+covers will be used as the literal first frame of a hyperframes
+composition (a full-frame still scene, not letterboxed), regenerate
+covers at the SUPPORTED gpt-image-2 size CLOSEST to your target:
+
+| Target frame | Use `--size`     | Aspect    | Notes |
+|--------------|------------------|-----------|-------|
+| 1920×1080    | `1536x1024`      | 3:2 ≈ 16:9 | default |
+| **1080×1920** (视频号) | `1024x1792`      | ≈ 9:16    | **must use this for vertical**; `1024x1536` (default) is 2:3 and gets cropped or letterboxed |
+| Square       | `1024x1024`      | 1:1       | |
+
+The default `--size 1024x1536` (2:3) is fine for the Path A title-card
+intro because `prepend_intro.py` letterboxes it during concat. But for
+hyperframes Path B where the cover IS the first frame full-bleed,
+mismatch shows up as either ugly letterbox bars (object-fit: contain)
+or cropped title text (object-fit: cover) — both wrong. Always pass
+`--size 1024x1792` for vertical.
+
 **Why hand off raw, not burned:** hyperframes will compose the cover
 animation, render subtitle text as HTML/CSS (with kinetic word-by-word
 highlights, keyword emphasis, custom fonts, deterministic seekability),
@@ -124,6 +143,30 @@ sets of subs visually colliding. Always hand off raw cropped clip.
 **Avoid double subtitle systems.** If hyperframes will render captions
 from the SRT, do NOT also burn libass subs in this skill. Pick one
 caption system per output video.
+
+### What hyperframes adds on top of Path B raw clips
+
+Concrete things hyperframes can do that this skill cannot (and that
+make Path B worth the additional authoring time):
+
+- **AI cover as the literal first frame** of the video — full-bleed,
+  no animation needed, served as the platform thumbnail by default.
+- **Outlined large-font HTML/CSS captions** (white text, thick black
+  `-webkit-text-stroke`, ~64px on vertical 1080-wide) — more readable
+  than libass bubbles and seekable per cue.
+- **Illustration overlays at hook moments** — top-corner stack diagrams,
+  centered "hammer" callouts (e.g., a 96px "LLM = 新编译器" with kinetic
+  reveal), keyword pops. Each illustration is its own timed `class="clip"`
+  div with `data-start` / `data-duration`.
+- **End-card CTA scene** — branded outro for "关注王建硕 / AI 炼金术"
+  with arrow + foot text.
+- **Scene transitions** — crossfades, wipes, shader transitions between
+  cover/body/CTA.
+
+The body video itself is just a normal `<video class="clip">` clip with
+matching `<audio>` track; the SRT is loaded as inline JSON and each cue
+becomes its own bubble element with deterministic show/hide tweens.
+The whole composition compiles to ONE final encode — no cascade.
 
 ## Step 1 — Agent reads SRT, writes `segments.json`
 
