@@ -210,6 +210,83 @@ Stream-copies via `ffmpeg -ss S -to E -c copy`. Falls back to re-encode if a cop
 
 Pass `--reencode` to force re-encode all clips.
 
+### ⚠ Keyframe-snap audio/caption desync — read before shipping
+
+**Stream-copy cuts at any timestamp produce a clip that starts EARLIER
+than requested** — up to one GOP interval (typically 1-4 seconds on
+H.264 source). `ffmpeg -ss N -i src -c copy` seeks to the nearest
+keyframe *before* N because it can't re-encode. The output's t=0 then
+maps to source's t=keyframe (not source's t=N), so the clip plays a
+fraction of a second of "lead-in" content before the requested speech.
+
+Captions sliced from the master SRT and shifted to start at segment
+boundary N will then appear **AHEAD of the audio** by exactly that
+GOP fraction. Listeners feel "subtitles lead the voice."
+
+#### Diagnosing
+
+```bash
+# What's the source GOP near segment N?
+ffprobe -v error -select_streams v:0 -read_intervals "$((N-2))%$((N+5))" \
+  -show_entries packet=pts_time,flags -of csv=p=0 master.mp4 | grep "K_"
+```
+
+Output like `360.023,K__   362.023,K__   364.023,K__` → GOP=2s. A
+stream-copy cut requested at 361.000 actually starts at 360.023 →
+**captions are 0.977s ahead of audio**.
+
+#### Fix — pick one
+
+**A. Per-clip SRT offset shim (fastest, retroactive).** After cutting,
+measure the exact offset (`requested_start − nearest_preceding_keyframe`)
+and add it to every cue's `start` / `end` in the per-clip SRT. Works
+for already-cut clips you don't want to re-encode.
+
+**B. Re-cut with accurate seek (slow, correct, per-clip).** Drop
+`-c copy` and let ffmpeg re-encode the cut so it lands precisely:
+
+```bash
+ffmpeg -ss 361.0 -i master.mp4 -t 107.76 \
+  -c:v libx264 -preset medium -crf 18 \
+  -c:a aac -b:a 192k \
+  -force_key_frames "expr:gte(t,n_forced*2)" \
+  clip_01.mp4
+```
+
+Accurate to the frame; ~30s per clip on CPU. Use `segment.py --reencode`
+to force this for all segments.
+
+**C. Pre-encode the master with keyframes at segment boundaries
+(BEST for production).** Before cutting, re-encode the source ONCE
+forcing keyframes at every requested cut point. Then ALL stream-copy
+cuts land exactly:
+
+```bash
+# Build the comma-separated keyframe list from segments.json
+KF=$(python3 -c "import json,sys; s=json.load(open('segments.json'))
+ts=[]
+for seg in s['segments']:
+    ts += [seg['start'], seg['end']]
+print(','.join(ts))")
+
+# Re-encode master once, forcing keyframes at all segment boundaries
+ffmpeg -i master.mp4 \
+  -c:v libx264 -preset medium -crf 18 \
+  -force_key_frames "$KF" \
+  -c:a copy master_kf.mp4
+
+# Now segment.py stream-copies cleanly — every cut lands on a keyframe.
+python3 segment.py --segments segments.json --source master_kf.mp4 --out output/
+```
+
+Trade-off: re-encodes the full source once (slow) but every subsequent
+cut is free. Best when you'll re-cut the same source multiple times
+(iterating on segment boundaries).
+
+**Recommendation:** for one-shot work, use **B** (`--reencode`). For
+iterative work (re-picking segments), use **C** (pre-keyframed master).
+For already-shipped wrong cuts, use **A**.
+
 ## Step 2.5 — Orientation check (ask before continuing)
 
 **Critical decision point — must happen before covers.** Covers are
