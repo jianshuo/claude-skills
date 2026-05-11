@@ -12,6 +12,5 @@ Skills:
 - [`wjs-multicam/`](./wjs-multicam/) — sync multi-camera footage via audio cross-correlation and auto-edit director-style cuts on speaker / silence / motion changes.
 - [`wjs-translate-video/`](./wjs-translate-video/) — end-to-end video localization: transcribe (Whisper) → translate → SRT → optional burn-in → optional time-aligned voice dub (Volcano / edge-tts).
 - [`wjs-video-overlay/`](./wjs-video-overlay/) — layer animated overlays (title cards, callouts, cutaways, lower-thirds) on top of an existing video via a HyperFrames composition.
-- [`wjs-video-split/`](./wjs-video-split/) — randomly split a video into N segments of varying lengths using ffmpeg stream copy (fast + lossless).
 
 Hook source: `~/.claude/skills-publish-hook.sh`
