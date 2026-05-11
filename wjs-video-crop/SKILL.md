@@ -1,11 +1,11 @@
 ---
 name: wjs-video-crop
-description: Use when the user wants to convert a video between horizontal and vertical orientations while preserving the inverted aspect ratio (16:9 ↔ 9:16, 4:3 ↔ 3:4, 21:9 ↔ 9:21). The skill crops a narrow band from the source and tracks detected faces over time so the main speaker stays in frame. Triggers — "横转竖", "竖转横", "做成竖屏发抖音/视频号/小红书", "16:9 to 9:16", "make this vertical for Reels / TikTok / YouTube Shorts", "crop to portrait", "convert to landscape".
+description: Use when the user wants to convert a video between horizontal and vertical orientations while preserving the inverted aspect ratio (16:9 ↔ 9:16, 4:3 ↔ 3:4, 21:9 ↔ 9:21). The skill crops a narrow band from the source and tracks the active speaker — the person whose mouth is moving — via MediaPipe face landmarks and mouth-aspect-ratio variance, so the talker stays in frame even when other people are visible. Triggers — "横转竖", "竖转横", "做成竖屏发抖音/视频号/小红书", "16:9 to 9:16", "make this vertical for Reels / TikTok / YouTube Shorts", "crop to portrait", "convert to landscape".
 ---
 
 # wjs-video-crop
 
-Convert a video's orientation by **cropping** a narrow band from the source — not by physically rotating it. The crop window follows detected faces over time so the active speaker stays in frame. A `.crop.json` sidecar records the crop plan; the original input is never modified.
+Convert a video's orientation by **cropping** a narrow band from the source — not by physically rotating it. The crop window follows the **active speaker** (the face whose mouth is *moving*), not just the largest or most-confident face. A `.crop.json` sidecar records the crop plan, the per-segment speaker decisions, and the parameters used. The original input is never modified.
 
 ## When to use
 
