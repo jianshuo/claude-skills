@@ -140,20 +140,52 @@ If mismatch → **ASK THE USER** before converting. Sample phrasing:
 > 调用 `/wjs-video-crop` 转成竖屏？(crop 会用 MediaPipe 跟踪正在说话
 > 的人的脸，保持说话人始终在画面中)
 
-If the user confirms, run the crop skill on each clip in place:
+If the user confirms, invoke wjs-video-crop on each clip. The crop
+script needs `mediapipe + opencv + numpy` in a Python 3.12 venv
+(mediapipe doesn't yet ship wheels for 3.14+). One-time setup:
 
 ```bash
-# Conceptually — invoke the wjs-video-crop skill per clip.
-# It uses MediaPipe face-tracking to keep the active speaker in frame.
-# The skill replaces clip_NN.mp4 with the vertical version (or writes
-# to a new path; pick one convention and stay consistent so later
-# steps find the right file).
+uv venv --python 3.12 /tmp/_crop_venv
+/tmp/_crop_venv/bin/python -m pip install mediapipe opencv-python numpy
 ```
 
-The wjs-video-crop skill handles the cropping mechanics (active-speaker
-detection via mouth-aspect-ratio variance, smoothed pan, etc.). This
-skill's only job at Step 2.5 is to **gate** the decision and orchestrate
-the call.
+Per-clip invocation (loops over all 5 segments in shell):
+
+```bash
+for n in 01 02 03 04 05; do
+  slug=$(ls clip_${n}_*.mp4 | grep -v -E "_intro|_burned|_vert" | head -1 | sed -E "s/clip_${n}_(.+)\.mp4/\1/")
+  /tmp/_crop_venv/bin/python ~/.claude/skills/wjs-video-crop/scripts/crop.py \
+    "clip_${n}_${slug}.mp4" \
+    --out "clip_${n}_${slug}_vert.mp4" \
+    --target portrait \
+    --bitrate 8M    # 视频号 caps at 10Mbps; 抖音 12Mbps OK
+done
+```
+
+After cropping, **swap the cropped versions to canonical names** so
+downstream make_cover / burn_subs / prepend_intro find them:
+
+```bash
+mkdir -p _horizontal_archive
+for n in 01 02 03 04 05; do
+  base=$(ls clip_${n}_*_vert.mp4 | sed -E "s/_vert\.mp4$//")
+  mv "${base}.mp4" "_horizontal_archive/"          # keep original
+  mv "${base}_vert.mp4" "${base}.mp4"              # promote vertical
+  # Re-extract midpoint frame from the now-vertical clip:
+  mid=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${base}.mp4" | awk '{print $1/2}')
+  slug=$(echo "$base" | sed -E "s/^clip_${n}_//")
+  ffmpeg -hide_banner -loglevel error -ss "$mid" -i "${base}.mp4" \
+    -frames:v 1 -q:v 3 "frame_${n}_${slug}.jpg" -y
+done
+```
+
+**Sanity check** — face-on-screen detection rate in the crop output
+log can read low (e.g. `face#0: 9.6s on screen (9%)`) when speakers
+sit further than ~2 m from the camera. That number being low is OK —
+the active-speaker hysteresis + fallback-to-largest-face still
+produces well-centered crops. **Verify visually by extracting a
+midpoint frame from each `_vert.mp4` and checking the speaker is
+centered** before committing to the swap.
 
 **Skip the prompt only when:**
 - Source aspect already matches target platform.
