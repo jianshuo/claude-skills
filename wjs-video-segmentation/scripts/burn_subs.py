@@ -147,13 +147,18 @@ def burn_one(ffmpeg: str, clip_in: Path, srt: Path, clip_out: Path, style: str):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--segments", required=True)
-    ap.add_argument("--out", required=True)
+    ap = argparse.ArgumentParser(
+        description="Slice + burn subtitles into video. Batch or standalone.",
+    )
+    ap.add_argument("--segments", help="batch mode: path to segments.json")
+    ap.add_argument("--out", required=True,
+                    help="output dir (batch) or output file (standalone)")
+    ap.add_argument("--video", help="standalone mode: single input video")
     ap.add_argument(
         "--srt",
         default=None,
-        help="full-video SRT (default: <source_srt>.burn.srt → <source_srt>)",
+        help="batch: full-video SRT to slice (default: <source_srt>.burn.srt → "
+             "<source_srt>). standalone: the SRT to burn directly (required).",
     )
     ap.add_argument(
         "--style",
@@ -163,9 +168,40 @@ def main():
     ap.add_argument(
         "--no-burn",
         action="store_true",
-        help="only write per-clip SRTs; skip the libx264 burn-in",
+        help="(batch) only write per-clip SRTs; skip the libx264 burn-in",
     )
     args = ap.parse_args()
+
+    standalone = bool(args.video)
+    batch = bool(args.segments)
+    if standalone == batch:
+        sys.exit("pass EITHER --segments (batch) OR --video (standalone)")
+
+    if standalone:
+        if not args.srt:
+            sys.exit("standalone mode needs --srt")
+        ffmpeg = find_ffmpeg_with_libass()
+        if not ffmpeg:
+            sys.exit(
+                "no libass-enabled ffmpeg found. Either:\n"
+                "  - export FFMPEG=/path/to/ffmpeg-with-libass\n"
+                "  - drop a static build to /tmp/ff_bin/ffmpeg "
+                "(e.g. https://evermeet.cx/ffmpeg/getrelease/zip)"
+            )
+        clip_in = Path(args.video).resolve()
+        srt_in = Path(args.srt).resolve()
+        clip_out = Path(args.out).resolve()
+        clip_out.parent.mkdir(parents=True, exist_ok=True)
+        print(f"using ffmpeg: {ffmpeg}", file=sys.stderr)
+        # Run from srt's dir so the relative path in the filtergraph is short.
+        cwd = os.getcwd()
+        os.chdir(srt_in.parent)
+        try:
+            burn_one(ffmpeg, clip_in, Path(srt_in.name), clip_out, args.style)
+        finally:
+            os.chdir(cwd)
+        print(f"  burned → {clip_out.name}", file=sys.stderr)
+        return
 
     seg_path = Path(args.segments).resolve()
     cfg = json.loads(seg_path.read_text(encoding="utf-8"))
