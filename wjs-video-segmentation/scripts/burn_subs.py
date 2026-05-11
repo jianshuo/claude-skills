@@ -1,29 +1,30 @@
-"""Slice the full-video SRT into per-clip SRTs and burn-in to each clip.
+"""Slice + burn subtitles. Two modes.
 
-Reads `segments.json`. For each segment:
-  1. Reads the full-video SRT (default: <source_srt>'s `*.burn.srt`
-     companion if present, else <source_srt>; override with --srt).
-  2. Keeps cues that overlap [start, end], clamps boundaries, and
-     shifts timestamps so the new SRT starts at 00:00:00.000.
-  3. Writes `output/clip_NN_slug.zh-CN.burn.srt`.
-  4. Burns those subtitles into the existing
-     `output/clip_NN_slug.mp4`, producing
-     `output/clip_NN_slug_burned.mp4`.
+BATCH mode (read segments.json):
+  For each segment, slice the full-video SRT to [start, end] (shifting
+  timestamps to start at 0), write `output/clip_NN_slug.zh-CN.burn.srt`,
+  and burn into the existing `output/clip_NN_slug.mp4`.
 
-Step 4 needs an ffmpeg built with libass. The script auto-detects:
+STANDALONE mode (single video + SRT, no segments.json):
+  Burn the given SRT into the given video as-is, no slicing.
+
+Both need ffmpeg with libass. Auto-detects:
   - $FFMPEG env var
   - /tmp/ff_bin/ffmpeg (the path used by translate-video skill)
   - whichever ffmpeg is on PATH, only if its `-filters` output
     advertises `subtitles`/`ass`.
 
-If none has libass and --no-burn was not passed, the script exits
-with a hint to download a static build.
+Exits with a hint if none has libass and --no-burn was not passed.
 
-Usage:
+Usage (batch):
   python3 burn_subs.py --segments segments.json --out output/
   python3 burn_subs.py --segments segments.json --out output/ --srt my.srt
   python3 burn_subs.py --segments segments.json --out output/ --no-burn
   python3 burn_subs.py --segments segments.json --out output/ --style 'Fontsize=22,MarginV=80'
+
+Usage (standalone):
+  python3 burn_subs.py --video in.mp4 --srt in.srt --out out.mp4
+  python3 burn_subs.py --video in.mp4 --srt in.srt --out out.mp4 --style 'Fontsize=22'
 """
 import argparse
 import json
