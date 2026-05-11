@@ -69,7 +69,7 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 5. **Smooth** the face-center track with a moving-average window (default 5 samples).
 6. **Chunk** into fixed-duration windows (default 3 s). Within each chunk, take the mean smoothed face center → one crop center per chunk.
 7. **Build a ffmpeg piecewise-linear expression** that interpolates the crop-window top-left between chunk midpoints. Hard-clamp to source bounds so the crop never falls off-screen.
-8. **Render** one ffmpeg pass — `crop=W:H:x='expr':y='expr':eval=frame, scale=OUT_W:OUT_H`. Audio stream-copied.
+8. **Render** one ffmpeg pass — `crop=W:H:x='expr':y='expr', scale=OUT_W:OUT_H`. The crop filter evaluates `x` and `y` per frame natively, so no `eval` flag is needed. Audio stream-copied.
 
 `scripts/crop.py` is the implementation. Output side effects:
 - `<input>.crop.json` — sidecar with the crop plan
