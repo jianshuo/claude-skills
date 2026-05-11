@@ -47,10 +47,30 @@ def envelope_rms(x, sr=SR, hop_ms=ENV_HOP_MS, win_ms=200):
     return np.log(out + 1e-3), sr / hop
 
 def per_second(env, env_sr, total_sec):
+    """Compute per-second mean envelope in the cam's LOCAL time."""
     n_per = int(env_sr / FRAME_HZ)
     take = (len(env) // n_per) * n_per
     env = env[:take].reshape(-1, n_per).mean(axis=1)
     return env[:total_sec]
+
+
+def per_sec_in_reference(env, env_sr, delta_sec, total_ref_sec):
+    """Lift cam-local envelope into the reference timeline.
+
+    For each reference second t, returns env_local at (t - delta_sec). Times
+    falling outside the cam's recorded range are filled with -inf so they're
+    never picked by the editor's argmax."""
+    n_per = int(env_sr / FRAME_HZ)
+    take = (len(env) // n_per) * n_per
+    local_per_sec = env[:take].reshape(-1, n_per).mean(axis=1)
+    local_dur = len(local_per_sec)
+    out = np.full(total_ref_sec, -np.inf, dtype=np.float32)
+    for t in range(total_ref_sec):
+        t_local_f = t - delta_sec
+        t_local = int(t_local_f)
+        if 0 <= t_local < local_dur:
+            out[t] = local_per_sec[t_local]
+    return out
 
 def read_sidecar(input_path: Path):
     """Read <input>.sync.json. Returns (delta_seconds, overlap_in_reference,
