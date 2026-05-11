@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""wjs-video-rotate — convert video orientation by face-tracked cropping.
+"""wjs-video-crop — convert video orientation by face-tracked cropping.
 
-Output: cropped + scaled MP4, plus a `.rotate.json` sidecar with the crop plan.
+Output: cropped + scaled MP4, plus a `.crop.json` sidecar with the crop plan.
 The original input is never modified.
 
 Usage:
@@ -265,10 +265,10 @@ def main():
     crop_y_expr = build_crop_expr(chunks, "cy", crop_h, src_h)
 
     # Sidecar
-    sidecar = args.input.with_suffix(args.input.suffix + ".rotate.json")
+    sidecar = args.input.with_suffix(args.input.suffix + ".crop.json")
     sidecar.write_text(json.dumps({
         "_about": (
-            f"wjs-video-rotate crop plan for {args.input.name}. "
+            f"wjs-video-crop crop plan for {args.input.name}. "
             "Original file is not modified."
         ),
         "_help": {
