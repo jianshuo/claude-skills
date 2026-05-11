@@ -29,7 +29,7 @@ The output aspect is the source aspect with width and height swapped — 16:9 �
 | Single-face track (the largest face per sampled frame) | Per-speaker independent crops |
 | Smooth pan via ffmpeg piecewise-linear crop expression | Cinematic ease-in/ease-out camera moves |
 | Audio stream-copy (bit-exact) | Audio reprocessing / re-encoding |
-| MediaPipe `face_detection` at 2 fps sampled via ffmpeg | Per-frame neural inpainting / out-painting |
+| MediaPipe Tasks `FaceDetector` (BlazeFace short-range) at 2 fps sampled via ffmpeg | Per-frame neural inpainting / out-painting |
 | One `ffmpeg crop + scale` pass | Frame-by-frame Python compositor |
 
 If you need active-speaker tracking (mic + face fused), it's not in this skill — for now the heuristic is "largest face = main subject".
