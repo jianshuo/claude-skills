@@ -5,7 +5,7 @@ Output: cropped + scaled MP4, plus a `.crop.json` sidecar with the crop plan.
 The original input is never modified.
 
 Usage:
-    python rotate.py INPUT.mp4 \
+    python crop.py INPUT.mp4 \
         [--target auto|portrait|landscape] \
         [--out OUTPUT.mp4] \
         [--sample-fps 2] \
@@ -218,7 +218,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("input", type=Path)
     ap.add_argument("--out", type=Path, default=None,
-                    help="Output path (default: <input>_rotated.mp4)")
+                    help="Output path (default: <input>_cropped.mp4)")
     ap.add_argument("--target", choices=["auto", "portrait", "landscape"], default="auto")
     ap.add_argument("--sample-fps", type=float, default=2.0,
                     help="Face detection sample rate")
@@ -288,7 +288,7 @@ def main():
     }, indent=2, ensure_ascii=False))
     print(f"Sidecar: {sidecar}")
 
-    out_path = args.out or args.input.with_name(f"{args.input.stem}_rotated.mp4")
+    out_path = args.out or args.input.with_name(f"{args.input.stem}_cropped.mp4")
     vf = (
         f"crop={crop_w}:{crop_h}:x='{crop_x_expr}':y='{crop_y_expr}':eval=frame,"
         f"scale={out_w}:{out_h}"
