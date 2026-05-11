@@ -351,7 +351,14 @@ def main():
     edl = edl_from_seq(seq)
 
     plan = {
+        "_about": (
+            "EDL produced by wjs-multicam-edit/autoedit.py. Times are in the "
+            "reference timeline. `deltas[k]` is the per-input offset — render "
+            "scripts apply `ffmpeg -itsoffset deltas[k] -i inputs[k]` so they "
+            "can read original (un-trimmed) files. See wjs-multicam-edit/SKILL.md."
+        ),
         "inputs": [str(p) for p in args.inputs],
+        "deltas": [float(d) for d in deltas],
         "duration_sec": total,
         "audio_source": audio_src,
         "coverage": coverage,
