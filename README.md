@@ -13,5 +13,6 @@ Skills:
 - [`wjs-multicam-edit/`](./wjs-multicam-edit/) — director-style auto-edit of synced multicam footage: hard cuts, virtual close-ups via crop-zoom, picture-in-picture. Consumes the sidecars produced by `wjs-multicam-sync`.
 - [`wjs-translate-video/`](./wjs-translate-video/) — end-to-end video localization: transcribe (Whisper) → translate → SRT → optional burn-in → optional time-aligned voice dub (Volcano / edge-tts).
 - [`wjs-video-overlay/`](./wjs-video-overlay/) — layer animated overlays (title cards, callouts, cutaways, lower-thirds) on top of an existing video via a HyperFrames composition.
+- [`wjs-video-rotate/`](./wjs-video-rotate/) — convert a video between horizontal and vertical orientations by face-tracked cropping (16:9 ↔ 9:16, 4:3 ↔ 3:4). Uses MediaPipe to follow the speaker; ffmpeg piecewise-linear crop expression for smooth panning.
 
 Hook source: `~/.claude/skills-publish-hook.sh`
