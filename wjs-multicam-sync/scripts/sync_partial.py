@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 """Sync a partial-coverage source (e.g. a Riverside recording, a phone audio
-recorder, a clip that started mid-session) to an existing reference camera
-already on the common timeline.
+recorder, a clip that started mid-session) to a reference camera that defines
+the common timeline.
 
-Output is a file with the same duration as the reference, with leading
-black+silence padding so the new source can drop into the multicam set as
-another timeline-aligned input. Original input is not modified.
+Output: ONE `.sync.json` sidecar next to the new source. No video / audio is
+re-encoded; the original input is left untouched. Downstream tools apply
+`ffmpeg -itsoffset delta_seconds` at consume time.
 
 Usage:
-    python sync_partial.py REF_SYNCED.mov NEW_INPUT.mp4 [--out NAME] \
-        [--video|--audio-only] [--encoder hevc_videotoolbox] [--bitrate 8M]
+    python sync_partial.py REFERENCE.MOV NEW_INPUT.mp4
 """
-import argparse, json, subprocess, tempfile
+import argparse, json, subprocess, sys, tempfile
 from pathlib import Path
 
 import numpy as np
 from scipy import signal
 
 SR = 8000
+SCHEMA_VERSION = 1
+
 
 def extract(video, dst):
     subprocess.run(["ffmpeg", "-nostdin", "-y", "-i", str(video),
                     "-map", "0:a:0", "-ac", "1", "-ar", str(SR),
                     "-f", "s16le", str(dst)], check=True, stderr=subprocess.DEVNULL)
+
 
 def envelope(x, sr=SR, hop_ms=10, win_ms=50):
     hop = int(sr * hop_ms / 1000); win = int(sr * win_ms / 1000)
@@ -35,35 +37,33 @@ def envelope(x, sr=SR, hop_ms=10, win_ms=50):
         out[i] = np.sqrt(max(1e-9, (csq[s+win] - csq[s]) / win))
     return out, sr / hop
 
+
 def hp(x, fs, cut=0.05):
     sos = signal.butter(2, cut, btype="high", fs=fs, output="sos")
     return signal.sosfiltfilt(sos, x).astype(np.float32)
+
 
 def norm(x):
     x = x - x.mean(); s = x.std()
     return x/s if s > 0 else x
 
+
 def media_dur(p):
-    out = subprocess.run(["ffprobe","-v","error","-show_entries","format=duration",
-                          "-of","default=nw=1:nk=1", str(p)], check=True,
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                          "-of", "default=nw=1:nk=1", str(p)], check=True,
                          capture_output=True, text=True)
     return float(out.stdout.strip())
 
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("reference", type=Path, help="Already-synced reference camera (sets the timeline)")
-    ap.add_argument("new", type=Path, help="New source to align")
-    ap.add_argument("--out", type=Path, default=None, help="Output path (default: <new_stem>_synced.mp4)")
-    ap.add_argument("--encoder", default="hevc_videotoolbox")
-    ap.add_argument("--bitrate", default="8M")
-    ap.add_argument("--audio-only", action="store_true",
-                    help="Skip video; produce a .m4a synced to the reference timeline")
-    ap.add_argument("--width", type=int, default=1920)
-    ap.add_argument("--height", type=int, default=1080)
-    ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("reference", type=Path,
+                    help="Reference recording (defines the common timeline). "
+                         "Usually one of the main cameras.")
+    ap.add_argument("new", type=Path,
+                    help="New source to align. Can cover only part of the reference's span.")
     args = ap.parse_args()
 
-    out = args.out or args.new.with_name(f"{args.new.stem}_synced{'.m4a' if args.audio_only else '.mp4'}")
     ref_dur = media_dur(args.reference)
     new_dur = media_dur(args.new)
     print(f"Reference: {args.reference.name}  {ref_dur:.3f}s")
@@ -83,13 +83,13 @@ def main():
         xc = signal.correlate(norm(env_a), norm(env_r), mode="full", method="fft")
         lags = np.arange(len(xc)) - (len(env_r) - 1)
         pk = int(np.argmax(xc))
-        coarse = lags[pk] / esr
-        ncoef = xc[pk] / len(env_r)
+        coarse = float(lags[pk] / esr)
+        ncoef = float(xc[pk] / len(env_r))
         print(f"Coarse offset: {coarse:.4f}s (xc/N={ncoef:.3f})")
         if abs(ncoef) < 0.3:
-            print(f"WARNING: low correlation; sync may be wrong")
+            print("WARNING: low correlation; sync may be unreliable", file=sys.stderr)
 
-        # multi-probe refinement
+        # Multi-probe refinement
         def refine(b_start, expected, probe_len=60.0, pad=1.5):
             pl = int(probe_len * SR); bs = int(b_start * SR)
             if bs + pl > len(r): return None
@@ -104,12 +104,12 @@ def main():
             pk = int(np.argmax(np.abs(xc)))
             val = xc[pk] / len(probe)
             if 0 < pk < len(xc) - 1:
-                y0,y1,y2 = xc[pk-1], xc[pk], xc[pk+1]
+                y0, y1, y2 = xc[pk-1], xc[pk], xc[pk+1]
                 d = y0 - 2*y1 + y2
-                sub = 0.5*(y0-y2)/d if abs(d) > 1e-9 else 0.0
+                sub = 0.5 * (y0 - y2) / d if abs(d) > 1e-9 else 0.0
             else:
                 sub = 0.0
-            return (lo + pk + sub)/SR - b_start, val
+            return (lo + pk + sub) / SR - b_start, val
 
         probes = []
         for bs in np.arange(60.0, new_dur - 60.0, 180.0):
@@ -117,92 +117,77 @@ def main():
             if res:
                 probes.append((bs, res[0], res[1]))
 
+        drift_slope = 0.0
         if probes:
             arr = np.array(probes)
-            good = np.abs(arr[:,2]) > 0.05
+            good = np.abs(arr[:, 2]) > 0.05
             if good.sum() >= 3:
-                slope, intercept = np.polyfit(arr[good,0], arr[good,1], 1)
+                slope, intercept = np.polyfit(arr[good, 0], arr[good, 1], 1)
                 midpoint = new_dur / 2
                 delta = float(slope * midpoint + intercept)
+                drift_slope = float(slope)
                 drift_ms = float(slope * new_dur * 1000)
                 print(f"Drift: {drift_ms:+.2f} ms over {new_dur:.0f}s")
             else:
-                delta = float(np.median(arr[:,1]))
+                delta = float(np.median(arr[:, 1]))
         else:
             delta = float(coarse)
         print(f"Chosen delta: {delta:.4f}s (= start of new in reference timeline)")
 
-    # Compute trim and pad
-    pre_pad = max(0.0, delta)
-    in_start = max(0.0, -delta)
-    avail = new_dur - in_start
-    out_avail = ref_dur - pre_pad
-    use_dur = min(avail, out_avail)
-    post_pad = ref_dur - pre_pad - use_dur
-    in_end = in_start + use_dur
-    print(f"\nPlan:")
-    print(f"  Pre-pad black/silence: {pre_pad:.3f}s")
-    print(f"  Use new[{in_start:.3f} .. {in_end:.3f}]  ({use_dur:.3f}s)")
-    print(f"  Post-pad: {post_pad:.3f}s")
-    print(f"  Output total: {ref_dur:.3f}s")
+    # Overlap window in reference timeline
+    overlap_ref_start = max(0.0, delta)
+    overlap_ref_end = min(ref_dur, delta + new_dur)
+    overlap_src_start = overlap_ref_start - delta
+    overlap_src_end = overlap_ref_end - delta
+    overlap_dur = overlap_ref_end - overlap_ref_start
 
-    # ffmpeg with tpad for video + adelay for audio
-    # adelay accepts ms; pre_pad in ms
-    pre_ms = int(round(pre_pad * 1000))
+    print(f"\nCoverage (reference timeline): "
+          f"[{overlap_ref_start:.3f} .. {overlap_ref_end:.3f}]s  ({overlap_dur:.3f}s)")
+    print(f"Coverage (source timeline):    "
+          f"[{overlap_src_start:.3f} .. {overlap_src_end:.3f}]s")
 
-    if args.audio_only:
-        af = (
-            f"[0:a]atrim=start={in_start}:end={in_end},asetpts=PTS-STARTPTS,"
-            f"aresample=48000"
-            + (f",adelay={pre_ms}" if pre_ms > 0 else "")
-            + (f",apad=pad_dur={post_pad}" if post_pad > 0.01 else "")
-            + "[a]"
-        )
-        cmd = ["ffmpeg","-nostdin","-y","-i", str(args.new),
-               "-filter_complex", af, "-map","[a]",
-               "-t", f"{ref_dur}",
-               "-c:a","aac","-b:a","192k","-movflags","+faststart",
-               str(out)]
-    else:
-        W, H, fps = args.width, args.height, args.fps
-        vf = (
-            f"[0:v]trim=start={in_start}:end={in_end},setpts=PTS-STARTPTS,"
-            f"fps={fps},scale={W}:{H}:force_original_aspect_ratio=decrease,"
-            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2,setsar=1"
-            + (f",tpad=start_duration={pre_pad}:color=black" if pre_pad > 0.01 else "")
-            + (f",tpad=stop_duration={post_pad}:color=black" if post_pad > 0.01 else "")
-            + "[v]"
-        )
-        af = (
-            f"[0:a]atrim=start={in_start}:end={in_end},asetpts=PTS-STARTPTS,"
-            f"aresample=48000"
-            + (f",adelay={pre_ms}" if pre_ms > 0 else "")
-            + (f",apad=pad_dur={post_pad}" if post_pad > 0.01 else "")
-            + "[a]"
-        )
-        cmd = ["ffmpeg","-nostdin","-y","-i", str(args.new),
-               "-filter_complex", f"{vf};{af}",
-               "-map","[v]","-map","[a]",
-               "-t", f"{ref_dur}",
-               "-c:v", args.encoder, "-b:v", args.bitrate, "-tag:v","hvc1",
-               "-c:a","aac","-b:a","192k","-movflags","+faststart",
-               str(out)]
+    if overlap_dur < 1.0:
+        print("ERROR: overlap window <1s. Reference and source barely share content.",
+              file=sys.stderr)
+        sys.exit(1)
 
-    sidecar = out.with_suffix(out.suffix + ".sync.json")
-    sidecar.write_text(json.dumps({
-        "reference": str(args.reference),
-        "input": str(args.new),
-        "output": str(out),
-        "delta_seconds": delta,
-        "pre_pad_seconds": pre_pad,
-        "input_trim_start": in_start,
-        "input_trim_end": in_end,
-        "post_pad_seconds": post_pad,
-    }, indent=2))
-    print(f"Sidecar metadata: {sidecar}")
-    print("Running ffmpeg...")
-    subprocess.run(cmd, check=True)
-    print(f"Done: {out}")
+    sidecar = args.new.with_suffix(args.new.suffix + ".sync.json")
+    sc = {
+        "_about": (
+            f"Sync metadata for {args.new.name} (aligned to {args.reference.name}). "
+            "Generated by wjs-multicam-sync/sync_partial.py for a partial-coverage source. "
+            "Original is not modified; downstream uses ffmpeg -itsoffset delta_seconds."
+        ),
+        "_help": {
+            "delta_seconds": (
+                "Source's t=0 in reference's timeline. Positive => source starts AFTER "
+                "reference (common for late-arriving / mid-session recordings)."
+            ),
+            "drift_slope": "Clock drift slope; usually 0 for short partial recordings.",
+            "overlap_in_reference": (
+                "[start, end] in reference timeline where this source has content. "
+                "Outside this window, fall back to other cameras."
+            ),
+            "overlap_in_source": (
+                "Same window in the source's local timeline."
+            ),
+            "verification": (
+                "Filled in by verify.py: median_residual_ms, residual_spread_ms, probe_count."
+            ),
+        },
+        "schema_version": SCHEMA_VERSION,
+        "source": args.new.name,
+        "reference": args.reference.name,
+        "delta_seconds": float(delta),
+        "drift_slope": drift_slope,
+        "overlap_in_reference": [float(overlap_ref_start), float(overlap_ref_end)],
+        "overlap_in_source": [float(overlap_src_start), float(overlap_src_end)],
+        "verification": None,
+    }
+    sidecar.write_text(json.dumps(sc, indent=2, ensure_ascii=False))
+    print(f"\nWrote sidecar: {sidecar}")
+    print("Original input untouched. No video / audio encoded.")
+
 
 if __name__ == "__main__":
     main()
