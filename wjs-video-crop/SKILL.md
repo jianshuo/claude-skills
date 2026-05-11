@@ -67,9 +67,9 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 7. **Build a ffmpeg piecewise-linear expression** that interpolates the crop-window top-left between chunk midpoints. Hard-clamp to source bounds so the crop never falls off-screen.
 8. **Render** one ffmpeg pass — `crop=W:H:x='expr':y='expr':eval=frame, scale=OUT_W:OUT_H`. Audio stream-copied.
 
-`scripts/rotate.py` is the implementation. Output side effects:
+`scripts/crop.py` is the implementation. Output side effects:
 - `<input>.crop.json` — sidecar with the crop plan
-- `<input>_rotated.mp4` — final cropped + scaled video
+- `<input>_cropped.mp4` — final cropped + scaled video
 
 ## Sidecar schema (`<input>.crop.json`)
 
