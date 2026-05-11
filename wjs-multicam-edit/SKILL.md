@@ -9,9 +9,11 @@ Take N synced camera angles and emit a single render that switches between them 
 
 ## REQUIRED INPUT
 
-`*_synced.MOV` files on a common timeline. If sources aren't synced yet, run **wjs-multicam-sync** first — this skill assumes the work is done.
+**Original camera files (untouched) plus their `.sync.json` sidecars next to them.** No `_synced.MOV` files are needed — and aren't produced anywhere in the pipeline anymore. If sources aren't synced yet, run **wjs-multicam-sync** first to write the sidecars.
 
-Per-camera coverage is auto-detected from `<input>.sync.json` sidecars (from `sync_partial.py`); missing sidecar = full coverage assumed.
+Each input must have a `<input>.sync.json` next to it (written by wjs-multicam-sync). The sidecar carries `delta_seconds` (how this cam's t=0 maps into the reference timeline) and `overlap_in_reference` (this cam's coverage window). `autoedit.py` reads sidecars automatically and shifts each cam's envelope into reference time before scoring. `render_cuts.py` / `render_pip.py` read the EDL's `deltas[]` array and apply `ffmpeg -itsoffset` per input.
+
+Missing sidecar = cam assumed at delta=0, full coverage (backward-compat for single-source jobs).
 
 ## When NOT to use
 
