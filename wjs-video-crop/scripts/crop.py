@@ -97,9 +97,10 @@ def default_output_size(target):
 # --- face detection ---
 
 def detect_faces(input_path: Path, sample_fps: float):
-    """Sample frames via ffmpeg at sample_fps, run MediaPipe face_detection,
-    return [(t_seconds, norm_x, norm_y, norm_size)] for the largest face per
-    frame (skipped if no face detected)."""
+    """Sample frames via ffmpeg at sample_fps, run MediaPipe Tasks
+    FaceDetector, return [(t_seconds, norm_x, norm_y, norm_size)] for the
+    largest face per frame (skipped if no face detected)."""
+    model_path = ensure_face_model()
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
         # ffmpeg extracts JPEGs at sample_fps — much faster than decoding
@@ -111,33 +112,34 @@ def detect_faces(input_path: Path, sample_fps: float):
             check=True, stderr=subprocess.DEVNULL,
         )
         frames = sorted(td.glob("f_*.jpg"))
-        mp_fd = mp.solutions.face_detection.FaceDetection(
-            model_selection=1, min_detection_confidence=0.5,
-        )
+        base_opts = mp_python.BaseOptions(model_asset_path=str(model_path))
+        options = mp_vision.FaceDetectorOptions(base_options=base_opts)
+        detector = mp_vision.FaceDetector.create_from_options(options)
         samples = []
         for i, fp in enumerate(frames):
             t = i / sample_fps
             img = cv2.imread(str(fp))
             if img is None:
                 continue
+            h, w = img.shape[:2]
             rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            res = mp_fd.process(rgb)
-            if not res.detections:
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+            result = detector.detect(mp_image)
+            if not result.detections:
                 continue
-            # Largest face = closest to camera = main subject (heuristic)
+            # Largest face = closest to camera = main subject (heuristic).
+            # In the Tasks API the bounding_box is in PIXELS, unlike the
+            # legacy Solutions API which used normalized [0,1] coords.
             best = max(
-                res.detections,
-                key=lambda d: (
-                    d.location_data.relative_bounding_box.width
-                    * d.location_data.relative_bounding_box.height
-                ),
+                result.detections,
+                key=lambda d: d.bounding_box.width * d.bounding_box.height,
             )
-            box = best.location_data.relative_bounding_box
-            cx = box.xmin + box.width / 2
-            cy = box.ymin + box.height / 2
-            size = math.sqrt(max(0.0, box.width * box.height))
+            bb = best.bounding_box
+            cx = (bb.origin_x + bb.width / 2) / w
+            cy = (bb.origin_y + bb.height / 2) / h
+            size = math.sqrt(max(0.0, (bb.width / w) * (bb.height / h)))
             samples.append((t, cx, cy, size))
-        mp_fd.close()
+        detector.close()
     return samples
 
 
