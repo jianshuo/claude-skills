@@ -191,29 +191,70 @@ r.raise_for_status()
 words = r.json()["words"]   # [{"word": "你好", "start": 0.12, "end": 0.34}, ...]
 ```
 
-##### Assembling cues from words
+##### Assembling cues from words + segments
+
+**Surprise discovered the hard way:** Whisper's `words[]` array
+typically has **no punctuation** in `word["word"]` — each entry is
+a bare token like `"做"`, `"个"`, `"测"`, `"试"`. Punctuation, when
+present, lives only in `segments[]` `text` field.
+
+Worse, `segments[]` text is **inconsistently punctuated** across
+chunks: chunk 0 of a 79-min podcast might emit 285 bare segments
+("做个测试" "你在" "呵呵") at 1-2s each with no punctuation; chunk 7
+might emit 34 segments at 14-30s each *with* punctuation
+("前提下面把工作全换成AI,它至少在这个AI浪潮里面,公司和个人,..."). Both behaviors
+ship in the same API response.
+
+So the right recipe combines both data sources:
 
 ```python
-# 3. Group words into cues. Flush at punctuation OR length cap.
-CHINESE_PUNCT = set("，。！？；：、——,.;:!?")
-MAX_DUR = 7.0     # seconds — longer than this hurts on-screen reading
-MIN_DUR = 1.0     # seconds — shorter than this feels choppy
-MAX_GAP = 1.5     # silence between words → force flush
-cues, buf = [], []
-def flush():
-    if not buf: return
-    cues.append((buf[0]["start"], buf[-1]["end"],
-                 "".join(w["word"] for w in buf)))
-    buf.clear()
-for i, w in enumerate(words):
-    buf.append(w)
-    cur_dur = buf[-1]["end"] - buf[0]["start"]
-    gap = (words[i+1]["start"] - w["end"]) if i+1 < len(words) else 0
-    ends_in_punct = any(p in w["word"] for p in CHINESE_PUNCT)
-    if (ends_in_punct and cur_dur >= MIN_DUR) or cur_dur >= MAX_DUR or gap >= MAX_GAP:
-        flush()
-flush()
+TARGET_DUR = 3.0   # try to make cues this long
+MAX_CUE_DUR = 5.0  # never exceed
+MAX_CHARS = 18     # ~one line at Fontsize 14 on 1080-wide vertical
+MAX_GAP = 1.0      # silence threshold → force cue boundary
+MIN_PIECE = 0.3    # below this, merge with neighbor
+SPLIT_PUNCT = set("，。！？；,.;!?")
+
+# Step A: merge short segments[] toward TARGET_DUR (use segments,
+#         not words — Whisper's segment boundaries are already
+#         pause-aligned).
+def assemble(segments, offset):
+    cues, buf = [], []
+    def flush():
+        if buf:
+            cues.append((buf[0]["start"]+offset, buf[-1]["end"]+offset,
+                         "".join(s["text"].strip() for s in buf)))
+            buf.clear()
+    for s in segments:
+        dur = s["end"] - s["start"]
+        # Long single segment WITH internal punct → split standalone
+        if dur > MAX_CUE_DUR and any(c in s["text"] for c in SPLIT_PUNCT):
+            flush(); cues.extend(split_long_segment(s, offset)); continue
+        if not buf: buf.append(s); continue
+        if (s["start"] - buf[-1]["end"]) >= MAX_GAP \
+           or (buf[-1]["end"] - buf[0]["start"]) >= TARGET_DUR \
+           or (s["end"] - buf[0]["start"]) > MAX_CUE_DUR:
+            flush()
+        buf.append(s)
+    flush(); return cues
+
+# Step B: final pass — split every internal comma/period to its own cue
+#         (proportional timestamps by char position). Coalesce pieces
+#         shorter than MIN_PIECE forward.
+
+# Step C: any cue still > MAX_CHARS gets split at the largest inter-word
+#         gap using words[] timestamps. Recursive until under cap.
 ```
+
+The reference implementation in `~/.claude/skills/wjs-translate-video/scripts/`
+(if it exists) follows this exact recipe. Tweak `TARGET_DUR` and
+`MAX_CHARS` to your platform's reading rhythm.
+
+**Why this matters for burned subtitles.** On vertical 1080×1920
+at `Fontsize=14`, ~13-14 Chinese characters fit on one line. A cue
+text of 30+ characters will overflow the frame width or wrap to
+multiple unreadable lines. Capping at 18 keeps cues to 1-2 visible
+lines maximum.
 
 ##### Operational details
 
