@@ -312,8 +312,9 @@ def main():
     print(f"Sidecar: {sidecar}")
 
     out_path = args.out or args.input.with_name(f"{args.input.stem}_cropped.mp4")
+    # crop filter evaluates x/y expressions per frame natively — no eval flag.
     vf = (
-        f"crop={crop_w}:{crop_h}:x='{crop_x_expr}':y='{crop_y_expr}':eval=frame,"
+        f"crop={crop_w}:{crop_h}:x='{crop_x_expr}':y='{crop_y_expr}',"
         f"scale={out_w}:{out_h}"
     )
     cmd = [
