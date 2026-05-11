@@ -252,6 +252,22 @@ def main():
     args = ap.parse_args()
 
     K = len(args.inputs)
+
+    # Pre-read all sidecars so we know per-cam deltas + coverage in ref time.
+    deltas = []
+    cov_from_sc = []
+    has_sidecars = []
+    for p in args.inputs:
+        d, ovl, has = read_sidecar(p)
+        deltas.append(d)
+        cov_from_sc.append(ovl)
+        has_sidecars.append(has)
+    missing = [p.name for p, h in zip(args.inputs, has_sidecars) if not h]
+    if missing:
+        print(f"WARN: no sidecar for {missing}; assuming delta=0, full coverage. "
+              "Run wjs-multicam-sync first if you expected these to be offset.")
+
+    # Extract per-cam audio (LOCAL time) and compute LOCAL envelopes.
     durations = []
     envs = []
     with tempfile.TemporaryDirectory() as td:
@@ -264,12 +280,20 @@ def main():
             durations.append(len(x) / SR)
             envs.append((env, esr))
 
-    total = int(min(durations))
-    per_sec = np.zeros((total, K), dtype=np.float32)
-    for k, (env, esr) in enumerate(envs):
-        per_sec[:, k] = per_second(env, esr, total)
+    # Total in REFERENCE timeline = max(coverage end across cams). If no
+    # sidecars at all, falls back to min(durations) (everyone-shares-clock).
+    cov_ends = [ovl[1] for ovl in cov_from_sc if ovl is not None]
+    if cov_ends:
+        total = int(max(cov_ends))
+    else:
+        total = int(min(durations))
 
-    # Coverage: from sidecar by default, CLI override
+    # Lift each cam's envelope into reference timeline using its delta.
+    per_sec = np.full((total, K), -np.inf, dtype=np.float32)
+    for k, (env, esr) in enumerate(envs):
+        per_sec[:, k] = per_sec_in_reference(env, esr, deltas[k], total)
+
+    # Coverage in reference timeline: from sidecar if present, CLI override below
     coverage = [coverage_from_sidecar(p, total) for p in args.inputs]
     if args.coverage:
         cov_overrides = parse_coverage_flag(args.coverage, K, total)
