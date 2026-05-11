@@ -72,8 +72,8 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 5. **Track faces** across frames by center-distance matching → each face gets a stable `face_id`.
 6. **Per-sample active speaker**: for each face track, variance of MAR over a sliding window (`--mar-var-window-sec`, default 1 s). The face with the highest variance is "speaking". Below `--mar-var-threshold`, no one is speaking → fall back to largest face.
 7. **Hysteresis**: a candidate switch only commits if the new speaker is stable for `--min-segment-sec` (default 1.5 s). Shorter flickers are squashed — prevents the crop from ping-ponging on a one-frame mis-detection.
-8. **Speaker-aligned segments** → for each segment, mean (cx, cy) of that speaker's face over the segment becomes the crop center.
-9. **Build a ffmpeg piecewise-linear expression** that interpolates the crop-window top-left between segment midpoints. Hard-clamp to source bounds.
+8. **Speaker-aligned segments** → for each segment, mean (cx, cy) of that speaker's face over the segment becomes the crop center, *fixed* for the full duration of the segment.
+9. **Build a ffmpeg step-function expression** (`--motion cut`, default) that holds each segment's crop position constant and **jumps instantly at each segment boundary** — the visual feel of a real cut between camera angles. (`--motion smooth` switches to piecewise-linear pan between segment midpoints; rarely the right call for talking-head content because the camera appears to drift mid-sentence.)
 10. **Render** one ffmpeg pass — `crop=W:H:x='expr':y='expr', scale=OUT_W:OUT_H`. The crop filter evaluates `x` and `y` per frame natively. Audio stream-copied.
 
 `scripts/crop.py` is the implementation. Output side effects:
