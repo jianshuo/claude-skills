@@ -42,14 +42,25 @@ segments.json
 clip_NN.mp4 + frame_NN.jpg
    ↓     ASK: target platform orientation match source?
    ↓     /wjs-video-crop on each clip (if 16:9 → 9:16, etc.)
-clip_NN.mp4    (now in target orientation)
-   ↓     make_cover.py: gpt-image-2 generates cover (title baked in)
+   ↓     re-extract frames from cropped clips
+clip_NN.mp4 + frame_NN.jpg    (now in target orientation)
+   ↓     make_cover.py: gpt-image-2 generates cover
+   ↓     --size MUST match clip aspect (vertical → 1024x1536)
 cover_NN.png   (matches clip aspect)
+   ↓     burn_subs.py:  slice SRT + libass burn-in (SLOW — re-encodes body)
+clip_NN_burned.mp4
    ↓     prepend_intro.py: prepend cover as 1.5s title-card
-clip_NN_intro.mp4
-   ↓     burn_subs.py:  slice SRT + libass burn-in
+   ↓     fast path: concat-demuxer + stream-copy (~1s per clip)
 clip_NN_burned_intro.mp4    ← upload this
 ```
+
+**Order matters: burn FIRST, prepend LAST.** Burning libass subs into
+video requires re-encoding every frame of the body — unavoidable. But
+prepending the cover doesn't have to re-encode the body if the
+1.5-second cover-clip is encoded to match the body's codec exactly;
+then `ffmpeg -f concat -c copy` stitches them losslessly in seconds.
+Prepending first means burn re-encodes the prepended output anyway,
+wasting that stream-copy savings.
 
 ## Step 1 — Agent reads SRT, writes `segments.json`
 
