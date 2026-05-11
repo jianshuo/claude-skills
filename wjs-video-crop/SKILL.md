@@ -67,12 +67,14 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 
 1. **Probe** input dimensions, fps, duration via ffprobe.
 2. **Decide orientation** — auto from aspect (`--target portrait|landscape` to override).
-3. **Sample frames at 2 fps** by piping ffmpeg's `fps=2` filter to a temp directory of JPEGs.
-4. **Face detect** each sampled frame with MediaPipe Tasks `FaceDetector` (BlazeFace short-range model). Pick the largest face (closest to camera) per frame.
-5. **Smooth** the face-center track with a moving-average window (default 5 samples).
-6. **Chunk** into fixed-duration windows (default 3 s). Within each chunk, take the mean smoothed face center → one crop center per chunk.
-7. **Build a ffmpeg piecewise-linear expression** that interpolates the crop-window top-left between chunk midpoints. Hard-clamp to source bounds so the crop never falls off-screen.
-8. **Render** one ffmpeg pass — `crop=W:H:x='expr':y='expr', scale=OUT_W:OUT_H`. The crop filter evaluates `x` and `y` per frame natively, so no `eval` flag is needed. Audio stream-copied.
+3. **Sample frames at `--sample-fps`** (default 5; high enough to catch mouth motion — Nyquist for speech is ~10 Hz, we need at least 4–5 fps).
+4. **Detect face landmarks** per sampled frame with MediaPipe Tasks `FaceLandmarker` (478 landmarks). For each detected face record: center, size proxy, MAR (mouth-aspect-ratio = inner-lip vertical distance / horizontal mouth-corner distance).
+5. **Track faces** across frames by center-distance matching → each face gets a stable `face_id`.
+6. **Per-sample active speaker**: for each face track, variance of MAR over a sliding window (`--mar-var-window-sec`, default 1 s). The face with the highest variance is "speaking". Below `--mar-var-threshold`, no one is speaking → fall back to largest face.
+7. **Hysteresis**: a candidate switch only commits if the new speaker is stable for `--min-segment-sec` (default 1.5 s). Shorter flickers are squashed — prevents the crop from ping-ponging on a one-frame mis-detection.
+8. **Speaker-aligned segments** → for each segment, mean (cx, cy) of that speaker's face over the segment becomes the crop center.
+9. **Build a ffmpeg piecewise-linear expression** that interpolates the crop-window top-left between segment midpoints. Hard-clamp to source bounds.
+10. **Render** one ffmpeg pass — `crop=W:H:x='expr':y='expr', scale=OUT_W:OUT_H`. The crop filter evaluates `x` and `y` per frame natively. Audio stream-copied.
 
 `scripts/crop.py` is the implementation. Output side effects:
 - `<input>.crop.json` — sidecar with the crop plan
