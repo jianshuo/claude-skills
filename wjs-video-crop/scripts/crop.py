@@ -24,8 +24,29 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 import numpy as np
+from mediapipe.tasks import python as mp_python
+from mediapipe.tasks.python import vision as mp_vision
 
 SCHEMA_VERSION = 1
+
+# MediaPipe 0.10+ ships only the Tasks API; the legacy `mp.solutions` namespace
+# is gone. The Tasks API needs a downloadable model file (~200 KB), cached in
+# the skill dir so subsequent runs are offline.
+MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/face_detector/"
+    "blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+)
+MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "blaze_face_short_range.tflite"
+
+
+def ensure_face_model() -> Path:
+    if MODEL_PATH.exists():
+        return MODEL_PATH
+    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading face detector model -> {MODEL_PATH}")
+    import urllib.request
+    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+    return MODEL_PATH
 
 
 # --- input probing ---
