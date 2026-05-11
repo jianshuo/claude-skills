@@ -77,6 +77,7 @@ def main():
 
     plan = json.loads(args.edl.read_text())
     inputs = plan["inputs"]
+    deltas = plan.get("deltas", [0.0] * len(inputs))
     edl = plan["edl"]
     audio_src = plan["audio_source"]
     K = len(inputs)
