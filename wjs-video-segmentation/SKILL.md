@@ -321,6 +321,10 @@ prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4 [--duration 1.5]
 - **Pre-generating all covers before showing the user one** — taste is iterative. Always preview segment 1.
 - **Re-encoding when stream-copy works** — segment.py detects black-opening-frame cases automatically; trust the fallback.
 - **Skipping the orientation check (Step 2.5)** — generating a 16:9 cover and burning subs onto a 16:9 clip, only to later realize 视频号/抖音 needs 9:16, means redoing covers/intro/burn from scratch. Always probe source aspect and ask the user *before* covers.
+- **Forgetting `--size 1024x1536` for vertical covers** — make_cover.py defaults to 16:9 (1536×1024) regardless of clip aspect. Pass the matching size or the cover gets letterboxed in the 1.5s title card.
+- **Forgetting vertical `--style` for burn** — using the horizontal default `Fontsize=18` on a 1080×1920 clip produces oversized subtitles that overflow the frame. Use `Fontsize=14,MarginL=20,MarginR=20,MarginV=200` for vertical.
+- **Prepending intro BEFORE burning subs** — the burn step then re-encodes the prepended output and wastes the prepend's potential stream-copy. Always burn first, prepend last.
+- **Force-re-encoding prepend by default** — the script's fast path is concat-demuxer + stream-copy and should hit `[stream-copy]` for almost all clips. If you see `[re-encoded]` in the output, your body has unusual codec params; investigate rather than just accepting the slow path.
 
 ## Integration with other wjs- skills
 
