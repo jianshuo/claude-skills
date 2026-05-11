@@ -225,21 +225,7 @@ batch still completes. Retry the failed segment with `--single N`.
 
 **Pillow fallback** (`compose_cover.py`) — use when gpt-image-2 is unavailable OR its Chinese typography is unacceptable. Produces a vertical 4:5 thumbnail from frame + text overlay. Per-platform dimensions in `references/platform_sizes.md`.
 
-## Step 4 — Prepend cover as title-card intro
-
-```bash
-python3 ~/.claude/skills/wjs-video-segmentation/scripts/prepend_intro.py \
-    --segments segments.json --out output/
-```
-
-Inserts the cover as a 1.5s still in front of each clip (silent audio during the still, clip audio starts cleanly). Result: the cover IS the literal first frame of the video, so platforms that auto-pick the first frame as the thumbnail get your designed cover by default.
-
-**Standalone mode** (no segments.json needed):
-```bash
-prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4 [--duration 1.5]
-```
-
-## Step 5 — Slice + burn subtitles
+## Step 4 — Slice + burn subtitles (BEFORE prepend)
 
 ```bash
 python3 ~/.claude/skills/wjs-video-segmentation/scripts/burn_subs.py \
@@ -248,11 +234,62 @@ python3 ~/.claude/skills/wjs-video-segmentation/scripts/burn_subs.py \
 
 For each segment: clamp full SRT to `[start, end]`, shift timestamps to start at 0, burn into the clip via libass. Auto-detects ffmpeg with libass (`$FFMPEG` → `/tmp/ff_bin/ffmpeg` → `which ffmpeg`); exits with a hint if none has libass.
 
-`--no-burn` writes only the per-clip SRTs (for editing in Final Cut Pro / Premiere). Default style: `Fontsize=18,MarginV=60`. Override via `--style 'Fontsize=22,MarginV=80'` (commas auto-escaped).
+Burn is **unavoidably slow** — libass writes pixels into every frame,
+so the whole body re-encodes. ~30-60s per 2-min clip on CPU. Run
+prepend AFTER this so prepend can stream-copy.
+
+`--no-burn` writes only the per-clip SRTs (for editing in Final Cut Pro / Premiere).
+
+**Style — match font scale to clip orientation.** libass scales
+`Fontsize` linearly with frame height (PlayResY default 288), so the
+same Fontsize renders much larger on 1920-tall vertical than on
+1080-tall horizontal.
+
+| Clip aspect       | Recommended `--style`                                          |
+|-------------------|----------------------------------------------------------------|
+| Horizontal 16:9   | `Fontsize=18,MarginV=60` (default)                             |
+| **Vertical 9:16** | `Fontsize=14,MarginL=20,MarginR=20,MarginV=200`                |
+
+For vertical, also push `MarginV` up to ~200 to clear the bottom-area
+UI overlaid by 视频号 / 抖音 (likes, comments, share buttons). At
+`Fontsize=14` on 1080-wide, ~13-14 Chinese characters fit on one line
+before wrap — which is why **the source SRT cues should already cap
+at ~18 characters** (handled upstream by your assembly logic; see
+`wjs-translate-video` skill).
 
 **Standalone mode**:
 ```bash
 burn_subs.py --video in.mp4 --srt in.srt --out out.mp4 [--style '...']
+```
+
+## Step 5 — Prepend cover as title-card intro (LAST, fast)
+
+```bash
+python3 ~/.claude/skills/wjs-video-segmentation/scripts/prepend_intro.py \
+    --segments segments.json --out output/
+```
+
+Inserts the cover as a 1.5s still in front of each `_burned.mp4`,
+producing the final `_burned_intro.mp4`. The cover IS the literal
+first frame of the video, so platforms that auto-pick the first frame
+as the thumbnail get your designed cover by default.
+
+**Fast path: concat-demuxer + stream-copy.** The script probes the
+body's codec/profile/fps/pix_fmt/audio params, encodes just the 1.5s
+intro to a tiny mp4 matching those params exactly, then runs
+`ffmpeg -f concat -c copy` to stitch them. A 2-minute body that would
+take 30-60s to re-encode wraps in ~1s. The script prints `[stream-copy]`
+when this path succeeds.
+
+**Fallback: filter-graph concat + re-encode.** If the intro can't be
+encoded to match the body (rare — exotic codec, weird pix_fmt), the
+script falls back to filtergraph concat + libx264 medium. Marked
+`[re-encoded]` in the output. Force this with `--reencode` if you
+suspect codec mismatch causing playback issues.
+
+**Standalone mode** (no segments.json needed):
+```bash
+prepend_intro.py --clip in.mp4 --cover c.png --out out.mp4 [--duration 1.5]
 ```
 
 ## Quick reference
