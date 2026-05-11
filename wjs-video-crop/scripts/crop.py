@@ -384,18 +384,43 @@ def segments_to_chunks(segments, tracks, src_w, src_h):
     return chunks
 
 
-def build_crop_expr(chunks, axis, crop_dim, src_dim, max_control_points=200):
-    """Piecewise-linear ffmpeg expression between chunk midpoints. Clamped to
-    [0, src_dim - crop_dim]."""
+def _topleft(ch, axis, crop_dim, src_dim):
+    return max(0.0, min(src_dim - crop_dim, ch[axis] - crop_dim / 2))
+
+
+def build_crop_expr_cut(chunks, axis, crop_dim, src_dim):
+    """Step-function ffmpeg expression: each chunk holds a constant crop
+    position; transitions between chunks are instant hard cuts. This is the
+    default — pans inside a speaker segment add no information and look like
+    an AI artifact. Real editors cut, not pan."""
+    if not chunks:
+        return f"{max(0.0, (src_dim - crop_dim) / 2):.2f}"
+    parts = []
+    for i, ch in enumerate(chunks):
+        tl = _topleft(ch, axis, crop_dim, src_dim)
+        if i == len(chunks) - 1:
+            # Catch t >= last chunk's t0 (extends past the nominal end)
+            parts.append(f"gte(t,{ch['t0']:.3f})*{tl:.2f}")
+        else:
+            # Half-open [t0, t1): avoids double-counting at boundaries
+            parts.append(
+                f"(gte(t,{ch['t0']:.3f})*lt(t,{ch['t1']:.3f}))*{tl:.2f}"
+            )
+    return "(" + "+".join(parts) + ")"
+
+
+def build_crop_expr_smooth(chunks, axis, crop_dim, src_dim, max_control_points=200):
+    """Piecewise-linear pan between chunk midpoints. Opt-in via --motion smooth.
+    Useful for solo speaker who moves around but should never cut to themselves.
+    Default is hard cut (build_crop_expr_cut)."""
     if not chunks:
         return f"{max(0.0, (src_dim - crop_dim) / 2):.2f}"
 
     mids = []
     for ch in chunks:
         tmid = (ch["t0"] + ch["t1"]) / 2
-        center = ch[axis]
-        topleft = max(0.0, min(src_dim - crop_dim, center - crop_dim / 2))
-        mids.append((tmid, topleft))
+        tl = _topleft(ch, axis, crop_dim, src_dim)
+        mids.append((tmid, tl))
 
     if len(mids) > max_control_points:
         step = math.ceil(len(mids) / max_control_points)
