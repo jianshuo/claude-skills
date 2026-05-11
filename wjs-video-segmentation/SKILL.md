@@ -24,7 +24,7 @@ A 5-step pipeline that turns one long video + SRT into multiple stand-alone shor
 
 | Is | Is not |
 |---|---|
-| You (the agent) **read the full SRT and decide the topic boundaries** | A script that runs NLP topic modeling |
+| You (the agent) **read the full SRT and decide the topic boundaries** | A script that runs NLP topic modeling, silence-based chapter detection, or "viral moment" scoring. **This is intentional — topic boundaries are semantic, not acoustic, and competing tools (Descript, OpusClip, Riverside Magic Clips) all get this wrong by automating it.** |
 | 5 scripts coupled by `segments.json` as the data contract | One giant orchestrator script |
 | Stream-copy cuts (seconds, lossless) | Full re-encode by default (only fallback when keyframes don't align) |
 | GPT-Image-2 bakes the title text directly into the AI image (default) | Pillow text-on-top of frame (Pillow fallback exists for offline / no-LLM) |
