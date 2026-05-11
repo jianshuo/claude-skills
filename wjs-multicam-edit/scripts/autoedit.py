@@ -27,6 +27,7 @@ import numpy as np
 SR = 16000
 FRAME_HZ = 1.0
 ENV_HOP_MS = 100
+SCHEMA_VERSION = 1
 
 def extract(video: Path, dst: Path):
     subprocess.run(["ffmpeg", "-nostdin", "-y", "-i", str(video),
