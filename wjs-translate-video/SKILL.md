@@ -139,30 +139,147 @@ Preferred working format:
 
 #### Transcription tooling
 
-Use `openai-whisper` via `uvx` so nothing pollutes the system:
+**Default: OpenAI Whisper API with word-level timestamps.** Higher
+accuracy than local Whisper (especially for Chinese), and — critically
+— word-level granularity lets you do the cue-segmentation yourself,
+which avoids the two failure modes that wreck `response_format=srt`:
+
+1. **30-second blob cues.** In long monologues or quiet stretches,
+   `whisper-1` with `response_format=srt` will emit one cue covering
+   the full 30s `condition_on_previous_text` window. The transcript
+   is fine; the timing is unusable for on-screen reading.
+2. **Loop hallucination on quiet tails.** Greedy `temperature=0` on
+   low-energy audio produces "你如果不把拥抱浪费写在这上面,你很难的" repeated 50
+   times. The model gets stuck and never escapes within the window.
+
+Both stem from **letting Whisper decide cue boundaries**. The fix is to
+ask for word-level timestamps and assemble cues yourself at
+punctuation boundaries. This makes downstream post-processing
+(loop detection, splitting, merging) deterministic and free —
+no second API call needed to "fix" a bad output.
+
+##### Calling the API
 
 ```bash
-# Extract 16k mono PCM (faster + smaller than feeding mp4 directly)
-ffmpeg -i input.mp4 -vn -ac 1 -ar 16000 -c:a pcm_s16le _audio.wav -y
+# 1. Compress for upload — 64kbps mono MP3 is plenty for speech.
+#    OpenAI limit is 25MB per request; chunk into 10-min pieces
+#    (≈4.5MB at 64kbps) for resilience under flaky proxies.
+ffmpeg -hide_banner -loglevel error -y \
+  -ss <start> -t 600 -i input.mp4 \
+  -vn -ac 1 -ar 16000 -c:a libmp3lame -b:a 64k chunk.mp3
+```
 
-# Transcribe — outputs .srt next to the input
+```python
+# 2. Request word-level timestamps. Do NOT request response_format=srt.
+import httpx, os
+data = {
+    "model": "whisper-1",
+    "language": "zh",                        # pin source language
+    "response_format": "verbose_json",
+    "timestamp_granularities[]": "word",     # ← the critical flag
+    "temperature": "0.2",                    # enable fallback chain (anti-loop)
+}
+with open("chunk.mp3", "rb") as f:
+    r = httpx.post(
+        "https://api.openai.com/v1/audio/transcriptions",
+        headers={"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"},
+        data=data,
+        files={"file": ("chunk.mp3", f, "audio/mpeg")},
+        timeout=600.0,
+    )
+r.raise_for_status()
+words = r.json()["words"]   # [{"word": "你好", "start": 0.12, "end": 0.34}, ...]
+```
+
+##### Assembling cues from words
+
+```python
+# 3. Group words into cues. Flush at punctuation OR length cap.
+CHINESE_PUNCT = set("，。！？；：、——,.;:!?")
+MAX_DUR = 7.0     # seconds — longer than this hurts on-screen reading
+MIN_DUR = 1.0     # seconds — shorter than this feels choppy
+MAX_GAP = 1.5     # silence between words → force flush
+cues, buf = [], []
+def flush():
+    if not buf: return
+    cues.append((buf[0]["start"], buf[-1]["end"],
+                 "".join(w["word"] for w in buf)))
+    buf.clear()
+for i, w in enumerate(words):
+    buf.append(w)
+    cur_dur = buf[-1]["end"] - buf[0]["start"]
+    gap = (words[i+1]["start"] - w["end"]) if i+1 < len(words) else 0
+    ends_in_punct = any(p in w["word"] for p in CHINESE_PUNCT)
+    if (ends_in_punct and cur_dur >= MIN_DUR) or cur_dur >= MAX_DUR or gap >= MAX_GAP:
+        flush()
+flush()
+```
+
+##### Operational details
+
+- **Auth:** credentials live in `~/code/.env`; load with
+  `set -a; source ~/code/.env; set +a` before invoking.
+- **SOCKS proxy on this machine:** `httpx` needs the `socksio` extra —
+  use `uvx --with httpx --with socksio python ...` (without it you get
+  `ImportError: Using SOCKS proxy, but the 'socksio' package is not
+  installed`).
+- **Chunking:** 10-min pieces at 64kbps mono MP3 (~4.5MB each) are the
+  reliability sweet spot. 20-min chunks (~9MB) sometimes RST under flaky
+  proxies. Concurrency `max_workers=2` is more reliable than `4`.
+- **Retry:** every API call wrapped in 5× exponential backoff
+  (`time.sleep(min(2**n, 30))`) — `RemoteProtocolError: Server
+  disconnected` is common and transient.
+- **Offset stitching:** each chunk's words come back with timestamps
+  relative to that chunk. When merging, add the chunk's absolute start
+  offset to every word's `start`/`end` before assembling cues.
+- **Loop guard (belt + suspenders):** even with `temperature=0.2`,
+  occasionally a sub-chunk still loops. After assembly, run a
+  loop-detector on each cue's text — if any phrase of length 8–40 chars
+  repeats 3+ times consecutively, drop the cue. Cheap and catches the
+  residue.
+
+##### Local Whisper as fallback
+
+Use the local `openai-whisper` package only when offline, the API
+quota is exhausted, or for ultra-cheap rough drafts. Quality is
+materially lower for Chinese than `whisper-1`, and the same blob/loop
+failure modes still apply — local Whisper does not expose word-level
+timestamps via the CLI, so the principled fix above isn't available.
+
+```bash
+ffmpeg -i input.mp4 -vn -ac 1 -ar 16000 -c:a pcm_s16le _audio.wav -y
 uvx --from openai-whisper whisper _audio.wav \
-    --language es --task transcribe \
-    --model small --output_format srt --output_dir .
+    --language zh --task transcribe \
+    --model medium --output_format srt --output_dir .
+rm _audio.wav
 ```
 
 Notes:
 
-- Use `--language es` to lock Spanish; auto-detect can mis-route on
-  short or accented clips.
-- `small` is enough for clean studio audio; jump to `medium` if
-  background noise or overlapping speakers are present.
-- Whisper writes timestamps with `.` milliseconds; the file is still a
-  valid SRT (it auto-converts to `,` on save). If you regenerate the
-  SRT yourself, always emit `,` ms.
-- The first run downloads the model (~480MB for `small`); subsequent
-  runs are cached.
-- Delete the intermediate `.wav` after transcription.
+- Use `--language zh` (or `es`, `en`, etc.) to lock detection;
+  auto-detect can mis-route on short or accented clips.
+- `medium` is the practical floor for Chinese accuracy; `small` is OK
+  only for clean studio English.
+- Whisper writes `.` milliseconds; the file is still valid SRT
+  (players accept it). If you regenerate the SRT, always emit `,` ms.
+
+##### Anti-patterns (do not do)
+
+- ❌ **Do not request `response_format=srt`** for content longer than
+  ~2 minutes. You're handing cue-segmentation to a model that is bad
+  at it on hard audio.
+- ❌ **Do not "fix" bad cues with a second API call.** If you got blob
+  cues or loop hallucinations from your first call, the principled
+  fix is to redo with word-level granularity once — not to
+  re-transcribe just the broken sub-range. The post-processing path
+  is deterministic and free once you have words.
+- ❌ **Do not use `temperature=0`** on potentially-quiet audio (yoga,
+  spiritual content, podcast outros). Greedy decoding loops. `0.2`
+  enables the fallback chain and breaks out cleanly with no
+  perceptible quality loss.
+- ❌ **Do not skip `language=zh` / `language=es` etc.** Auto-detect
+  occasionally swaps Chinese→Japanese or Spanish→Portuguese on the
+  first 30 seconds and the whole transcript is then wrong.
 
 ---
 
