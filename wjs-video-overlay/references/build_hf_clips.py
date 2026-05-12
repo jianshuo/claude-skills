@@ -1,32 +1,55 @@
 #!/usr/bin/env python3
-"""Build hyperframes projects for clips 2-5 from clip 1's template.
-Strips clip-1-specific illustrations (stack, hammer) to keep batch
-fast; each clip gets cover + body + outlined captions + chapter chip
-+ CTA. Illustrations can be re-added per-clip later as a polish pass."""
+"""Build hyperframes projects for all clips from segments.json.
+
+Each clip gets: AI cover (full-frame) + body video + outlined HTML/CSS
+captions + chapter chip + optional illustrations + end-card CTA.
+Renders to ONE final encode per clip (no decode/encode cascade).
+
+This is a TEMPLATE — copy it into your project and edit:
+  - ROOT (project directory containing segments.json + output/)
+  - CHAPTER (per-clip chapter chip text)
+  - SYNC (per-clip sync offset; ZERO when clips were accurate-cut)
+  - illustrations.py (sibling file: per-clip illustration definitions)
+
+Sources read from `<ROOT>/output/`:
+  clip_NN_slug.mp4           (or _v2.mp4 if re-cropped)
+  cover_NN_slug.png
+  clip_NN_slug.zh-CN.burn.srt
+
+Targets written under `<ROOT>/hf_clip_NN/1080/`.
+
+Run with `python3 build_hf_clips.py` after editing the constants below.
+"""
 import json, os, re, shutil, subprocess, sys
 from pathlib import Path
 
-sys.path.insert(0, "/tmp")
+# illustrations.py sits next to this script (or set sys.path accordingly)
+sys.path.insert(0, str(Path(__file__).parent))
 from illustrations import render_for_clip, ILLUSTRATIONS
 
-ROOT = Path("/Users/jianshuo/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/2026年5月9日AI炼金术Riverside")
+# ── EDIT THESE PER PROJECT ──────────────────────────────────────
+ROOT = Path("/PATH/TO/YOUR/PROJECT")
 SEG = json.load(open(ROOT / "segments.json"))
 
-# Clips are now accurate-cut (re-encoded with -ss before -i -c:v libx264) —
-# sync offset is no longer needed.
+# Per-clip sync offset (seconds). Use 0.0 when clips were accurate-cut
+# with `segment.py --reencode` (the recommended default). If you used
+# stream-copy and have keyframe-snap drift, fill in
+# `requested_start − nearest_preceding_keyframe` per clip here.
 SYNC = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0}
 
-# Per-clip chapter chip text (first line of segment title)
+# Per-clip chapter chip text — short label for the top-left chip
 CHAPTER = {
-    1: "第一段 · 自然语言才是新代码",
-    2: "第二段 · 你停在第几层？",
-    3: "第三段 · 从轿夫到司机",
-    4: "第四段 · 它自己改自己",
-    5: "第五段 · 你脑子才是瓶颈",
+    1: "第一段 · ...",
+    2: "第二段 · ...",
+    3: "第三段 · ...",
+    4: "第四段 · ...",
+    5: "第五段 · ...",
 }
 
-# Per-clip episode label on cover (not used in template, but a marker)
-EPISODE = {1: "EP.01", 2: "EP.02", 3: "EP.03", 4: "EP.04", 5: "EP.05"}
+# Source video suffix. After re-crop, you typically have clip_NN_slug_v2.mp4
+# (the cropped vertical version). Use "" to point at clip_NN_slug.mp4.
+CLIP_SUFFIX = "_v2"
+# ────────────────────────────────────────────────────────────────
 
 COVER_SCENE_DUR = 1.5
 CTA_SCENE_DUR = 3.24
