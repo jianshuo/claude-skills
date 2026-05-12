@@ -83,28 +83,19 @@ description: Use when the user wants to write or publish a 微信公众号 (WeCh
 
 > 题图想怎么处理？
 > A) 我有图片，我提供路径
-> B) 用文字封面（标题 + 简洁背景，HTML/CSS 渲染，免费、即时）
-> C) **AI 生成（GPT Image，按词义出概念图，需 OPENAI_API_KEY，每张约 $0.05–0.20）**
-> D) 跳过，待会儿手动处理
+> B) **AI 生成（gpt-image-2 via Codex，按词义出概念图，每张约 $0.05–0.20）**
+> C) 跳过，待会儿手动处理
 
 **如果选 A**：把用户提供的图片复制到文章目录，重命名为 `cover.png`/`cover.jpg`。
 
 **如果选 B**：
 
 ```bash
-~/.claude/skills/wjs-wechat-publish/render-cover.sh "标题文字" "副标题或日期" /path/to/output/cover.png
-```
-
-输出 900×383 PNG，2.35:1 微信主封面比例。
-
-**如果选 C**：
-
-```bash
 ~/.claude/skills/wjs-wechat-publish/gen-cover-ai.sh <article-folder> ["目标字词"]
 ```
 
 - 不传第二个参数时，从 `meta.json` 取 `title` 当目标字词
-- 内部调用 `gpt-image-2-skill`（自动选 provider：Codex `~/.codex/auth.json` 或 `OPENAI_API_KEY`）
+- 内部调用 `gpt-image-2-skill`，**强制走 `--provider codex`**（不再支持 OpenAI API key fallback）
 - 默认尺寸 `1536x1024`（最接近 2.35:1 的 landscape），自动 sips 居中裁到 900×383
 - 原图保存为 `cover-raw.png`，裁剪后是 `cover.png`
 - `cover-prompt.md` 作为 `--instructions`（设计哲学），短生成指令作为 `--prompt`——这样 gpt-5.4 能消化长 prompt 后再调 image_generation 工具
@@ -117,9 +108,9 @@ git clone https://github.com/Wangnov/gpt-image-2-skill /tmp/g
 cp -r /tmp/g/skills/gpt-image-2-skill ~/.claude/skills/
 ```
 
-并且至少有以下一种鉴权：
-- **推荐**：Codex `~/.codex/auth.json`（ChatGPT Plus 计划即可，**不需要 OpenAI 组织验证**，gpt-image-2 的中文字渲染明显比 gpt-image-1 准确）
-- 或 `OPENAI_API_KEY`（需要在 platform 验证组织才能用 gpt-image-2）
+并且必须有 Codex 鉴权：
+- **唯一支持**：Codex `~/.codex/auth.json`（ChatGPT Plus 计划即可，**不需要 OpenAI 组织验证**，gpt-image-2 的中文字渲染明显比 gpt-image-1 准确）
+- **不再支持** `OPENAI_API_KEY` 直连（`--instructions` 仅 Codex provider 支持，且 API 模式会绕过 Codex 的 prompt 优化）
 
 **目标字词**的选择：文章标题往往是长短语（如「AI 能力的三个简单层次」），但 prompt 模板对单字 / 两字词更友好。可以建议用户挑核心概念字词：
 
