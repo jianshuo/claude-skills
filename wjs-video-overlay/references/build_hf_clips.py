@@ -241,8 +241,8 @@ def build_clip(seg):
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     work.mkdir(exist_ok=True)
 
-    # Copy media + cover. Source is _v2.mp4 (accurate-cut + re-cropped vertical).
-    shutil.copy(ROOT / "output" / f"clip_{sid:02d}_{slug}_v2.mp4", work / "clip.mp4")
+    # Copy media + cover. CLIP_SUFFIX="_v2" if re-cropped vertical, else "".
+    shutil.copy(ROOT / "output" / f"clip_{sid:02d}_{slug}{CLIP_SUFFIX}.mp4", work / "clip.mp4")
     shutil.copy(ROOT / "output" / f"cover_{sid:02d}_{slug}.png", work / "cover.png")
 
     # Build captions json
