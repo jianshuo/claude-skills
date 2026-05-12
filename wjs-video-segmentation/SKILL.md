@@ -20,7 +20,7 @@ covers, captions, illustrations, CTA, and final render.
 ## When NOT to use
 
 - Single-topic trimming → just use `ffmpeg -ss A -to B`.
-- No transcript yet → run **`/wjs-translate-video`** first.
+- No transcript yet → run **`/wjs-transcribe`** first (then `/wjs-translate-srt` if the segments need a non-source language).
 - Multicam editing → use **`/wjs-multicam-edit`**.
 - Highlight reel with multiple cuts inside a single topic → that's
   editing, not segmentation.
