@@ -101,7 +101,7 @@ rm -f "$TMP_SCALED"
   echo "target_word: $WORD"
   echo "size: $SIZE"
   echo "quality: $QUALITY"
-  echo "via: gpt-image-2-skill (auto provider)"
+  echo "via: gpt-image-2-skill (codex provider only)"
   echo "generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } > "$ARTICLE_DIR/cover-prompt-used.txt"
 
