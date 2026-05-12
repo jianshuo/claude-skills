@@ -1,4 +1,4 @@
-# jianshuo-wechat-mp-publish
+# wjs-wechat-publish
 
 Claude Code skill for writing and publishing **微信公众号 (WeChat Official Account)** articles, with AI-generated covers, AI-generated explanation illustrations, and a one-command upload helper.
 
@@ -36,10 +36,10 @@ articles/2026-05-09-my-slug/
 ## Install
 
 ```bash
-git clone https://github.com/jianshuo/jianshuo-wechat-mp-publish ~/.claude/skills/jianshuo-wechat-mp-publish
+git clone https://github.com/jianshuo/wjs-wechat-publish ~/.claude/skills/wjs-wechat-publish
 ```
 
-Then in Claude Code, the skill auto-fires on prompts like "写一篇公众号", "润色", "准备发布", or "/jianshuo-wechat-mp-publish".
+Then in Claude Code, the skill auto-fires on prompts like "写一篇公众号", "润色", "准备发布", or "/wjs-wechat-publish".
 
 ## Dependencies
 
@@ -65,13 +65,13 @@ The skill does most of the work for you. After it asks 1–2 clarifying question
 DIR=articles/YYYY-MM-DD-slug
 
 # Generate the typographic cover (2.35:1, auto-cropped to 900×383)
-~/.claude/skills/jianshuo-wechat-mp-publish/gen-cover-ai.sh "$DIR" "目标字词"
+~/.claude/skills/wjs-wechat-publish/gen-cover-ai.sh "$DIR" "目标字词"
 
 # Generate the cartoon explanation image (any aspect ratio)
-~/.claude/skills/jianshuo-wechat-mp-publish/gen-illustration.sh "$DIR"
+~/.claude/skills/wjs-wechat-publish/gen-illustration.sh "$DIR"
 
 # Open browser, reveal cover, push HTML to clipboard
-~/.claude/skills/jianshuo-wechat-mp-publish/publish.sh "$DIR"
+~/.claude/skills/wjs-wechat-publish/publish.sh "$DIR"
 ```
 
 Each script is idempotent — re-run it to get a different result (image generations are stochastic).
