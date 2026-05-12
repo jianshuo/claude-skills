@@ -16,6 +16,22 @@ Claude Code skill 是一个带 frontmatter 的 `SKILL.md` 文件 + 一组脚本�
 
 ---
 
+## 安装 & 使用 / How to Install
+
+把任意一个 skill 目录复制到 Claude Code 的 skills 目录即可：
+
+```bash
+# 全局安装（所有项目都能用）
+cp -r wjs-transcribing-audio ~/.claude/skills/
+
+# 项目级安装（只在当前项目可用）
+cp -r wjs-transcribing-audio ./.claude/skills/
+```
+
+装好后用触发词自然说话（如「转写这个视频」、「做 SRT」），或用斜杠命令 `/wjs-transcribing-audio` 显式调用。不需要重启 Claude Code，技能即时生效。
+
+---
+
 ## Skills 总览
 
 | Skill | 一句话作用 | 输入 → 输出 |
@@ -194,3 +210,16 @@ Claude Code skill 是一个带 frontmatter 的 `SKILL.md` 文件 + 一组脚本�
 ```
 草稿 → wjs-publishing-wechat → 题图 + 解释图 + HTML + 上传草稿 → mp.weixin.qq.com 后台微调发布
 ```
+
+---
+
+## 如何贡献 / Contributing
+
+欢迎提 Issue 或 PR。新增 skill 的要求：
+
+1. 目录名用 **V-ing 动名词**（如 `wjs-doing-something`），加 `wjs-` 前缀与本仓库风格保持一致。
+2. 目录内放一个 `SKILL.md`，frontmatter 里写 `name` 和 `description`（含具体触发词/例句），正文写清楚 when to use / when NOT to use / 执行步骤。
+3. 需要的脚本放同目录下。
+4. 提 PR，在 PR 描述里说明 skill 的用途和触发词。
+
+有问题或建议，请到 [Issues](https://github.com/jianshuo/Claude-skills/issues) 反馈。
