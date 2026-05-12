@@ -7,9 +7,9 @@
 #   - Pass a short generation directive as --prompt
 #   - Output 1536x1024, then sips-crop to 900x383 (2.35:1 微信主封面)
 #
-# Provider routing handled by gpt-image-2-skill (auto: Codex auth.json or
-# OPENAI_API_KEY). Codex path works on ChatGPT Plus accounts without OpenAI
-# organization verification.
+# Provider: forced --provider codex (requires ~/.codex/auth.json). The OpenAI
+# API key path is intentionally NOT supported — --instructions is codex-only,
+# and direct API calls bypass Codex's prompt distillation.
 #
 # Usage:
 #   gen-cover-ai.sh <article-folder> [target-word]
