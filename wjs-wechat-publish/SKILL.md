@@ -234,8 +234,6 @@ article.md 是源文件，下次改用这个。
 ```
 ~/.claude/skills/wjs-wechat-publish/
 ├── SKILL.md                       # 本文件
-├── cover-template.html            # 文字题图模板（HTML+CSS）
-├── render-cover.sh                # 渲染文字题图（免费、即时）
 ├── cover-prompt.md                # AI 题图 prompt 模板（[目标字词] 占位符）
 ├── gen-cover-ai.sh                # 题图: 2.35:1 强约束, 自动裁到 900×383
 ├── illustration-prompt.md         # AI 解释图 prompt 模板（[文章内容] 占位符）
