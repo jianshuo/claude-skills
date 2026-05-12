@@ -47,7 +47,8 @@ QUALITY="${WECHAT_PUBLISH_IMAGE_QUALITY:-high}"
 echo "calling gpt-image-2-skill (illustration, size: $SIZE, quality: $QUALITY)" >&2
 
 cd "$HOME/.claude/skills/gpt-image-2-skill"
-# --instructions only supported by codex provider; force it (auth.json must exist).
+# Codex-only: --instructions is supported solely by the codex provider, and we
+# do not allow OPENAI_API_KEY fallback. ~/.codex/auth.json must exist.
 RESULT=$(node "$WRAPPER" --json --provider codex images generate \
   --instructions "$INSTRUCTIONS" \
   --prompt "$GEN_PROMPT" \
