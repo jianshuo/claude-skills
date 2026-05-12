@@ -300,8 +300,8 @@ article.md 是源文件，下次改用这个。
 3. 写 `original.md`（用户原始输入）
 4. 写 `article.md`（润色版）→ 列 diff 给用户
 5. 用 AskUserQuestion 问标题候选
-6. 用 AskUserQuestion 问题图选择
-7. 渲染题图（如选 B）
+6. 用 AskUserQuestion 问题图选择（A 用户提供 / B AI 生成 / C 跳过）
+7. 生成题图（如选 B 跑 gen-cover-ai.sh）+ 解释图（自动跑 gen-illustration.sh）
 8. 生成 `article.html`、`meta.json`
 9. 输出发布指引
 
