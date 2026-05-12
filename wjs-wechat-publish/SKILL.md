@@ -242,7 +242,7 @@ article.md 是源文件，下次改用这个。
 ```
 
 依赖的外部 skill：
-- `gpt-image-2-skill`（github.com/Wangnov/gpt-image-2-skill）—— gen-cover-ai.sh 走这里调 gpt-image-2，**注意必须用 `--provider codex`**（gen-cover-ai.sh / gen-illustration.sh 已硬编码），否则 `--instructions` 不支持
+- `gpt-image-2-skill`（github.com/Wangnov/gpt-image-2-skill）—— gen-cover-ai.sh / gen-illustration.sh 走这里调 gpt-image-2，**只走 `--provider codex`**（两个脚本已硬编码），需要 `~/.codex/auth.json`。不支持 OpenAI API key 直连
 - `/md2wechat` skill / `md2wechat` CLI —— upload-draft.sh 用它的 `upload_image` + `create_draft` 命令（需要 `WECHAT_APPID` / `WECHAT_SECRET`，且当前 IP 在白名单里）
 
 > 注：仓库里仍保留 `publish.sh`（浏览器 + 剪贴板手动发布流），仅作为 md2wechat 配置未就绪 / 不能加 IP 白名单时的备用方案。本 skill 默认路径不再使用它。
