@@ -25,7 +25,7 @@ rendered in a SINGLE final encode. No cascade of decodes/re-encodes
 
 **Don't use** for:
 - Splitting one long video into clips → use `/wjs-video-segmentation`.
-- Creating the source SRT → use `/wjs-video-translate-video`.
+- Creating the source SRT → use `/wjs-transcribe` (then `/wjs-translate-srt` if you need a different language).
 - Full HyperFrames productions where the source isn't a fixed video →
   use `hyperframes` directly.
 - 微信视频号 / 抖音 upload (no public API for those) → this skill
@@ -181,7 +181,7 @@ cover duration to every `start`/`end`, and inline as JSON in a
 
 **Caption length cap.** If a single cue exceeds ~18 Chinese chars on
 1080-wide at 56px, it wraps to 2 lines awkwardly. This is upstream
-discipline — `/wjs-video-translate-video` should cap cues at ~18 chars
+discipline — `/wjs-translate-srt` should cap cues at ~18 chars
 using word-gap split + punctuation split. If you receive longer cues,
 either reduce `font-size` to 48px or accept the wrap.
 
@@ -484,7 +484,7 @@ Before considering a clip done:
 - **`/wjs-video-segmentation`** — the typical upstream. After it cuts
   + crops + slices SRTs, this skill picks up. The hand-off package is
   `clip_NN.mp4` + `clip_NN.zh-CN.burn.srt` + `segments.json`.
-- **`/wjs-translate-video`** — if no SRT exists, run that first. The
+- **`/wjs-transcribe`** + **`/wjs-translate-srt`** — if no SRT exists, run them first. The
   word-level Whisper or Volcano/豆包 ASR output is preferred for
   accurate cue timing.
 - **`hyperframes`** — the underlying composition framework. This skill
