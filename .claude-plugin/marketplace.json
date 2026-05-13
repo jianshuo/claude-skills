@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "wjs-skills",
+  "description": "13 Claude Code skills for video production (transcribe / translate / dub / multicam / subtitles / reframe) + WeChat publishing. SKILL.md format — also compatible with OpenAI Codex CLI.",
+  "owner": {
+    "name": "Jianshuo Wang (王建硕)",
+    "url": "https://github.com/jianshuo"
+  },
+  "plugins": [
+    {
+      "name": "wjs-transcribing-audio",
+      "description": "Audio/video → timestamped SRT in the source language. Chinese uses Volcano ASR; other languages use OpenAI Whisper with word-level timestamps + punctuation-bounded re-segmentation.",
+      "source": "./wjs-transcribing-audio"
+    },
+    {
+      "name": "wjs-translating-subtitles",
+      "description": "Translate an SRT from one language to another with punctuation-bounded re-segmentation. Simplified Chinese and English are first-class targets. Supports bilingual output.",
+      "source": "./wjs-translating-subtitles"
+    },
+    {
+      "name": "wjs-dubbing-video",
+      "description": "Time-aligned TTS dub of a video against a target-language SRT. Volcano TTS for Chinese, edge-tts for everything else. Single-speaker by default; opt-in visual diarization for multi-speaker.",
+      "source": "./wjs-dubbing-video"
+    },
+    {
+      "name": "wjs-burning-subtitles",
+      "description": "Final-composite step: burn SRT into pixels via libass, mix in a dub track, keep the original audio as a low-volume bed — all in one ffmpeg encode (no cascade).",
+      "source": "./wjs-burning-subtitles"
+    },
+    {
+      "name": "wjs-localizing-video",
+      "description": "Thin orchestrator for the end-to-end video localization pipeline (transcribe → translate → dub → burn). Use it when the user asks for full localization in one go.",
+      "source": "./wjs-localizing-video"
+    },
+    {
+      "name": "wjs-syncing-multicam",
+      "description": "Audio cross-correlation alignment for N recordings of the same event. Outputs `.sync.json` sidecars per file — never re-encodes the originals.",
+      "source": "./wjs-syncing-multicam"
+    },
+    {
+      "name": "wjs-editing-multicam",
+      "description": "Auto-edit 2+ synced cams into a single MP4. Switches between angles second-by-second based on audio energy. Optional picture-in-picture.",
+      "source": "./wjs-editing-multicam"
+    },
+    {
+      "name": "wjs-segmenting-video",
+      "description": "Cut a long-form interview / lecture / podcast into 3–6 stand-alone topical short clips, with per-clip SRT — ready for downstream post-production.",
+      "source": "./wjs-segmenting-video"
+    },
+    {
+      "name": "wjs-overlaying-video",
+      "description": "Post-production overlays on top of a clip: AI-generated cover as first frame, HTML/CSS kinetic captions, illustration overlays, chapter chips, end-card CTA. HyperFrames-backed, single final encode.",
+      "source": "./wjs-overlaying-video"
+    },
+    {
+      "name": "wjs-reframing-video",
+      "description": "Horizontal ↔ vertical conversion (16:9 ↔ 9:16, 4:3 ↔ 3:4). Crops a narrow band and tracks the active speaker via MediaPipe + mouth-aspect-ratio variance.",
+      "source": "./wjs-reframing-video"
+    },
+    {
+      "name": "wjs-uploading-video",
+      "description": "Batch upload videos to YouTube with per-video metadata from `UPLOAD_META.md`. Survives SOCKS/HTTP proxies by using `requests` directly for resumable upload.",
+      "source": "./wjs-uploading-video"
+    },
+    {
+      "name": "wjs-publishing-wechat",
+      "description": "Polish a 微信公众号 (WeChat Official Account) article, generate a cover image (题图) and explanation illustration, and upload as a draft to mp.weixin.qq.com.",
+      "source": "./wjs-publishing-wechat"
+    },
+    {
+      "name": "wjs-auditing-project",
+      "description": "Holistic state-of-the-project audit: unmerged branches, stalled PRs, failed GitHub Actions, stale builds, plan drift, unreleased commits, log errors. Read-only investigation → grouped checklist → fix only after confirmation.",
+      "source": "./wjs-auditing-project"
+    }
+  ]
+}
