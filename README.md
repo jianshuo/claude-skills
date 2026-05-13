@@ -6,6 +6,28 @@
 > 每次我编辑 `wjs-*` skill，对应目录会被 rsync 到这里并推送到 GitHub。
 > Hook 源码：`~/.claude/skills-publish-hook.sh`
 
+## 安装 / Install
+
+```bash
+# 单个 skill（推荐）
+clawhub install wjs-transcribing-audio
+clawhub install wjs-translating-subtitles
+# ... 13 个 skill 都可以这样装
+
+# 或者克隆整个仓库到 ~/.claude/skills/
+git clone https://github.com/jianshuo/claude-skills ~/.claude/skills/wjs
+```
+
+## 兼容性 / Compatibility
+
+[`SKILL.md`](https://agentskills.io) 是 Anthropic 公开的 skill 格式标准（2025 年 10 月发布，2025 年 12 月被 OpenAI Codex 采纳），所以这套 skill 同样适用于:
+
+- [**Claude Code**](https://claude.com/code) — 主要测试和使用环境
+- [**OpenAI Codex CLI**](https://developers.openai.com/codex/skills) — 2025-12+ 起兼容
+- **Cursor** / **Gemini CLI** / **Goose** —  生态在跟进
+
+第三方分发平台:[ClawHub](https://clawhub.ai/jianshuo) · [SkillsMP](https://skillsmp.com)（自动索引）
+
 ## 这些 skill 是什么？
 
 Claude Code skill 是一个带 frontmatter 的 `SKILL.md` 文件 + 一组脚本。当用户的请求匹配 skill 描述里的触发词（"翻译字幕"、"做封面"、"上传 YouTube"……）时，Claude 会自动加载这个 skill 并按里面写的流程执行。
