@@ -1,25 +1,19 @@
 #!/usr/bin/env bash
 # List all wjs-* skills with their last-promotion date from history.jsonl.
 # Output: TSV — skill_name<TAB>last_posted_date<TAB>days_since
-# "never" / "9999" for skills that have never been posted.
-
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_DIR="${HOME}/.claude/skills"
 HISTORY="${HERE}/state/history.jsonl"
-
 today_epoch=$(date +%s)
 
 for d in "${SKILLS_DIR}"/wjs-*/; do
   [[ -d "$d" ]] || continue
   name=$(basename "$d")
-  # Skip self
   [[ "$name" == "wjs-promoting-skills" ]] && continue
-  # Skip if no SKILL.md
   [[ -f "${d}SKILL.md" ]] || continue
 
   if [[ -f "$HISTORY" ]]; then
-    # Only count successful posts — failed/skipped attempts don't reset the rotation clock.
     last_date=$(grep -F "\"skill\":\"${name}\"" "$HISTORY" 2>/dev/null \
                 | grep -F "\"status\":\"posted\"" \
                 | tail -1 \
