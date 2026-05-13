@@ -19,7 +19,9 @@ for d in "${SKILLS_DIR}"/wjs-*/; do
   [[ -f "${d}SKILL.md" ]] || continue
 
   if [[ -f "$HISTORY" ]]; then
+    # Only count successful posts — failed/skipped attempts don't reset the rotation clock.
     last_date=$(grep -F "\"skill\":\"${name}\"" "$HISTORY" 2>/dev/null \
+                | grep -F "\"status\":\"posted\"" \
                 | tail -1 \
                 | sed -E 's/.*"date":"([^"]+)".*/\1/')
   else
