@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "wjs-skills",
-  "description": "13 Claude Code skills for video production (transcribe / translate / dub / multicam / subtitles / reframe) + WeChat publishing. SKILL.md format — also compatible with OpenAI Codex CLI.",
+  "description": "14 Claude Code skills for video production (transcribe / translate / dub / multicam / subtitles / reframe) + WeChat publishing + 吃一堑长一智 personal reflection. SKILL.md format — also compatible with OpenAI Codex CLI.",
   "owner": {
     "name": "Jianshuo Wang (王建硕)",
     "url": "https://github.com/jianshuo"
@@ -71,6 +71,11 @@
       "name": "wjs-auditing-project",
       "description": "Holistic state-of-the-project audit: unmerged branches, stalled PRs, failed GitHub Actions, stale builds, plan drift, unreleased commits, log errors. Read-only investigation → grouped checklist → fix only after confirmation.",
       "source": "./wjs-auditing-project"
+    },
+    {
+      "name": "wjs-eating-and-growing",
+      "description": "吃一堑长一智 — 6-step interactive reflection for personal setbacks. Diagnoses which layer (L1 notes / L2 in-the-moment trigger / L3 default-reaction practice) is missing and routes to the right modality, instead of letting every reflection become another notebook entry.",
+      "source": "./wjs-eating-and-growing"
     }
   ]
 }
