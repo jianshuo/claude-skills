@@ -9,12 +9,14 @@
 ## 安装 / Install
 
 ```bash
-# 单个 skill（推荐）
+# 方式 1:从 ClawHub 装单个 skill
 clawhub install wjs-transcribing-audio
-clawhub install wjs-translating-subtitles
-# ... 13 个 skill 都可以这样装
 
-# 或者克隆整个仓库到 ~/.claude/skills/
+# 方式 2:把整个仓库作为 Claude Code marketplace
+claude plugin marketplace add jianshuo/claude-skills
+claude plugin install wjs-transcribing-audio
+
+# 方式 3:直接 clone 到 skills 目录
 git clone https://github.com/jianshuo/claude-skills ~/.claude/skills/wjs
 ```
 
