@@ -1,0 +1,4 @@
+# State is local-only. history.jsonl has tweet IDs; plans/ has marketing internals.
+*
+!.gitignore
+!README.md

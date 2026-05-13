@@ -2,10 +2,10 @@
 # Uninstall: unload the launchd plist. State files are preserved.
 
 set -uo pipefail
-LABEL="com.jianshuo.wjs-prompting-skills"
+LABEL="com.jianshuo.wjs-promoting-skills"
 PLIST_DEST="${HOME}/Library/LaunchAgents/${LABEL}.plist"
 
-echo "=== Uninstalling wjs-prompting-skills launchd job ==="
+echo "=== Uninstalling wjs-promoting-skills launchd job ==="
 
 if [[ -f "$PLIST_DEST" ]]; then
   if launchctl print "gui/$(id -u)/${LABEL}" >/dev/null 2>&1; then

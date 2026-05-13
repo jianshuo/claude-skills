@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.jianshuo.wjs-prompting-skills</string>
+    <string>com.jianshuo.wjs-promoting-skills</string>
     <key>ProgramArguments</key>
     <array>
         <string>__DAILY_SH__</string>
@@ -25,8 +25,8 @@
     <key>RunAtLoad</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>__HOME__/Library/Logs/wjs-prompting-skills/launchd.out</string>
+    <string>__HOME__/Library/Logs/wjs-promoting-skills/launchd.out</string>
     <key>StandardErrorPath</key>
-    <string>__HOME__/Library/Logs/wjs-prompting-skills/launchd.err</string>
+    <string>__HOME__/Library/Logs/wjs-promoting-skills/launchd.err</string>
 </dict>
 </plist>

@@ -14,7 +14,7 @@ for d in "${SKILLS_DIR}"/wjs-*/; do
   [[ -d "$d" ]] || continue
   name=$(basename "$d")
   # Skip self
-  [[ "$name" == "wjs-prompting-skills" ]] && continue
+  [[ "$name" == "wjs-promoting-skills" ]] && continue
   # Skip if no SKILL.md
   [[ -f "${d}SKILL.md" ]] || continue
 

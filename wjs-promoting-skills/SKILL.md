@@ -1,9 +1,9 @@
 ---
-name: wjs-prompting-skills
-description: Use when the user wants to set up automated daily promotion / marketing for their Claude Code skills — researching how top skills are promoted on marketplaces (ClawHub / openclaw / SkillsMP / agentskills.io), generating a per-skill marketing plan, auto-posting to X (Twitter) via xurl, and drafting community discussion posts (Reddit / HN / Discord). Triggers — "推广 skills", "营销 skills", "自动发推广", "每天自动推广", "skill marketing", "promote my skills", "/wjs-prompting-skills".
+name: wjs-promoting-skills
+description: Use when the user wants to set up automated daily promotion / marketing for their Claude Code skills — researching how top skills are promoted on marketplaces (ClawHub / openclaw / SkillsMP / agentskills.io), generating a per-skill marketing plan, auto-posting to X (Twitter) via xurl, and drafting community discussion posts (Reddit / HN / Discord). Triggers — "推广 skills", "营销 skills", "自动发推广", "每天自动推广", "skill marketing", "promote my skills", "/wjs-promoting-skills".
 ---
 
-# wjs-prompting-skills
+# wjs-promoting-skills
 
 每天早上 4:00 自动跑一遍：挑一个 `wjs-*` skill → 生成今日推广角度 → 发到 X → 起草社区帖。**X 真发，社区只起草到 outbox/ 让人工 review。**
 
@@ -18,7 +18,7 @@ description: Use when the user wants to set up automated daily promotion / marke
 ## When This Skill Fires
 
 - 用户说「帮我推广这些 skills」/「设置每天自动发推广」/「研究一下别人怎么推广 skill 的」
-- 用户用 `/wjs-prompting-skills` 显式调用
+- 用户用 `/wjs-promoting-skills` 显式调用
 - 用户问「今天准备推哪个 skill」/「outbox 里有什么」
 
 如果用户只想发**一次**（不要 cron），直接用 `/publish-skill <name>` —— 那是单条手动版。本 skill 的价值是**每天自动**。
@@ -26,7 +26,7 @@ description: Use when the user wants to set up automated daily promotion / marke
 ## File Layout
 
 ```
-~/.claude/skills/wjs-prompting-skills/
+~/.claude/skills/wjs-promoting-skills/
 ├── SKILL.md                                # 本文件
 ├── setup.sh                                # 一次性：装 launchd plist，启动 4 AM 定时
 ├── uninstall.sh                            # 一次性：卸 launchd plist
@@ -35,7 +35,7 @@ description: Use when the user wants to set up automated daily promotion / marke
 ├── pick-next-skill.sh                      # 按轮换规则挑今日 skill
 ├── research-marketplaces.sh                # 研究 openclaw / clawhub / SkillsMP 的爆款怎么写文案（每月跑一次）
 ├── make-plan.sh                            # 给一个 skill 生成 marketing plan（30 天 angle rotation）
-├── com.jianshuo.wjs-prompting-skills.plist.template
+├── com.jianshuo.wjs-promoting-skills.plist.template
 ├── prompts/
 │   ├── research-marketplaces.md            # 研究 prompt
 │   ├── make-plan.md                        # marketing plan prompt
@@ -59,17 +59,17 @@ description: Use when the user wants to set up automated daily promotion / marke
 ## Setup (one-time)
 
 ```bash
-~/.claude/skills/wjs-prompting-skills/setup.sh
+~/.claude/skills/wjs-promoting-skills/setup.sh
 ```
 
 会做三件事：
 1. 检查前置依赖：`claude` CLI、`xurl`（且 `xurl whoami` 能返回用户）、`jq`
 2. 跑一次 `research-marketplaces.sh` 生成初始 `state/research.md`（**只此一次会真上网调研**，下次每月自动刷新一次）
-3. 把 `com.jianshuo.wjs-prompting-skills.plist.template` 渲染成真正的 plist 放到 `~/Library/LaunchAgents/`，然后 `launchctl bootstrap`
+3. 把 `com.jianshuo.wjs-promoting-skills.plist.template` 渲染成真正的 plist 放到 `~/Library/LaunchAgents/`，然后 `launchctl bootstrap`
 
 跑完之后每天 04:00 自动触发，不需要任何手动操作。
 
-要停止：`~/.claude/skills/wjs-prompting-skills/uninstall.sh`
+要停止：`~/.claude/skills/wjs-promoting-skills/uninstall.sh`
 
 ## Daily Flow (4 AM — what `daily.sh` does)
 
@@ -141,22 +141,22 @@ Angle rotation（同一个 skill 多次推时不重复）：
 
 ```bash
 # 看看明天会推谁
-~/.claude/skills/wjs-prompting-skills/pick-next-skill.sh
+~/.claude/skills/wjs-promoting-skills/pick-next-skill.sh
 
 # 给某个 skill 强制生成 plan
-~/.claude/skills/wjs-prompting-skills/make-plan.sh wjs-transcribing-audio
+~/.claude/skills/wjs-promoting-skills/make-plan.sh wjs-transcribing-audio
 
 # 把今天的整个 flow 跑一遍但不发 X（dry-run）
-DRY_RUN=1 ~/.claude/skills/wjs-prompting-skills/daily.sh
+DRY_RUN=1 ~/.claude/skills/wjs-promoting-skills/daily.sh
 
 # 强制推某个 skill（绕过 rotation）
-SKILL=wjs-segmenting-video ~/.claude/skills/wjs-prompting-skills/daily.sh
+SKILL=wjs-segmenting-video ~/.claude/skills/wjs-promoting-skills/daily.sh
 
 # 刷新 marketplace 研究
-~/.claude/skills/wjs-prompting-skills/research-marketplaces.sh
+~/.claude/skills/wjs-promoting-skills/research-marketplaces.sh
 
 # 看最近 7 天推过什么
-tail -7 ~/.claude/skills/wjs-prompting-skills/state/history.jsonl | jq .
+tail -7 ~/.claude/skills/wjs-promoting-skills/state/history.jsonl | jq .
 ```
 
 ## Prerequisites
@@ -188,7 +188,7 @@ tail -7 ~/.claude/skills/wjs-prompting-skills/state/history.jsonl | jq .
 
 ## Done When
 
-- [ ] `setup.sh` 跑成功，`launchctl list | grep wjs-prompting-skills` 能看到
+- [ ] `setup.sh` 跑成功，`launchctl list | grep wjs-promoting-skills` 能看到
 - [ ] `state/research.md` 存在且 > 1KB（说明研究跑过）
 - [ ] `DRY_RUN=1 daily.sh` 能完整跑通一遍且不发 X
 - [ ] `outbox/<today>/` 里有 4 个 markdown draft

@@ -1,0 +1,3 @@
+# Drafts are local-only.
+*
+!.gitignore

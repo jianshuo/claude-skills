@@ -4,11 +4,11 @@
 
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-LABEL="com.jianshuo.wjs-prompting-skills"
+LABEL="com.jianshuo.wjs-promoting-skills"
 PLIST_DEST="${HOME}/Library/LaunchAgents/${LABEL}.plist"
-LOG_DIR="${HOME}/Library/Logs/wjs-prompting-skills"
+LOG_DIR="${HOME}/Library/Logs/wjs-promoting-skills"
 
-echo "=== wjs-prompting-skills setup ==="
+echo "=== wjs-promoting-skills setup ==="
 
 # --- 1. Prereqs ---
 echo "→ Checking prereqs..."
@@ -77,7 +77,7 @@ fi
 mkdir -p "$(dirname "$PLIST_DEST")"
 sed -e "s|__DAILY_SH__|${HERE}/daily.sh|g" \
     -e "s|__HOME__|${HOME}|g" \
-    "${HERE}/com.jianshuo.wjs-prompting-skills.plist.template" > "$PLIST_DEST"
+    "${HERE}/com.jianshuo.wjs-promoting-skills.plist.template" > "$PLIST_DEST"
 
 launchctl bootstrap "gui/$(id -u)" "$PLIST_DEST"
 launchctl enable "gui/$(id -u)/${LABEL}"

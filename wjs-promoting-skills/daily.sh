@@ -19,12 +19,12 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${HOME}/.local/bin:${PATH}"
 export PATH
 
-LOG_DIR="${HOME}/Library/Logs/wjs-prompting-skills"
+LOG_DIR="${HOME}/Library/Logs/wjs-promoting-skills"
 mkdir -p "$LOG_DIR"
 LOG="${LOG_DIR}/daily-$(date +%Y-%m-%d).log"
 exec > >(tee -a "$LOG") 2>&1
 
-echo "=== wjs-prompting-skills daily.sh start: $(date -Iseconds) ==="
+echo "=== wjs-promoting-skills daily.sh start: $(date -Iseconds) ==="
 echo "DRY_RUN=${DRY_RUN:-0} SKILL=${SKILL:-<auto>} FORCE=${FORCE:-0}"
 
 # --- Prereqs ---
@@ -204,4 +204,4 @@ if [[ "$(date +%u)" == "7" ]] && [[ "${DRY_RUN:-0}" != "1" ]]; then
   "${HERE}/research-marketplaces.sh" || echo "WARN: research refresh failed (non-fatal)"
 fi
 
-echo "=== wjs-prompting-skills daily.sh done: $(date -Iseconds) ==="
+echo "=== wjs-promoting-skills daily.sh done: $(date -Iseconds) ==="

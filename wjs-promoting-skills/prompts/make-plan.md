@@ -7,11 +7,11 @@ You're writing a 30-day rotation plan for promoting **${SKILL}** on X.
 - `~/.claude/skills/${SKILL}/SKILL.md` — the skill itself
 - `~/.claude/skills/${SKILL}/README.md` (if exists)
 - `~/code/claude-skills/README.md` — overall portfolio + style reference
-- `~/.claude/skills/wjs-prompting-skills/state/research.md` — current marketplace research
+- `~/.claude/skills/wjs-promoting-skills/state/research.md` — current marketplace research
 
 ## Task
 
-Generate `~/.claude/skills/wjs-prompting-skills/state/plans/${SKILL}.md` with **8 distinct X-post angles** (we'll rotate through them when it's this skill's turn — at ~1 post/week per skill, 8 angles = ~2 months coverage).
+Generate `~/.claude/skills/wjs-promoting-skills/state/plans/${SKILL}.md` with **8 distinct X-post angles** (we'll rotate through them when it's this skill's turn — at ~1 post/week per skill, 8 angles = ~2 months coverage).
 
 ## Required structure
 

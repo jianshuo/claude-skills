@@ -5,9 +5,9 @@ These are **drafts only** — 王建硕 reviews and copy-pastes them manually. D
 ## Inputs (read these)
 
 - `~/.claude/skills/${SKILL}/SKILL.md`
-- `~/.claude/skills/wjs-prompting-skills/state/plans/${SKILL}.md`
+- `~/.claude/skills/wjs-promoting-skills/state/plans/${SKILL}.md`
 - The X post that was just sent (path: `${POSTED_X}`)
-- `~/.claude/skills/wjs-prompting-skills/state/research.md`
+- `~/.claude/skills/wjs-promoting-skills/state/research.md`
 
 ## Task
 

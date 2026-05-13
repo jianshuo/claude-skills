@@ -3,9 +3,9 @@
 ## Inputs (read these)
 
 - `~/.claude/skills/${SKILL}/SKILL.md`
-- `~/.claude/skills/wjs-prompting-skills/state/plans/${SKILL}.md`
-- `~/.claude/skills/wjs-prompting-skills/state/history.jsonl` (last 60 lines)
-- `~/.claude/skills/wjs-prompting-skills/state/research.md`
+- `~/.claude/skills/wjs-promoting-skills/state/plans/${SKILL}.md`
+- `~/.claude/skills/wjs-promoting-skills/state/history.jsonl` (last 60 lines)
+- `~/.claude/skills/wjs-promoting-skills/state/research.md`
 
 ## Task
 

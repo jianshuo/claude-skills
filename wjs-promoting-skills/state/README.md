@@ -18,7 +18,7 @@ Local-only state. Not pushed to GitHub (the sibling `.gitignore` excludes everyt
 tail -30 history.jsonl | jq -c 'select(.status == "posted") | {date, skill, tweet_url}'
 
 # How many days since each skill was last posted?
-~/.claude/skills/wjs-prompting-skills/list-skills.sh
+~/.claude/skills/wjs-promoting-skills/list-skills.sh
 
 # Failure rate over last 30 days?
 tail -30 history.jsonl | jq -s 'group_by(.status) | map({(.[0].status): length}) | add'
