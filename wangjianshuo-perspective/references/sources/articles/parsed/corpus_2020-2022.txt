@@ -1,0 +1,57 @@
+
+
+===== 2020-10-12 17:12:01 | Good Stuff for my Fiends | [Uncategorized] =====
+
+This is VPN configuration file for OpenVPN server in Amazon Cloud.
+
+OVPN Configuration file
+
+This is the only file that you actually need. No password is needed. Download this file to your Mac, iPhone, Android, or Windows system. If you have OpenVPN software/App install, just click the OVPN file and you can connect to the server.
+
+aws.ovpnDownload
+
+Download Software
+
+You should search for OpenVPN in Google or AppStore to download the latest version. In case, you cannot access these blocked site, download these:
+
+Tunnelblick_3.8.3_build_5520.dmgDownload
+
+openvpn-connect-3.2.1.1180_signed.msiDownload
+
+===== 2021-01-03 23:44:27 | Mi primero blog en español | [Uncategorized] =====
+
+Hola a todos!
+
+Este es mi primero blog en español. Tengo un blog en Inglés por 18 años, y ahoy es el tiempo por español.
+
+Voy a escribir algún en el futuro.
+
+Buenas noches!
+
+===== 2021-01-04 15:04:19 | Shanghai es Hermosa Hoy | [Uncategorized] =====
+
+Esta son dos fotografías de Shanghai. Dime en un edificio antiguo en la Bund.
+
+Los edificios no son aquí 40 años antes.
+
+Pudong en Shanghai
+
+Este la Bund. Los edificios son aquí 100 años antes. Shanghai fui muy moderno en 1930s. Fui el más grande en la este del mundo. Hay un rio que se llama Huanpu. Rio Huangpu es un rio muy bien para transporte. Muchas barcos están en el rio.
+
+Puxi de Shanghai
+
+===== 2021-01-11 16:01:57 | Sobre mi | [Uncategorized] =====
+
+Me llamo Javier. Tengo 43 años. Vivo en Shanghai en la calle Wulumuqi y la calle Anfu.
+
+Me gustan perros y gatos. Tengo un gato negro y blanco que se llama Mira. A Mira le gusta pollo mucho, y le gusta dormir. Entonces, Mira está muy gordo ahoy.
+
+===== 2022-05-19 21:50:25 | Documents for Steve | [Uncategorized] =====
+
+Hi Steve,
+
+Thanks for helping me on my EB1-A application. Here are some documents I have prepared.
+
+Media reports
+
+21jingji-百姓网CEO王建硕详解寒冬活法：盈利第一规模第二-21财经-1Download
