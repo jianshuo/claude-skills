@@ -6,7 +6,29 @@
 > 每次我编辑 `wjs-*` skill，对应目录会被 rsync 到这里并推送到 GitHub。
 > Hook 源码：`~/.claude/skills-publish-hook.sh`
 
-## 安装 / Install
+## 前置:安装 Claude Code / Install Claude Code
+
+这些 skill 跑在 [Claude Code](https://claude.com/code) 里,所以先装 Claude Code。
+
+```bash
+# 方式 1:npm 全局安装(推荐,需要 Node.js ≥ 18)
+npm install -g @anthropic-ai/claude-code
+claude            # 启动
+
+# 方式 2:不装,直接用 npx 跑一次
+npx @anthropic-ai/claude-code
+
+# 方式 3:原生安装脚本(无需 Node.js)
+# macOS / Linux
+curl -fsSL https://claude.ai/install.sh | bash
+# Windows (PowerShell)
+irm https://claude.ai/install.ps1 | iex
+```
+
+装好后在任意项目目录运行 `claude` 即可。首次启动会引导登录(Claude 账号或 API key)。
+升级:`claude update`(原生安装)或 `npm update -g @anthropic-ai/claude-code`(npm 安装)。
+
+## 安装 Skills / Install Skills
 
 ```bash
 # 方式 1:从 ClawHub 装单个 skill
