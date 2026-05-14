@@ -86,6 +86,16 @@ text = re.sub(r'^---\n.*?\n---\n', '', text, count=1, flags=re.DOTALL).strip()
 
 P_STYLE   = 'margin: 1em 0; line-height: 1.75; font-size: 16px; color: #333;'
 IMG_STYLE = 'max-width: 100%; height: auto; display: block; margin: 1.5em auto;'
+H2_STYLE  = 'margin: 1.6em 0 0.6em; font-size: 19px; font-weight: bold; line-height: 1.4; color: #222;'
+H3_STYLE  = 'margin: 1.3em 0 0.5em; font-size: 17px; font-weight: bold; line-height: 1.4; color: #222;'
+LI_STYLE  = 'margin: 0.4em 0; line-height: 1.75; font-size: 16px; color: #333;'
+
+def inline(s):
+    # Convert inline markdown the WeChat editor would otherwise show as raw text.
+    s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)   # **bold**
+    s = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'<em>\1</em>', s)  # *italic*
+    s = re.sub(r'`([^`]+)`', r'<code>\1</code>', s)           # `code`
+    return s
 
 blocks = []
 for block in re.split(r'\n\s*\n', text):
@@ -98,12 +108,23 @@ for block in re.split(r'\n\s*\n', text):
         if 'illustration' in src and ILLUSTRATION_URL:
             src = ILLUSTRATION_URL
         blocks.append(f'<p style="text-align: center;"><img src="{src}" alt="{alt}" style="{IMG_STYLE}"></p>')
+    elif block.startswith('### '):
+        blocks.append(f'<h3 style="{H3_STYLE}">{inline(block[4:].strip())}</h3>')
+    elif block.startswith('## '):
+        blocks.append(f'<h2 style="{H2_STYLE}">{inline(block[3:].strip())}</h2>')
     elif block.startswith('# '):
         # Drop body H1 — the WeChat editor uses meta.json title as the article title.
         # Keeping a body H1 causes md2wechat inspect's DUPLICATE_H1 warning.
         continue
+    elif all(re.match(r'^\s*([-*]|\d+\.)\s+', ln) for ln in block.splitlines()):
+        # A bullet / ordered list block.
+        ordered = bool(re.match(r'^\s*\d+\.\s+', block.splitlines()[0]))
+        items = [re.sub(r'^\s*([-*]|\d+\.)\s+', '', ln) for ln in block.splitlines()]
+        lis = ''.join(f'<li style="{LI_STYLE}">{inline(it)}</li>' for it in items)
+        tag = 'ol' if ordered else 'ul'
+        blocks.append(f'<{tag} style="margin: 1em 0; padding-left: 1.5em;">{lis}</{tag}>')
     else:
-        blocks.append(f'<p style="{P_STYLE}">{block}</p>')
+        blocks.append(f'<p style="{P_STYLE}">{inline(block)}</p>')
 
 content_html = '\n'.join(blocks)
 open('content.html', 'w').write(content_html)
