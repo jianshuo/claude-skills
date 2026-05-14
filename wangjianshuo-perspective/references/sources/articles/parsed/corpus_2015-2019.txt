@@ -1,0 +1,38 @@
+
+
+===== 2016-02-20 19:26:02 | Tickets System for Parents and Kids | [Uncategorized] =====
+
+This is the application that you and your kids can use to track "Tickets"
+
+What is Ticket?
+
+A ticket is an agreement between Kids and Parents.
+
+===== 2017-03-05 15:21:54 | Solute to Hackers | [Hi-Tech Toys] =====
+
+Look at this piece of code at the header of Hello Dolly plugin by Matt - maybe the first plugin of the WordPress system (you can always find this piece of code in any WordPress installation. Look for it in the /wp-content/plugins/ folder). Think about why the plugin has something to do with music! Think about why the description reads that way. What do you sense from a developer's code?
+/**
+* @package Hello_Dolly
+* @version 1.6
+*/
+/*
+Plugin Name: Hello Dolly
+Plugin URI: http://wordpress.org/extend/plugins/hello-dolly/
+Description: This is not just a plugin, it symbolizes the hope and enthusiasm of an entire generation summed up in two words sung most famously by Louis Armstrong: Hello, Dolly. When activated you will randomly see a lyric from <cite>Hello, Dolly</cite> in the upper right of your admin screen on every page.
+Author: Matt Mullenweg
+Version: 1.6
+Author URI: http://ma.tt/
+*/
+In this particular example, you found again the interesting connection between code and music, code and art, code and books, code and philosophy. Interesting developers are particularly active in other fields.
+
+The vision expressed in the note: "This is not just a plugin, it symbolizes ..." is exactly how developer seem the world differently than others. It is NOT just what it is, it IS something bigger, and code is just an expression of it.
+
+Solute to Matt, and other hackers. I know why WordPress succeeded and MT didn't. It is the lacking of this spirit after Ben left.
+
+===== 2017-03-05 17:44:00 | Wangjianshuo's Blog App on Apple App Store | [Blogging] =====
+
+During the weekend, as part of my process to learn Swift 3, I wrote a small application to show all the blog posts, and comments of Wangjianshuo's Blog. Here is the link to download the App:
+
+https://itunes.apple.com/cn/app/wangjianshuos-blog/id1210226590?mt=8
+
+All the few thousands post and about 40 thousands comments are quickly available on your iPhone. Try it out.

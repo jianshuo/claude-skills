@@ -1,0 +1,178 @@
+Reassembled 3108 posts
+Total word tokens: 1,002,946
+
+=== TOP 80 CONTENT WORDS ===
+  shanghai: 5612
+  people: 4943
+  time: 3824
+  china: 3582
+  like: 3073
+  many: 2898
+  don't: 2334
+  get: 2280
+  other: 2040
+  good: 1982
+  new: 1978
+  than: 1934
+  blog: 1848
+  com: 1800
+  only: 1786
+  rmb: 1735
+  see: 1716
+  after: 1663
+  road: 1613
+  city: 1588
+  know: 1584
+  first: 1544
+  years: 1479
+  chinese: 1474
+  before: 1443
+  still: 1430
+  day: 1429
+  wang: 1354
+  jian: 1346
+  now: 1325
+  shuo: 1312
+  much: 1297
+  name: 1293
+  back: 1271
+  even: 1262
+  site: 1253
+  same: 1233
+  way: 1224
+  airport: 1223
+  since: 1199
+  didn't: 1166
+  last: 1156
+  big: 1150
+  need: 1149
+  want: 1146
+  year: 1132
+  take: 1103
+  home: 1088
+  world: 1078
+  metro: 1074
+  station: 1050
+  days: 1045
+  life: 1043
+  beijing: 1027
+  think: 1021
+  because: 1007
+  today: 999
+  long: 993
+  car: 985
+  really: 960
+  too: 950
+  right: 949
+  well: 949
+  area: 945
+  use: 943
+  line: 924
+  http: 902
+  hotel: 893
+  work: 892
+  trip: 892
+  great: 874
+  why: 871
+  find: 866
+  taxi: 866
+  something: 857
+  another: 851
+  better: 849
+  business: 828
+  google: 824
+  train: 820
+
+=== SENTENCES ===
+  count: 59,790  avg words/sentence: 16.2
+  short (<=8 words): 13,031 (22%)
+
+=== 40 POST OPENINGS (sampled every Nth) ===
+  [2002] Oct 4K
+
+Nov 17K
+
+Dec 23K
+  [2002-11-25] Yesterday, lots of my friends gathered together in Shanghai.
+  [2003-03-14] Today, I happen to see Micah Sittig posted on his China, California, Books and mentioned my pictures to Daocheng.
+  [2003-05-26] This is the forth article of a series of article on the daily life in Shanghai.
+  [2003-08-25] I have to show the expression of :-( Sadly Smiley when I became aware that I have to pay 196 RMB as late payment fine fo
+  [2003-11-24] Stonese's comment on my Starbucks page led me to his blog (Chinese site).
+  [2004-02-05] Shanghai Map Viewer 0.7 Released
+
+New Features / Bug Fixes:
+
+Added LocationReminder so people will always return to the 
+  [2004-04-05] Air Waybill Number Origin Service Area Destination Service Area Status
+
+=====================================
+
+914644408
+  [2004-06-05] Dragoning (China site) posted a comment about his new blog.
+  [2004-07-28] Xintiandi (or Xin Tian Di) is a nice place to go.
+  [2004-09-30] I'd like to share the Orange Harvest in my garden.
+  [2004-12-12] I am in Chicago now, the greatest in the world.
+  [2005-02-21] I will attend the Shanghai Blogger Meetup this Wednesday.
+  [2005-06-01] Recently, to get more space for my team, we moved to Zhang Jiang High Tech Park, which is in Pudong.
+  [2005-09-26] I felt strange that there were no new comment after I posted my last comment at 25, 2005 12:55 AM.
+  [2006-01-01] This is the first post in the first several minutes of the year 2006.
+  [2006-03-17] The one day conference at SES (Search Engine Conference) went on well.
+  [2006-06-10] It is not easy to realize how strange it is when you live in an existing system, but when you have the chance to talk wi
+  [2006-08-25] These are pictures of Rujia (Home Inn), the cheap business hotel chain in Qingao.
+  [2006-11-09] Jian Shuo Wang is flying from Shanghai to San Francisco on Nov 9, 2006, via UA858.
+  [2007-01-27] We get in to PVG at 3:25 pm and need to get to Ningbo.
+  [2007-04-13] Everyone, if you travel to Shanghai, definitely avoid Hong Qiao Airport on Friday night.
+  [2007-07-14] According to this China Daily article, the controversial Starbucks store in the forbidden city was finally closed.
+  [2007-09-22] Today is a No Car Day in Shanghai, and other 107 cities in China.
+  [2007-12-08] In Tongli, in the shop next to our hotel, they have 20 small baskets of badges of Chinese characters - each badge has a 
+  [2008-02-15] This is the email I am trying to answer.
+  [2008-04-27] The most impressive experience I had during my first visit to Singapore in 2000 was a night ride of Singapore Metro - I 
+  [2008-07-20] After talking about it for weeks, Wendy and I finally brought Yifan to Gymboree, the early-education center.
+  [2008-10-03] At night, Wendy, Yifan and I had dinner with Run, Eric Zheng, and Apple Zhu.
+  [2008-12-14] Due to slow connection of Facebook in China - especially
+
+static.ak.connect.facebook.com and some times infinitive loop 
+  [2009-03-05] YLF 2009 Time
+
+Just got email from Jon that the eighth YLF (Young Leader's Forum) meeting will happen in November 4-8, 2
+  [2009-05-17] This is a series of articles on education in Shanghai (I tried to avoid big topics like Education in China:
+
+Worry about
+  [2009-08-13] Interesting.
+  [2009-10-11] After posting my intention to buy a camcorder, Wendy and I finally bought one at "Buy Now" computer market at 7550 RMB.
+  [2010-02-09] I started my vacation in Sanya.
+  [2010-03-26] Let me record the experienced I had in Pudong airport before I forgot.
+  [2010-07-26] Aspen is a nice town situated in the valley of Rocky Range.
+  [2010-11-20] Yifan enjoys the game FlightControl very much.
+  [2011-07-22] Daily report is a great way for people to do some meditation, and review what happened during the day.
+  [2012-05-30] This photo marks the end of a project, and it seems everyone is happy about it.
+  [2012-11-01] After switching to WordPress from MovableType, and after switching from Windows to Mac, I need to find some software to 
+
+=== SIGNATURE PHRASE COUNTS ===
+  'I think': 296
+  'I believe': 440
+  'I don't know': 225
+  'I am not sure': 64
+  'I guess': 196
+  'in China': 1540
+  'in Shanghai': 1972
+  'for example': 317
+  'as I': 937
+  'to be honest': 77
+  'the fact that': 52
+  'I would say': 69
+  'interesting': 770
+  'amazing': 187
+  'I feel': 260
+  'my point is': 9
+  'anyway': 190
+  'P.S.': 449
+  'Update:': 59
+  'Wow': 68
+  'lol': 23
+  'I am very': 152
+  'very interesting': 111
+  'It is interesting': 40
+  'I love': 253
+
+Wrote sample_stratified.txt: 48 posts

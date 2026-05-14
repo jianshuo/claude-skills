@@ -1,0 +1,1504 @@
+
+
+===== 2002-09-21 22:13:24 | Foreign Companies in Shanghai =====
+
+Tonight, I enjoyed the ice cream mooncakes from Haagen-Dazs. The Belgian chocolate flavor ice cream is really nice, as described on its web site: "When the first spoonful melts in your mouth the moment is pure pleasure".
+
+Haagen-Dazs changed its products a lot to meet Chinese styles and festivals. It seems Haagen-Dazs did great job in penertrate into the mooncake market of Shanghai. As I know, more than 10,000 joint-venture company employees received Haagen-Dazs mooncake certificates from efesco. This is also the third year I receive the Haagen-Dazs mooncake certificate. It must be one of the big deals of this
+
+It is not long since Haagen-Dazs appeared in Shanghai. I still remember I attended the opening ceremony of Haagen-Dazs in Shanghai Center six years ago. Now, it has opened about four stores in Shanghai (based on the stores I know). There are two Haagen-Dazs stores near the building I am working in. One more store is under construction near my old apartmnt. It also expanded its coverage to Beijing, Dalian, Guangzhou and Shenzhen, according to China Online's report.
+
+I have chatted with Bill Lum about another European company IKEA. I told him the store is very profitable in Shanghai and Beijing.
+
+"If there is a holiday or a promotion, there are sometimes as many as 10,000 people here, so many you can't move"
+
+said Linda Shi, PR manager of IKEA Shanghai Store
+
+Source: siamfuture.com
+
+It is very true. When the store opens in 1997, I have visited the store and only few people are there. The price in the store is considered very high. Now, every Saturday, there are so many people that "you cannot move". It is more like a supermarket of furnitures.
+
+They are going to the second store in Shanghai. With 35,000 square meters' store area, the new store will be the largest IKEA store in Asia. I was very supprised when Bill told me IKEA opened a store in San Francisco only one year before.
+
+Update March 30, 2003
+
+New IKEA store will open on April 16, 2003 in Shanghai... FULL STORY
+
+
+===== 2002-11-06 11:49:46 | Googlism =====
+
+What does Googlism think about Shanghai?
+
+shanghai is hot
+
+shanghai is the largest city and one of the most popular tourist
+
+shanghai is waiting for freecloud
+
+shanghai is now
+
+shanghai is a combination
+
+shanghai is one of the biggest cities in
+
+shanghai is not about economics only
+
+shanghai is a "work in progress"?
+
+It seems some of the statements are true. I marked them in bold.
+
+Thanks to Google Weblog for pointing me to this interesting web site. You can type in anything you are interested, and the site will give you the answer based on Google search result. Let me give you another example, I asked Who is Jian Shuo, four answers are returned:
+
+jian shuo is always happy when he is with fanfan
+
+jian shuo is prompted as project manager
+
+jian shuo is now dead
+
+jian shuo is one of the ten regular attendants
+
+The first two are very correct, while the third is completely wrong. :-( and the last one, basically, I don't know what it is talking about.
+
+Why now try your self on Googlism? Type in the city you are living in, or the company you are working for to see what Google says about it. The results are almost always interesting and sometimes surprising, but don't care the result too much - it is only a humor generator.
+
+ 
+
+Good luck. Why not share the interesting result you have found with us by utilizing the comment function with this blog entry?
+
+Also on today...
+
+Party with Shanghai Expat
+
+I had a wonderful party yesterday with Michael from shanghaiexpat.com, Graham, Shanshan, and K at KABB of Xin Tian Di. It is very interesting to meet people from different culture background - from Seattle, New Zealand, Hong Kong and other part of the world. We gather together to talk about the culture shock. They are all very nice people. I am expecting to meet them again.
+
+Christina's blog
+
+I also talked with Christina (Chinese/English site) on MSN Messenger. She is very careful and sensitive about her life. This makes her blog full of interesting thoughts and thorough observation. I will recommend you to take a look.
+
+
+===== 2002-10-28 22:59:08 | Add Unsubscribe Function to MovableType =====
+
+Adding unsubscription function into MovableType has been a very hot topic in MovableType Support Forum (refer to this post and that one.
+
+Tonight, I spent some time to think about it and changed the code a little bit to support unsubscription function.
+
+mt-add-notify.cgi
+
+my $note = MT::Notification->new;
+
+$note->blog_id( $q->param('blog_id') );
+
+$note->email( $q->param('email') );
+
+$note->url( $q->param('url') );
+
+$note->save;
+
+As you can see, I added a line into the code - as shown in red. I am using the existing URL field to add a tag of unsubscription. By utilizing existing fields, we reduce the code changes.
+
+Result for subscription
+
+By default, MovableType does not offer the subscription success confirmation page. It redirect users to the home page of the weblog by default. It is very confusing since subscribers don't know what happened. We need to create one by yourself and change the _redirect input field of the subscription page. Refer to MovableType's help for suggestions on adding "subscribe" function to your page.
+
+<form method="post" action="http://home.wangjianshuo.com/mt/mt-add-notify.cgi">
+
+<p>Enter your email address in the textbox below and click Subscribe</p>
+
+<input type="hidden" name="blog_id" value="1">
+
+<input type="hidden" name="_redirect" value="http://www.wangjianshuo.com/news/20020126JSZine/subscribe.htm">
+
+<input name="email" size="56" value="Enter your email"><br>
+
+<input type="submit" value="Subscribe"> </p>
+
+</form>
+
+Unsubscribe
+
+<form method="post" action="http://home.wangjianshuo.com/mt/mt-add-notify.cgi">
+
+<p>Please enter your email address in the box below</p>
+
+<input type="hidden" name="blog_id" value="1">
+
+<input type="hidden" name="_redirect" value="http://www.wangjianshuo.com/news/20020126JSZine/unsubscribe.htm">
+
+<input name="email" size="56" value="Enter your email"><br>
+
+<input type="hidden" name="url" 
+
+value="unsubscribe" / >
+
+<input type="submit" value="Unsubscribe"> </p>
+
+</form>
+
+I added a hidden field called URL with value of unsubscribe. Thus you can see the who is willing to unsubscribe from the notification list and do it manually when you notice it.
+
+Want to have a try?
+
+Please check the homepage of my weblog. The notification subscription area is at the right-top corner. You can also directly visit the subscription page.
+
+Next step
+
+It is ideal if we can add code for removing the Email from $note database directly in MT-add-notify.cgi. I don't have time to do it now, but it should be very easy. Please let me know if you have done so.
+
+
+===== 2003-07-09 21:38:05 | Domain Name PVG.CN Registered =====
+
+With the continous increase in hit rate for my Pudong Airport website, and more and more compliments I got for the work done, I feel it is neccessary to give the site a better and shorter URL than the current one:
+
+http://www.wangjianshuo.com/personal/places/pudongairport/
+
+The site has been successful
+
+Based on the good information provided on the site, the site has become the first return result for search terms such as Pudong Airport, pu dong airport. It is the must see website for visitors for Pudong Airport. I am very happy to see the result. Currently, all the information are publicly available and free of charge. It is there simply to help confused visitors for the city.
+
+Shorter and Better Domain Name: PVG.CN
+
+Today, I registered PVG.CN for the Pudong Airport website. PVG is the international airport code for Pudong Airport, which will appear on your ticket. In case you are curious, SHA stands for Shanghai Hongqiao Airport, which does not serve international flights now.
+
+Best unofficial airport website
+
+The vision for this site is the best unofficial airport website. As the previous Pudong Airport site on my personal web site, this website needs to be more professional, more helpful and provide more functions. The work will still base on my volunteering time and effort. I believe it may become a highlight for the unusable airport.
+
+YOUR HELP NEEDED
+
+Please follow the simple three steps to help me to build the website and to help more visitors.
+
+1. REVIEW the current content of Pudong Airport website
+
+2. THINK about what are the information and functions you need most but is missing.
+
+3. COMMENT on this page and let your voice be heard.
+
+I appreciate your help. Meanwhile, for a professional website, I need native English speakers to be volunteer to proof read the new site. Please send me email at jianshuo@hotmail.com.
+
+P.S. Shanghai Lightening
+
+My friend Tang Zhen sent me a phone about the lightening in Shanghai.
+
+Recently, it rains heavily in Shanghai at night. The left lightening hit the Jin Mao Tower and the right one hit Oriental Tower.
+
+
+===== 2003-10-07 23:09:05 | Returned from Huizhou (Huang Shan) Trip =====
+
+We finally returned to Shanghai today after the four day trip to Hui Zhou. We planned to go to Huang Shan (the Yellow Mountain) but changed our route to visit the villages near Huang Shan instead. The places I visited include a lot of villages with strange names. I cannot read some of the characters in the names. They are (in Chinese and Pinyin)
+
+黟县 西递 宏村 卢村 木坑 屯溪 歙县 棠樾 呈坎
+
+Yixian Xidi Hongcun Lucun Mukeng Tunxi Shexian Tangyue Chengkan
+
+At Hongcun. The village before the Moon Pool, which is the place that on the post stamp with value of 0.08 RMB - the most popular post stamp in China for more than one decade.
+
+Hongcun - before the moon pool.
+
+Hongcun before the Nan Hu (the South Lake)
+
+The village in the bamboo sea... It is called Mu Keng.
+
+Poster saying "We will kill our pig on the Moon Festival. Those who want to buy meat, please come to my house to buy. - Sept 1, 2003"
+
+Xidi. Seen from the hill nearby.
+
+The wood building of Xidi.
+
+Locks on the Lian Hua Peak of Huang Shan. People will buy pairs of the lock, carve their names on it and lock them together in Huang Shan. After that, people will through the keys off the cliff - it is said that by looking the door together, the two will be together for the whole life. I believe it is true since Wendy and I put our lock there serveral years ago...
+
+Bao Lun Ge - the largest memorial temple in Cheng Kan.
+
+Shops at night in Hong Cun.
+
+This is the door of my room in the "hotel". It was an incrediable experience to have stayed for one night there.
+
+The No. 1 Restaurant at Lao Jie in Tun Xi. It is a very nice restaurant with 30 RMB per person average. We had our dinner everyday there. Highly recommend.
+
+This is the brick-carving on the top of the door of each house. You can find this kind of carving anywhere in the area.
+
+
+===== 2003-01-19 19:04:32 | Tickets for Maglev Tour =====
+
+I am watching TV and just head of the news of the Maglev Train Tour.
+
+Before the Maglev trains are put into production at the end of this year, they offer tour for the train at price of 150 RMB and 300 RMB. However, the tickets are still hard to buy. According to the news, they issue 2000 tickets every day, but the tickets were completely sold out before the Spring Festival on Feb 1, 2003. Individuals cannot book the tickets for the future, since the booking services only apply to large accounts with 20+ tickets a time.
+
+Meanwhile, it is even harder to buy train tickets here in Shanghai. I am not sure if people outside China understand this, people will try to return home no matter where they are in the Spring Festival, just like Christmas in the western countries. The train tickets are very hard to buy since there are too many people want to buy the limited number of tickets. According to the OTV news, the lines for buying tickets has been winding from the ticket counter, to outside the ticketing building, and extended to about 10 blocks away. Most of them came to buy the tickets before 12:00 AM yesterday and has standed in the line for 10 hours during the night -- poor people!
+
+It is also interesting to see people in Shanghai begin to tour to Hai Nan and other areas of China during the Spring Festival. Air tickets to Hai Nan have been sold out for Feb 1 to Feb 8.
+
+Fortunately, I have booked my air tickets back to Luoyang one week ago. :-)
+
+Updated Maglev Ticket is Set to Be 75 RMB Oct 21, 2003
+
+Starting from Oct 11, 2003, the Maglev will pickup passengers at Pudong Airport on every Saturday and Sunday. Then it drops them off at Longyang Road Station. The price is 75 RMB. This is not the final price yet, since it will continue to drop after formal business operation.
+
+See more at PVG: Maglev Started Carry Passengers.
+
+More Information:
+
+PVG: Has Maglev Started Operation?
+
+Pudong Airport Maglev in Depth
+
+
+===== 2004-03-24 12:01:29 | Stealing in Xiang Yang Market =====
+
+ST's experience of pickpocket in Xiang Yang Market.
+
+Hi!
+
+I just came on 20 march to shanghai for holiday. Just found your site and it is great!
+
+Will like to share an incident that happened to me the other day. Was walking along area around Xiang Yang when vendors approached me to ask me to go to their shop. I said no and carried out walking and the vendor pursued me, constantly pestering me and showing me the name card and asking me to go to their shop. I was hassled for about 50 metres and finally she gave up.
+
+However, later I found out the real scam. She had pickpocketed me. Luckily, she could only take my nokia battery which was kept on a travel bag. I realised then that this was similar to the gypsy children in Italy. They asked for money with a placard and underneath the placard was the real sleigh of hand.
+
+The Next time vendors approach me, I know what to expect. I hope your readers will too. 
+
+I know this hurts the image of the city greatly. There are so many people on the road between the Metro ShaanXi North Road Station and the market. The 100-meter road is full of "venders", trying to bring you into their shops. Pay attention to them. I have complained this to some news agencies. I know there must be some reason why the policemen nearby, the market administrator or whomever responsible for this street never stop them. I don't believe they don't know it is there. Knowing this and take precaution does not hurt the image of the city as much as having visitors' wallet stolen there.
+
+Again, personally, I believe Shanghai is safe. I have experienced one stealing (I believe) of Wendy's mobile several years ago. That is my only experience of stealing during my 9 years in Shanghai. Meanwhile, I have claimed my lost mobile in taxi at the taxi company for twice - the good drivers reported the mobile to the taxi company and finally find me. Well. It is 2 v.s. 1.
+
+
+===== 2004-12-18 10:48:27 | I am in Washington, D.C =====
+
+To my surprise, the price of hotel in Boston drops significantly in the weekdays than weekends. So we modified the route a little bit and chose to come to Washington D.C. during the weekend. I am in Hotel Washington, in Washington D.C. now. As always, to find sometime to sit down and write is not easy.
+
+We took greyhound here. It took 4 and half hours. I am planning to leave for Boston on Dec 20 and go back to New York on Dec 23 to continue the Big Apply journey. The Hotel Washington is a very nice hotel. It is on the same street of White House, which is only one block away. The Washington Memorial is shining right outside my window and the huge Christmas tree Bush lit up is down there.
+
+Washington D.C. is the type of city that I fall in love at my first step. Since the law requires no building can be higher than the capitol in this city, the buildings here are not tall but huge. It seems every building's name starts with "National", such as the National Press Building, National Theatre and National Museum of blah-blah around the hotel.
+
+Due to the big contrast between Washington D.C. and New York City, it is even more quiet and here. It is a place where pedestrians have time to wait for red lights and drivers yield for pedestrians. People have time to say "excuse me" again. For us, it's quite like an escape from New York City.
+
+BTW, the Metro in Washington D.C. is among the best metro system I saw so far. The big halls of Metro and clear signs make it very friendly. The train carts are clean - they even have carpet on train!
+
+P.S. Excuse me for not replying comments, or some emails recently. For those I do replied, sorry for conciseness of the reply. For a person with very strong Internet relationships like me, you can imagine how many emails in my mailbox after two or three days of absence. The dialup is slow here.
+
+
+===== 2004-10-17 22:30:55 | My Map Has Errors - I Know =====
+
+I apologize to Mr. Peng who wrote to me to complain that there is an error on my Shanghai Map. He searched for Zhong Shan South Road II and come to my site since mine is the first in the result. According to my map, the place is somewhere near Xi Kang Road. He took bus No 113 there only to find the road he was looking for is at the other side of the city.
+
+I apologize for the inconvenience my map caused. I put a disclaimer on the map with red font and put it on the top of the page. It reads:
+
+注意：本地图上的点信息由网友提供，任何人都可以添加一个点；没有人进行任何核实。它可能会帮助您尽快地在整张地图上找到您要找的点，但是一定要先在原始地图上确认再使用。Note: All the point information on this map was contributed by readers and is not verified for ts accuracy. Please reference the map image before use.
+
+The Map
+
+The map is built with two ideas in mind:
+
+A map should be simple with less interface and load fast.
+
+A map should be built with community effort
+
+So I simply put the tiles of the maps and enable people to pinpoint on the city map and scroll using the errors.
+
+Then I opened the right to add a point to anyone who has access to the page. This is built upon the Wiki concept. In the previous version, I enabled people to write description to any point and delete any point but it is not included in this version.
+
+The point information is not accurate. I guess about half of the information is wrong. I will find a better way to control the quality to make it usable, but now, I guess I don't have time to do it. So a disclaimer is the best solution that I can accomplish within five minutes.
+
+English Version?
+
+I don't have an English version map. I know it is highly demanded and many readers asked me for that. I'm afraid I don't have one.
+
+Copyright
+
+Actually, the copyright of the map is the SMI. I have contacted with them and want to make some progress to get a usage license before I use. We made appointment to meet before but didn't find the time.
+
+
+===== 2005-02-27 12:38:56 | My Favorites in Shanghai =====
+
+My favorite place for afternoon tea: Xian Zhi Xuan (Ambroise)
+
+My favorite book store: Ji Feng Book Store
+
+My favorite working lunch restaurant: Wei Qian La Ma
+
+My favorite bus line: 926
+
+My favorite place for wireless Internet access: Starbucks
+
+My favorite Starbucks store: People's Square store
+
+My favorite Hunan Cursion: San Xiang Masion
+
+My favorite tea house: Tian Qu at Dong Fang road
+
+My favorite restaurant in Pudong: Qin Feng Tang Yun
+
+My favorite road: Hua Shang Road (the section between Urumuqi Road and Jiang Su road)
+
+My favorite university campus: Shanghai Acdemic of Theatre
+
+My favorite theatre: An Fu Road Theatre
+
+My favorite hotel building: Ritz-Carlton Portman
+
+My favorite office building: Corporate Avenue
+
+My favorite car make: Volkswagon Polo
+
+My favorite gallery: Shanghai Gallary of Three on the Bund
+
+My favorite luxrous store: Three on the Bund
+
+My favorite book: The Art of Travel
+
+My favorite hotel to stay: Ressainance Hotel
+
+My favorite airport for business: Hong Qiao Airport
+
+My favorite express way: A30
+
+My favorite new area: Biyun International Community
+
+My favorite church: Shanghai Community Church
+
+My favorite Sichuan Cusion: YuXing
+
+My favorite gym: Physical
+
+My favorite view: The turning point from Yan'an Elevated Highway to the Zhong Shan East Rd.
+
+My favorite furniture design: IKEA
+
+My favorite Karaok: Cashbox
+
+My favorite swimming pool: Sports Hotel
+
+My favorite tennis court: Shanghai Tennis Center
+
+My favorite car rental: Shijong Rental
+
+My favorite airline agent: ctrip
+
+My favorite number to call: 114
+
+My favorite newspaper: Oritental Morning Post
+
+My favorite technology book store: Only Bookstore of Shanghai Jiaotong University
+
+My favorite broadband provider: ADSL from Shanghai Telecom
+
+My favorite mobile service provider: China Mobile
+
+My favorite taxi company: Dazhong Taxi
+
+My favorite hosptial: Hua Shan Hospital
+
+My favorite English Magazine: That's Shanghai
+
+Update: Related posts on this topic Feb 28, 2005
+
+Micah posted his favorite list immediately after my post.
+
+BingFeng's Tea House also posted a list
+
+Fons proposed "My Favorites in Shanghai" as the next Shanghai Weblog Meetup topic
+
+I encourage people to write on this topic and notify me so I can add your list to this update
+
+
+===== 2005-06-18 23:18:31 | How to Win Free Cross China Travel? =====
+
+Many people have the Around the World dream. For young people in China, maybe the Around China Travel is more realic. Dan Washburn did wonderful to travel around China in 3 months. He was also very successful in the fund raising perspective. I hope he can realize his dream of publishing his story into a book soon.
+
+I talked with my friend, a girl with great thoughts recently. She is also dreaming a 3-month around China tour. She expects the cost to be something around 10,000 USD. It seems to be a mission-impossible to raise this big amount of money in China. Donation and sponsorship are not popular yet.
+
+I suggested her to focus on the larger scope. I thought there must be some way to get some money for her trip. I don't know yet. Here is a list of things I can think of. Anyone has more ideas or willing to sponsor her? Please leave comment.
+
+Plan A: Gege is a very good writer and writes novels. Maybe she can publish some articles (but only in Chinese).
+
+Plan B: Some company may want to sponsor some $$ to have her wear the T-Shirt or coat with the logo of the company. And she makes sure there are enough reports for the trip so people can see the logo.
+
+Plan C: If any company or agents want someone to do some survey around China, maybe hiring her is a good idea - she only needs the travel cost, and don't ask for pay for the labor (I guess)
+
+Plan D: She can take pictures and sell it on the web, so someone can assign some photo-taking tasks....
+
+Plan E: Create a donation website so people can donate and help her...
+
+I know there must be plan F, G to Z. Any ideas?
+
+P.S. Wendy spent the last week in Seattle and this is the first weekend for her in Seattle. Wendy always wanted to visit Seattle. Her last trip was only to Portland - very near Seattle. I hope she enjoys the trip, as well as enjoy the happy life in Shanghai.
+
+
+===== 2005-12-27 23:12:20 | Pressure at Year End =====
+
+End of 2005 marks the enforcement of the ICP license and recordal requirements. This time, it seems they really mean it.
+
+In my previous story, I outlined the requirements for the registration for website. The first requirement came out in the year of 2000, and asks all website with a domain name to file registration with detailed information with the government. Nothing happened after the deadline.
+
+In 2002, it was said to be enforced again. Nothing happened.
+
+All the websites are in an environment that the law and regulation requires all site registration unrealistically from the year of 2000. The whole five years was under the pressure but not too much action. 2005 is different.
+
+In the year 2005, it is announced that all websites need registration. This time, it seems it will be enforced. At the end of the year, especially recent two weeks, many websites were shutdown.
+
+The homepage of the www.net.cn, the largest virtual server provider in China pops up the following notice:
+
+Image in courtesy of www.net.cn
+
+It explained the reason why their client's website were shutdown - because no registration license was found on the home page - it was required by the regulation. The service providers are required to pause the service. This requirement was there for 5 years and these two weeks are the starting point of the real enforcement.
+
+In Shanghai particularly, the network service is very unstable. The backbone network stops function from time to time. Many ADSL users were affected. For several minutes every few hours, Internet seems not accessible at all. I am confused whether the websites are down or just the network infrastructure. For example, the MSN Messenger will logoff for no reason and after sometime reconnects. It is the same for my friends. I bet the MSN Server receives much more logout (lost connection) or logon request these days from Shanghai. Beijing seems not impact from the network failure.
+
+Anyway, the end of 2005 is not a happy ending. The network blocking and shutting websites added a lot of stress to the atmosphere of the new year. It is annoying, very annoying.
+
+
+===== 2006-01-26 21:15:12 | Overseas Chinese Get Back to Home =====
+
+I never travel before the Chinese New Year on International (Taiwan/Hong Kong/Macau) flight.
+
+:-) International (Taiwan/Hong Kong/Macau) is the standard term to discribe the type of flights in China. Although flight from Hong Kong is not international flight, passengers follow the same procedures as International flight. That is the reason it is quoted that way.
+
+Every Spring Festival, transportation within China is a big problem, but I never imagine that international (T/H/M) flights are the same.
+
+Besides me are two gentleman from Indonisia. They are going back home at a small village in Taijin. The flight was fully packed with people. Many of them bring children with them.
+
+Then I realized how important Hong Kong plays a role as the connection between China and the world. Many passengers fly to Hong Kong first, and then transit to Beijing, Guangzhou or Shanghai. Hong Kong obviously have more connection to other Asia countries than any mainland airport does.
+
+Taiwan and Mainland China
+
+There is still no direct flight from Taiwan and any mainland city till now. If people want to go to Shanghai from Taipei, he/she needs to wake up very early, take flight to Hong Kong, transit there to Shanghai. It takes about 5 hours or more. It is the same for peopel to go to Taipei (if he/she luckily got the permit after a very lengthy procedure).
+
+It is very inconvinient, especially at the Spring Festival. Some data show there are more than one million people from Taiwan are working or living in Shanghai (the official number is much smaller). It is almost impossible for people to get back to Taiwan for Spring Festival via Hong Kong.
+
+This year, as the last few years, direct flights are provided between major cities and Taipei. As I know, there are Beijing - Taipei, Shanghai - Taipei, and Xiamen - Taipei flights. The ticket is around 4000 RMB.
+
+At Pudong Airport, I saw many signs for the flight. This is one example:
+
+They have special lanes at security check for passengers at the direct flight, and there were intensive media coverage.
+
+
+===== 2006-04-21 23:43:20 | CTRIP + CMB = Best eCommerce Experience =====
+
+It has been at least 4 years since I first used online payment in Shanghai. There were always dissatisfactions and "exceptions" either in the system, or credit card payment, or delivery.
+
+Today, my experience to book a ticket on CTRIP, Pay with China Merchant Bank credit card, and claim e-ticket from China Eastern Airlines were perfect. I vote it as the best ecommerce experience I have ever had so far.
+
+I am excited about the improvement in online stores, credit card system, and electronic flight ticket.
+
+Booking
+
+There are many improvement in the CTRIP system, that enables me to quickly enter all the information I need. For example, they store all the previous names on ticket, so I won't need to enter my Chinese name, National ID, and Birthday again. These information are required by airline.
+
+It responded quickly and suggested me e-ticket was available.
+
+Payment
+
+The credit card from CMB works best for me. I entered the card, and the system just went through. For many system, like net.cn, they have complicated system, and still simply does not work. When I enter a credit card number, those system reports scary technical details of an error, that is not possible to understand.
+
+This time, payment is OK.
+
+e-Ticket
+
+MU (China Eastern Airlines) and CA (Air China) started e-ticket years ago, and kept expansion of their e-ticket services. There were always problems with a new systems before.
+
+This time, the system seems to be mature already. I was told to visit the counter A, B in Pudong Airport to claim the boarding pass.
+
+No burden of delivery the ticket.
+
+3 minutes
+
+Everything happens in 3 minutes. This is exactly what ecommerce should look like. From the idea to reality, it takes more than 5 years!
+
+Change happens all the time. It is not as fast as we original expect, but when it happens, we realize it is actually faster than we thought.
+
+Bill Gates said: "The development of technology is always below our expection in 5 year frame, but dramatically above our expectation in 10 year frame."
+
+It applies to social change too.
+
+
+===== 2006-10-17 23:29:30 | Say Goodbye to Paper Ticket =====
+
+From yesterday, CATA (China Air Transportation Association) stopped providing paper ticket to ticket agents. This is an event that will eventually affect my life, and many others.
+
+This is a great achievement. When the Southern China Airlines started e-ticket testing in 2000, 6 years past. The user behavior changes slowly, and till now, paper ticket is still 70% of all tickets.
+
+My guess is, from today, travel agents cannot purchase blank paper ticket from CATA. They must have a lot of tickets in stock that they can continue to print out. However, by the end of this year, when most of the paper tickets in stock are used up, the travel agencies have to transit to using electronic tickets.
+
+I am expecting more people using e-tickets and recognize e-ticket.
+
+Reimbursement?
+
+One of the key issue with e-ticket is, it does not work with the current reimbursement practice. In U.S. and other countries, a receipt can be of any form - a piece of paper with handwriting numbers, or printed receipt from a teller machine. In China, however, only government agencies can issue blank invoices, and merchants fill in the blanks on the standard format invoice. Originally paper tickets are type of that "official invoice".
+
+My friends in U.S. thought the invoice in China is like money note. That is true (with very high-tech anti-fake technology in it).
+
+The e-ticket caused the problem. In many countries, you can just print out the receipt and reimburse with the paper. This is not working.
+
+To meet this need, the travel agents are thinking of ways to workaround it. I believe finally, people still have to go somewhere to get a paper ticket. The blank tickets may still be bought from government, and the travel agents fill in the departing, arriving cities, and the price. This may be even done after the travel. In this case, the paper ticket is not used as part of the travel experience, it is all about the reimbursement (and sometimes tax) experience.
+
+Another example of how the less-developed industry/process (the tax and reimbursement) stops fast pacing industry (airlines) from going faster.
+
+
+===== 2007-01-10 23:31:12 | 120K Self-Claim Tax in Details =====
+
+Disclaimer: Just like previous post, this is just want I *THINK* it works. It is NOT an official explain of the tax issue.
+
+The source of this explanation came from the tax summary paper I received in mail and this link.
+
+Who Should Follow the Self-Claim Routine
+
+Anyone who have annual income above 120K RMB should self-claim his/her tax to the tax bureau from Jan 1 to March 31 from this year.
+
+Personal annual income includes not only salary, it also include bonus, income for labor, interest, stock dividends,  author's remuneration, copyright royalty, rent of property, transfer of property,    accidental income and other income.
+
+From the list, it seems any money that goes into someone's pocket should be claimed. There are some exception, but none of them seem to be common to normal people.
+
+Tax rate for most of the items are 20%.
+
+How to Claim it
+
+The tax bureau provides a hot line: 12366 to handle questions. People can go to their office to claim between 8:30 to 16:30, from Monday to Saturday.
+
+What is the Status?
+
+In the most important national wide news time from 7:00 to 7:30 PM, there is an update for the status yesterday. 9 days after the policy was announced, there are 1253 persons claimed it in Beijing, 400 for other cities, and no one claimed in some cities.
+
+When I search the news on Internet, many cities didn't see anyone come to their office to claim.
+
+According to some (unconfirmed) sources, people we didn't claim their tax will be charged up to 5 times of 50% of their tax due.
+
+How about the Policy?
+
+I am pretty sure that this policy will be among the countless policies that no one follow. Just like the ICP license policy issued in 2000, it was not enforced until the year of 2006.
+
+For this one? It times time, maybe for 5 years for this policy to be really enforced. This can be a problem in China that laws and regulations are not accepted easily, just because the process of drafting these laws didn't involve the people.
+
+
+===== 2007-07-02 23:30:02 | China's Social Resources =====
+
+This morning, I took one morning leave to go to hospital to inject the immune for my son. He is one month old now - exactly one month. Due to Chinese tradition, people often celebrate the date with a ceremony similar to the wedding ceremony - after one month, the month, and the children (and the father, of cause) should already recovered from the initial "disorder" to the normal life. This seems to be good timing. We didn't do it. We went to hospital this morning. The second round of immune injection started from today.
+
+To my surprise, it took us almost the whole morning to wait in the long line of crying babies. We left around 11:00 AM after the injection, and was not patient enough to wait in the long line to get the Vitamin B the doctor prescribed. If I should have waited, I guess I needed 40 minutes.
+
+This reminded me the talk I had with Jim the other day. He said: "Before you have a baby, or you get sick, you may not understand how limited the social resource in this country is".
+
+This is true. Before, if there is only Wendy and I, there are not too much we need. Just go to restaurants, and we went to movies - there are plenty of them both in Shanghai.
+
+However, when we have a baby, we suddenly found there are just so few hospitals, so few doctors, and so long you have to wait. Later, I believe we will continuously find out the educational system, the other medical care, the sport facility for children -- it is still very rare resources - far from enough.
+
+I am also aware that I am in Shanghai - the city in China with relatively better social security, and insurance system. If I feel the lack of resources (indicated by long waiting time), it must be so in other places.
+
+I have to admit, that I only see part of China (before and now, and in the future). I just found out this with the arrival of my son.
+
+
+===== 2007-10-27 23:22:52 | Photos of Donghai Bridge =====
+
+Wendy, her parents, Yifan and I went to the Donghai bridge today. It is the second time for me to get onto the bridge, and the first time for others. Maybe is the second bridge Yifan has ever been to (with the first one as Nanpu Bridge).
+
+You can check my previous entry on Donghai Bridge to know the background of this bridge.
+
+To be short, it is the longest sea bridge in the world with 32.5 km on the sea, and another about 10 km on the land or the Yangshan Deep Water Port.
+
+This time, I took my camera with me so I can show you a little bit of the bridge, and the island.
+
+Below: Entrance of the bridge.
+
+Photograph by Wendy
+
+Below: The road on the bridge - we continued on this road for 15 minutes.
+
+Photograph by Wendy
+
+Photograph by Wendy
+
+Below: Rocks of the Yangshan Island
+
+Photograph by Jian Shuo Wang
+
+Below: Control tower on the top of the hill.
+
+Photograph by Jian Shuo Wang
+
+Below: At the entrance of the Yangshan Tourism Area. They offer walking path on the hill so people can see the whole port. Since Yifan was with us, we didn't take the challenge (and pay 30 RMB) to go along the path.
+
+Photograph by Jian Shuo Wang
+
+Below: These kinds of rocks are very rarely seen in Shanghai.
+
+Photograph by Jian Shuo Wang
+
+Photograph by Jian Shuo Wang
+
+Photograph by Jian Shuo Wang
+
+Below: Parking lots at the tourism area.
+
+Photograph by Jian Shuo Wang
+
+Below: Rocks again. Next time I go there, I will make sure I climb to the top of the mountain. Yangshan is, anyway, the second hill in Shanghai.
+
+Photograph by Jian Shuo Wang
+
+Below: The entrance of the tourism area.
+
+Photograph by Jian Shuo Wang
+
+Below: This is the path to the hill.
+
+Photograph by Jian Shuo Wang
+
+Below: the tunnels on the Yangshan Island.
+
+Photograph by Jian Shuo Wang
+
+Below: The port area.
+
+Photograph by Jian Shuo Wang
+
+Photograph by Jian Shuo Wang
+
+For more photos, please check my Donghai Bridge Photo Collection.
+
+
+===== 2008-02-07 21:39:46 | My Project Directory =====
+
+I just found out a directory on my laptop - the Project direction, holding part of the project I have worked on when I was in Microsoft. Hmm.... That is long time ago. Although the time shows 2007 (the time I copied them to this laptop), the real created time is from 2000 to 2005.
+
+  D:\my\D. Projects Direction
+
+  02/07/2008  09:30 PM    <DIR>          .   
+02/07/2008  09:30 PM    <DIR>          ..    
+10/09/2007  06:19 PM    <DIR>          Air    
+02/09/2007  07:58 AM    <DIR>          Antares    
+10/09/2007  06:21 PM    <DIR>          AntBackup    
+02/09/2007  07:58 AM    <DIR>          AutoComplete    
+02/09/2007  07:58 AM    <DIR>          B2BTemplate    
+10/09/2007  06:25 PM    <DIR>          CampusRecruiting    
+10/09/2007  06:25 PM    <DIR>          China Mobile    
+02/09/2007  07:43 AM    <DIR>          CodePlace    
+10/09/2007  06:26 PM    <DIR>          CoffeeBean    
+10/09/2007  06:27 PM    <DIR>          Communities    
+10/09/2007  06:28 PM    <DIR>          Conference    
+02/09/2007  07:59 AM    <DIR>          ESS    
+02/09/2007  07:59 AM    <DIR>          Lab    
+08/16/2007  06:00 PM    <DIR>          Lenovo    
+02/09/2007  08:02 AM    <DIR>          Longmen    
+06/08/2007  11:39 AM    <DIR>          map3    
+10/09/2007  06:30 PM    <DIR>          MAT    
+02/09/2007  08:02 AM    <DIR>          MCS    
+10/29/2007  11:22 AM    <DIR>          movabletype-php-dao    
+02/09/2007  08:02 AM    <DIR>          MSF    
+10/09/2007  06:35 PM    <DIR>          MSFTI    
+02/09/2007  08:02 AM    <DIR>          MVP Platform    
+02/02/2008  03:41 PM    <DIR>          MVP Sumit    
+02/09/2007  08:06 AM    <DIR>          MyBusStop    
+10/09/2007  06:36 PM    <DIR>          New York    
+10/09/2007  06:36 PM    <DIR>          NewCo    
+02/09/2007  08:07 AM    <DIR>          OrientHome    
+02/09/2007  08:08 AM    <DIR>          PartnerListeningSystem    
+02/09/2007  08:08 AM    <DIR>          Passport    
+02/09/2007  08:09 AM    <DIR>          Personal Suite M1    
+02/09/2007  08:09 AM    <DIR>          Profile    
+07/25/2007  02:02 PM    <DIR>          PSSSummit    
+02/09/2007  08:10 AM    <DIR>          Robin    
+09/05/2007  10:53 PM    <DIR>          RoundTheUSTrip    
+02/09/2007  08:10 AM    <DIR>          RushGo    
+02/09/2007  08:10 AM    <DIR>          S&M Training    
+02/13/2007  12:14 PM    <DIR>          ShanghaiMap    
+02/09/2007  08:11 AM    <DIR>          Smile    
+02/09/2007  08:12 AM    <DIR>          SocialSoftware    
+02/09/2007  08:13 AM    <DIR>          SoftwarePark    
+02/09/2007  08:14 AM    <DIR>          SolutionLab    
+02/09/2007  08:14 AM    <DIR>          TechEd    
+10/09/2007  06:37 PM    <DIR>          TechTalk    
+02/09/2007  08:14 AM    <DIR>          USClarify    
+02/09/2007  08:15 AM    <DIR>          WebRAID    
+10/23/2007  06:17 PM    <DIR>          Wedding
+
+  Any of them takes very much time, and effort to complete. Let me try to explain some of them - those projects reminds of old times, and even reminds me that I have ever had some kind of knowlege that I am now not aware of.
+
+
+===== 2008-08-12 22:42:38 | One Ceremony, Many Perceiptions =====
+
+I talked with my native American friend over the coffee today. I asked about his comments on the Opening Ceremony.
+
+As many people, he said the ceremony is great, and amazing... just like many people feel. He particularly mentioned that he was at bar in Shanghai with many foreigners. Many of them didn't believe there are people behind the MovableType part, until the last minute. He said this kind of show is very hard to create in western world. Later, he said, "maybe Germany" - I was very caustious when I heard about it, because I did have the same feeling to connect the "everyone the same, country first, power centric" show with the Berlin Olympic. I will talk about it later in another article. (Don't worry. Anything can be seen from different angle and reflect differnet result, just like the  Elephant and Bindmen story, and this wonderful opening ceremony is not an exception)
+
+Besides that, he mentioned some interesting points that I didn't thought of before.
+
+Why It is the Army who Raised the Chinese National Flag
+
+One of the question he asked was completely out of my expectation. He asked:
+
+Why at the begining of the ceremony, it is some military service people who raised the national flag of China? Is it a signal sending to the domestic military that "you are very important, so we put you into the most visible location? Or is it a signal to show to the world a powerful military force?
+
+I said no-no-no. In Chinese ceremony like this, it is ALWAYS the military people who raise the national flag, just like in the 1997 Hong Kong take-over. For me, it is the first part that many children took the flag that surprised me a lot - just the other way. If it is perceived this way, I think there is big misunderstanding.
+
+Anything Else
+
+I believe there must be many other misunderstanding like this for the ceremony. What is your favorite piece? I'd like to hear your "questions marks" for the event and help to explain some of it.
+
+
+===== 2008-10-19 20:17:09 | Xishan, an Island in Taihu =====
+
+As I forecast yesterday, my family went to Xishan, an island in the middle of the Taihu (Tai Lake). It is connected to the land via a big Taihu bridge.
+
+Here is the island - Xishan 西山:
+
+View Larger Map
+
+Here is the the island in the bigger map in the Taihu:
+
+View Larger Map
+
+The Area
+
+Many weeks, Wendy and I was wondering where we should go to spend the weekend. In Shanghai, we have became hopeless to find any place new or to spend the night. We love Hangzhou, and Suzhou.
+
+There are not many new things in the city of Suzhou. Our interest is mainly around the Taihu area.
+
+This time, we decided to go to the island in the Taihu.
+
+Xishan
+
+Xishan is the largest island in the Taihu (Tai Lake, the second largest lake in China). It is connected to the land with a large Taihu Bridge - three sections connecting three islands.
+
+We went to a place called Mingyuwan Village 明月湾村. Many of the buildings in the village were built in 1700s.
+
+We stayed there for one night - 100 RMB (13 USD) per room per night. We went to their orange farm, and hand-picked 14.5 kg of orange. We paid 29 RMB for it (4 USD).
+
+Transportaiton
+
+Getting there from Shanghai is easy. Here is how we got there:
+
+Yan'an Elevated Expressway
+
+-> A9
+
+-> A30
+
+-> Take Daying Exit 大盈出口
+
+-> West on Beiqing Road for 8 km 北青公路
+
+-> Suhu Expressway 苏沪高速
+
+-> Suzhou Ring Expressway 苏州绕城
+
+-> Take Xishan Exit 西山出口
+
+-> Take Taihu Bridge 太湖大桥
+
+-> Follow about 10 signs to the village.
+
+We took about 2 hours to get back (3 hours to get there because of traffic jam on A9).
+
+It is funny that the expressway from Suzhou to Shanghai just stops at the border of Suzhou and Shanghai. Suzhou is waiting for Shanghai to continue the construction but Shanghai just responded coldly. There is almost no cars on the road at all. It is said that the Shanghai section will start construction soon.
+
+
+===== 2009-02-19 21:10:27 | Financial Crisis and Shanghai =====
+
+It may be too late for me to write about the financial crisis, and its impact to Shanghai (I tried hard to avoid to use too big terms like China - basically, I only know a very small portion of the city of Shanghai, not to mention about China).
+
+Shanghai IS Impacted
+
+Despite of many claims that China is fine so far, I clearly feel the arrival of winter, or at least approaching of financial winter.
+
+Taking Wendy and I as an example, although we are not directly impacted, the sentiment of being more conservative surely impacted us. We have canceled almost all the movie expense, and cut our dining out to once every week (before, it was once once every day or twice per day).
+
+For layoffs, recently, I started to see signs like this. The winter has clearly impacted some higher risk companies, like Internet companies. It is not surprising to know friends leaving their company, and I feel very bad about it, and also, it is almost inevitable in this environment.
+
+Role of Controlled Media
+
+It is interesting to see the role of media in financial crisis. If you open all the major newspapers, and websites, the theme of all the news is: We face challenges, but everything is still fine, and at least it will be fine. For the majority of people who rely on the limited source of information, they are more optimistic than they should be, and ironically, this is a good thing in this era. The current economy is all about confidence. If majority of people are still confident (or blindly confident) about future, maybe the situation won't go as worse as it should be. In the US crisis, I am sure Internet plays an important role, that everyone knows the bad news, almost at the same time.
+
+I will still keep an eye about what is happening here in Shanghai, and if you have any specific questions about what the real situation is, feel free to ask me, and the questions help me to observe what is happening around me better.
+
+
+===== 2009-07-31 22:40:57 | Welcome Home, Chris and Endeavour =====
+
+After 15 days in space, Endeavour Shuttle will return to earth in one hour - it should land in Florida at 10:48 EDT, or 11:48 PM China time.
+
+Chris sent us (YLF) an email describing his departure preparation back to the Earth when he was in the International Space Station. It is the first email I got from the space - very cool. Obviously that very exciting and interesting email is private communication and should not be published, otherwise, I would be very happy to share what Chris experienced in the space on this blog.
+
+As I wrote in my email back (Chris told me that it is possible for astraunauts to receive emails on space station), to hear from a friend about fact that night/day alternates at 45 minutes circle is much more "real" than reading it from a text book. I have never been so close to the space, and that is one of the inspiration of landing my own outer space exploration facility one day.
+
+Image credit: NASA
+
+Update 10:59, July 31, 2009
+
+I watched it live on NASA TV, and took the following screen shots:
+
+Xu Zhiyong's Another Journey
+
+At the same time Chris returns home, another YLFer, Xu Zhiyong, was brought away by the police in Beijing in his home. I admire Xu Zhiyong's idea about Open Constitution Initiative, and his tiredless effort to help those treated unfairly by the government to get justice with his professional legal assistant. Several weeks ago, the organization Zhiyong started 5 years ago was fined by the Tax Administration for more than 1 million RMB, and soon, the OCI was banned by the government, and now Zhiyong himself is brought away by the police, and subject to sentence. Obviously the government is trying to prevent people like him to fight for justice to this country. To me, Zhiyong is actually doing something much more dangerous, and that needs more courage than the space exploration. I will closely monitor what happens to Zhiyong, and provide my help if needed (including update the status of the case on this blog).
+
+
+===== 2009-04-01 23:47:18 | 10 Years from 32151, Automation, SJTU =====
+
+My old classmate Gong Liang sent us an email to remind us to return to Shanghai Jiao Tong University (SJTU) on April 11, 2009 - it is the official "Get Back to School" day of SJTU. More than that, it is 10 years since we graduate from university. It brought my memory back to the class 32151 of Automation Department of SJTU.
+
+10 years. I changed a lot in the last 10 years, and the time as a student in Shanghai Jiao Tong University seems to be very far from me. At that time, there was no blog, no digital camera, and there was plenty of time. I am not a good student when I was in university - I may talk about it when I am in the mood of getting back to old days...
+
+My office now is still on the campus of the university, but only today, I suddenly realized that I have ever studied here 10 years ago - think about how long the 10 years are.
+
+Yes. I am getting back to Min Hang campus on April 11. If there is any other alumni who go back to Minhang Campus, please let me know, and let's schedule some time to know each other and talk.
+
+Here is a list of names of classmates. I read the names of each person, and, ops, for some, I had a hard time to remember... We didn't contact each other after graduation (to be more exactly, I intentionally isolate myself from others). Hope April 11, 2009 is an opportunity to reconnect to my old friends.
+
+32151班
+
+段晓文　　　陈黛　　　　曲波　　　　吴立纲　　　周捷
+
+张铭　　　　王锋　　　　魏海滨　　　梅佳予　　　王晔
+
+朱元晨　　　殷重先　　　宗锐　　　　周珉　　　　王怡靖
+
+周俊威　　　刘冬清　　　王建硕　　　马劲　　　　柴海林
+
+张宜　　　　何宇升　　　钱江　　　　黄学　　　　朱顺波
+
+张震　　　　宫　亮　　　陈汇钢
+
+32152班
+
+言玮　　　　万洁卉　　　刘枫　　　　王治　　　　杨永
+
+赵翊捷　　　潘炜　　　　金东　　　　吴文翔　　　刘毅
+
+方圆海　　　徐军　　　　顾军　　　　池纪锋　　　费嘉亮
+
+向阳　　　　王凌云　　　王茂华　　　张江红　　　王昊鹏
+
+赵家佳　　　潘正　　　　陈波　　　　徐光业　　　陈旻
+
+张华　　　　尹启龙　　　冯传正　　　
+
+32153班
+
+桑伟数　　　何育敏　　　王爱华　　　朱磊　　　　冯玮
+
+张敏毅　　　周纪　　　　赵海峰　　　陈德嵘　　　俞清
+
+叶凌　　　　李炜　　　　赵晋　　　　池永华　　　蔡峰峰
+
+李晓冬　　　陈昶　　　　甘泉　　　　卢会来　　　祁江
+
+于祖强　　　冼旭和　　　盛浩军　　　杨添龙　　　郑鸿
+
+严胜
+
+
+===== 2010-10-10 22:46:28 | International Financial Center Opens =====
+
+Heard the news that International Financial Center opens at Lujiazui (many weeks ago), and it offers free parking, we detoured there on our way to the post office to check out.
+
+  Location: It has many the best location in Lujiazui, just between Jinmao tower, and the Super Brand Mall, as shown in the map below (it was not completed yet in the satellite image).
+
+    
+
+  After IFC opens, Shanghai has another top shopping center with the first line brands like Louis Vuitton, Gucci... I just feel I entered the world of "The Devil Wears Prada". Interestingly, I am the dummy who don't understand the brand. I just cannot keep asking the question, why a bag worth 20K RMB? What is the value the branded product? My guess is, maybe the reason is just like people buying iPhone (I can certainly understand why iPhone justifies its 3x to 4x higher price than average phones).
+
+  
+
+  Look at the list of brands you can find in the building.
+
+  
+
+  I didn't took a phone of the complex in the International Financial Center. It includes the HSBC Tower, Ritz Carlton, and office towers. Standing from there, you can see the Lujiazui skyscraper area.
+
+  
+
+  Shanghai is very difference in the last few years. 10 years ago, when I walk on the Orchard Road of Singapore, I was completely overwhelmed by the magnificence of the road. Few weeks ago, when I go there, I saw the Orchard Road, and started to wonder if it is the same road as I saw 10 years ago. It turned out that Shanghai changed faster than Singapore's Orchard road. In the last ten years, Nanjing road completely upgraded in the Nanjing West Road section, and the Huaihai Road also changed its face quietly. New places like the IFC, World Financial Center raised.... I am not actually too happy about the fact that Shanghai turning into a bigger metropolitan with luxurious brands covering the city faster than McDonald's. It is just a matter of fact...
+
+  I provided the information for the people who loves shopping, although I am a confused speculator in this strange place.
+
+
+===== 2010-04-02 22:42:09 | Nissan Teana 2.5 XL =====
+
+I started to drive the new white Nisson Teana. We still haven't given it a name yet, but will surely do that in few days. Here are some initial thoughts
+
+Bigger Car is Not Necessarily Better than Small One
+
+For the first time, I realized that bigger car is not as convenient as small car, especially in crowded city like Shanghai. I picked up my feeling of a new driver again - on the elevated highway, I started to complain the lanes are too narrow. At parking lots, I have to reverse the car to the narrow place - before, I always dive into the parking lot without even slow down too much - the benefit of a small car.
+
+CVT
+
+The Teana CVT's impact to driving is obvious. When I accelerate, the engine's speed is always 2800 round/min, and stick there as a constant. That is very different from the 5AT automatic shift, or manual shift.
+
+V6
+
+The V6 engine is very quiet. That also brings a problem. Wendy forgot to turn on the engine for several times. There are not very good ways to identify whether the engine is on or off without look at the big orange Start button. It is too quiet.
+
+Keys Always in Pocket
+
+My favorite part of the design is, you never need to bring the key out of your pocket.
+
+When you go near the car, the car is automatically unlocked, and you can press a small button in the handle to open the car. Then you just need to press the big orange start button to start the engine, and you are on the road.
+
+At the destination, you just left the car. If you are 85cm away from the car, it is locked automatically, and the front lights are closed. That is a very nice feature. I know myself better than anyone else. I tend to be attracted by small stuff like this than the power of the engine.
+
+Need More Time
+
+There are many great feature that I have not explored yet. I need more time to get used to the new car.
+
+
+===== 2010-07-07 09:50:40 | Reserved iPhone 4 at Apple Store =====
+
+After a meeting from 2:00 to 3:30 PM in downtown Palo Alto, I passed an Apple Store at 451 University Avenue Palo Alto, CA 94301 (650) 617-9000. Sometimes, shopping idea just happened at a flash of thought - I never thought about buying iPhone 4 before, but when I played it for a while, I decided to spend the $599 to get one. That is the difference - if you feel something on your hand, feel its weight, and play with it for a while, and most importantly, when you feel it is closer to you, and you can get it with a small action, you are more likely to buy it.
+
+That was what happened to me.
+
+Obviously, there is no easy way to get an iPhone 4. There are no iPhone in stock. There is similar poster on the Apple Store as on RadioShack, and other places selling iPhone 4: Due to popularity of iPhone 4, there is limited or no supply for iPhone in this store....
+
+I used the online system to make an reservation. When an iPhone is available, they will send me an email to pick it up at the Apple Store. Since there is no obligation to buy, it made the decision to reserve one even easier.
+
+So, I am on the waiting list to get an iPhone 4. I just hope it arrives before I leave Palo Alto, although the chance is not very high.
+
+Good job, Apple for generating such huge demand for a single product. When I walked out of the store, I realized Apple's headquarter at 1 Infinite Loop, Cupertino, CA, is just 10 miles away by driving from where I stood. Silicon Valley is really one of the tech capital of the world - I also realized that the iPhone will actually be manufactured in a factory somewhere in China. It is very likely to be in Shenzhen, where some young workers just sadly committed suicide. This world is more and more connected and we often realize the lines connecting the dots in special occasions like this one - when someone just reserved an iPhone.
+
+
+===== 2011-01-03 10:47:52 | The New Year Holiday Ends =====
+
+The last day of the three day holiday of the New Year.  Enjoyed the three relaxed day before putting all my effort back to my website. It is shining here in Shanghai. It snowed a little bit when I was in the Liangzhu 良渚 area in Hangzhou yesterday, and I heard it snowed this morning (I found some evidence on my car), but now, it is sunny and pleasant in Shanghai again.
+
+Looking back, I just realized how age, or the arrival of Yifan changed the family routines so greatly. The two-person family is filled of party, movie, afternoon tea, and friends. The three-person family is more of staying at home, or family gathering. It is kid-centric. I feel I am far away from this city - whether I live in Shanghai or other small town does not matter that much for a family, as long as there is kindergarten, and parks.
+
+New Expressways
+
+Yesterday, we drove back from Hangzhou. The misleading signs ("To Shanghai") led the cars to a new expressway, named S13 练杭高速 near Hangzhou. It turned out it connects with S12 (申嘉湖高速), and S32 in Shanghai. There are basically no traffic on the newly built expressway. I was always amazed by the newly addition of infrastructure in the Shanghai/Hangzhou area. I often run into roads that leads to sometimes seems "nowhere".
+
+Xinyang Market
+
+The third day of the new year, Wendy and I went to the Xinyang Market under the Science and Technology Museum. It is the closest replica of once famous Xiangyang Market. We bought some cloths, and shoes for the kid - a fresh new year.
+
+The Art of Travel
+
+The new year also started with some reading. I started to re-read Alain De Botton's The Art of Travel, the book I desperately fell in love in 2005. I appreciate the sensation it helped readers to build in themselves in daily life. Isn't it pleasant to start a new year with some good books?
+
+Again, Happy New Year! I am happy to have enjoyed the first 1% of the near year (or about 1/3 of the new week).
+
+
+===== 2011-05-25 23:09:20 | I Went to Karaok =====
+
+I went to Party World (originally the Cash Box) with the team tonight. OMG. When was my last time to visit Party World? I suspect it was in 2002 - about 9 years ago in Puxing Park. After that, I don't remember I have went to sing Karaok. It may be too far memory for me.
+
+For the songs, I don't know most of the songs people sang. "When did this song come out?" Often the answer was "Last year", or "2008"... I am not interested in songs. Does it mean aging (while, just a little bit?)
+
+Kids
+
+Looking back, there are some big life changer. Having a baby is definitely the biggest change about 4 years ago. That is the good bye to party life, and even to friend's world. To some extend, that is also the end of the two-person world, and become a one person world - Yifan's world. Night means at home, seeing Yifan play, and send him to bed. Night, is no longer the time to kill with many different ways.
+
+Marriage
+
+Marriage is another smaller life changer. It means the end of life surrounded with friends (either female or male). It is a new journey. That means most of the friends of both world come to emerge into one big circle - I know many of the friend of Wendy's and she knows mine, and to find the perfect circle of knowing everyone is harder.
+
+Keep Younger
+
+I am excited to be surrounded with college newly graduate. It was my situation about 12 years ago.
+
+Does it explain why my friends who don't have a child in their life (late 40s, 50s) are still pretty young? It is not related to physical change - it means people have about 10 years of uninterrupted time of being young, being party animal (when their peers are baby sitting), and be surrounded with really young people (when their peers are surrounded with too young baby).
+
+One question: can people with a kid can still live like those without? Possible?
+
+
+===== 2011-11-04 00:16:44 | Culture Shock in my Own Country =====
+
+When foreigners enter a difference country, they feel the culture shock. However, I found out that even in China, I sometimes feel the culture shock myself, from time to time.
+
+Regional Culture Shock
+
+China is large, and China differs a lot from region to region. The recent trip to Xi'an is pretty shocking in some ways - how people see entrepreneurs, and how people value their fixed income jobs - very different from Shanghai.
+
+China is as big as an Europe, and the diversity is maybe at least as big as the european countries. There is no such a thing called China. It consists of so many provinces. The place I grew up - Luoyang, is very different with, even the neighboring cities, no to mention the cross province contrast.
+
+System Culture Shock
+
+What system means? It is the government and the party system. It is a very strong system with a very strong culture. I was completely shocked from time to time when I deal with the system. Something we care, they don't. Something we don't care, they care a lot.
+
+For example, I was consistently educated by the government guys when we meet. They told me I should bring a notebook, and the book I brought the second time is too small to show respect. They complained the table to host the government guys were too small, and claimed that we should have the budget to buy bigger tables. Things like this.
+
+Culture Shock is Normal
+
+The more I see this world, the more I understand that culture shock is just part of this universe. Even in the relatively more melted culture like Silicon Valley, the culture shock between relatively very similar companies in the same industry is big enough - look at current Yahoo! v.s. Google v.s. Facebook v.s. Twitter - they are so different and I assume people transiting from one company can find it hard to fit into the other.
+
+The nature of culture shock is really about finding people in another company/society/system/group sing highly of something that you hate, and try to kill many things you value...
+
+This can be universal, and long lasting.
+
+
+===== 2012-07-26 09:56:48 | We Design Our Life, at Least for Travel =====
+
+I met with many people during the trip, and many of them were so interested in China, so that they even sent their kids to Chinese language school, but they never went to China. I asked why, and they said, they were thinking about it. I always encouraged them to come to China - anyway, it is just 12 hours of plane ride away.
+
+The interesting story of Two Monks's travel story suggested that well preparation, and a lot of money does not guarantee a monk to get to Nanhai from Sichuan. The one who take action made it.
+
+Related to this, I found it interesting to see how visa effectively prevent people in China to travel. We need visas to almost everywhere in this planet. This is the excuse many people, including myself, use not to travel. But the counter argument is, people in the States don't need visa to most of the places (Well, they need it to come to China), they don't travel as we thought. Taiwan is a new travel destination for some provinces in China, including Shanghai, but we don't travel much often to Taiwan (at least for me). To zoom in to closer places. Tibet does not require visa, but I have never set foot there.
+
+There are so many places in the world that I want to travel, but I didn't have a clear plan for it, and there is no action to it. Sometimes we need excuse to push us there. I am so lucky to use board meeting as a driving force to go to the Silicon Valley every half year, and that is so rewarding for me and for the company.
+
+There are many other things, like running a company. There must be a lot of things to do to run a company well, and to allow more freedom for the people in it and be more creative, and taking bolder approach. The decision is also on our hand, not others.
+
+We can design our lives, at least for travel, and at least for immediate relationship around us.
+
+
+===== 2012-09-27 15:33:27 | Some of My Old Photos =====
+
+I took a lot of photos with people I met, and many of them are good friends, but I never spent the time to organize them in a good way. Here is my attempt to make it happen.
+
+Sanjeev Singh and Jian Shuo Wang. January 18, 2012 at Facebook Office in Melon Park, CA. Sanjeev was creator of Google Mail, and FriendFeed.com. I visited Sanjeev in Facebook after FriendFeed.com was acquired by Facebook, and had wonderful lunch together in the newly opened cafe.
+
+Jack Ma, President of Alibaba.com. September 30, 2011 at Stanford University, CA. We attended China 2.0 Conference by Stanford University and Jack delivered closing speech after my pannel. We met briefly at the backstage.
+
+Paul Halen, former China Director of National Security Council of White House. Taken in  Oct 29, 2011 in Xi'an when we went to Karaoke together.
+
+Jan Berris, VP of National Committee on US-CHina Relationships (NCUSCR). Taken on December 1, 2007 in Nanjing during the Young Leader's Forum. Jan participated US-China relationship building from leading the US Ping-Pong team to visit China in 1971, and brought Jet Li to US.
+
+Zhu Tong and Jian Shuo. November 2007 in Nanjing, China. Rose Zhu served as interpreter of Zhu Rongji and Jiang Zemin.
+
+With Meg Whitman, former CEO of eBay, and currently CEO of HP. Taken on March 28, 2005 in Shanghai, China. Worked with Meg for about two months in Shanghai during the summer of 2005.
+
+With Mark Zuckerburg, founder and CEO of Facebook. February 25, 2010, in Facebook, Palo Alto, CA. Mark hosted me when I visited Facebook office with Matt Colher.
+
+Photo with Prof. Tan when I delivered speech on September 21, 2010 at Computer Department, National University of Singapore.
+
+With Zhang Jie, president of Shanghai Jiao Tong University on October 3, 2011, in San Jose, CA.
+
+Group photo of few day gathering Young Leaders Forum gathering in 2007. Among them are Christopher Cassidy, astronaut of NASA and visited space station; Matt Isler, Colonel of USA Air Force with a squadron of F-15C airplane. etc...
+
+
+===== 2012-02-03 21:59:29 | What is CEO's Job =====
+
+What a CEO should do? I have to recommend an article from Ben Horowitz again (the second time in a week): How Andreessen Horowitz Evaluates CEOs.
+
+Here is some note I took away from the reading. You should definitely read it too, by yourself.
+
+According to Ben, he thinks the CEOs should do two things:
+
+Does the CEO know what to do?
+
+Can the CEO get the company do what he knows?
+
+This is very broad and "empty" statement at the first glance, but Ben explained it in a very good way.
+
+First one
+
+About the first one, "Does the CEO knows what to do?", Ben suggested "One should interpret this question as broadly as possible". Basically, it is like: CEO needs to know everything. Don't laugh. It is actually very true. The CEO has to have insights of many things, from the office arrangement, to hiring, to marketing, to technology, to finance. Knowing what to do is about consistently keeping thinking about what's behind the surface. It is tough, but ... exciting.
+
+In particular, the story - the question "Why"...
+
+The other interesting part about know what to do is to make decisions. What Ben contributed in this idea is to clearly point out that CEO needs to make decisions with very limited information, always! The expectation to understand more about it is just not realistic. That actually gave me great relief about the situation I am in.
+
+Second One
+
+The second one is about getting the company do what he knows.
+
+It turned out to be organizational capacity, get things done culture, quality of hiring, and the work environment. It is not surprising that Ben mentioned the Netflix culture building slides.
+
+For Baixing, as a company with 50+ full time employees, we tried very hard to build a great company, and with great result. We are trying so hard to make sure the people are the core of the organization, and build the culture to help people to perform within it. It takes years of experience to get it...
+
+
+===== 2013-06-06 07:00:52 | How **** can Win in China? =====
+
+How about Censorship?
+
+Censorship is another widely spread out excuse for the failure of the Internet giant. Not true. It is part of the reasons, maybe 10%, but not all. There are examples of Google, and Facebook. Yes. They were blocked partially or completely, but that is the only only fatal attack they face. LinkedIn was not banned, but it didn't grow as fast as people think. eBay was not banned, and majority of the Internet companies were not. Although they survived from the first challenge - whether people can use it - they didn't survive the sequential challenge that both local and  international Internet companies face: the challenge of a good product, the challenge of a first-class team, the challenge of marketing, and the challenge of competition. Lift the censorship is the first step to success, but not last step.
+
+The management of Internet companies and media tend to put more attention to problems like censorship or other political issues than they actually deserve. It is like that foot is important for a person, but not all. I once broke my ankel and were in wheel chair for 3 months. Everyone noticed that I am so different from everyone else, but only I know that the broken ankel does not affect my life that big as people expect - at least when I use computer, or sleep, or talk with people - these activities occupy majority of my life. Censorship makes situation so different from other places, but I would strongly encourage people to focus on business challenges.
+
+Another similar argument was that Taobao was free but eBay was not. Similarly, that is only one of the many challenges. There are many other free sites but why Taobao dominate eventually? It is just small part of the story.
+
+The Details
+
+
+===== 2013-01-25 01:53:10 | Job Posting from a Friend =====
+
+I generally don't do this, but Yang Meng is so special to me so I promised to post a job for him to my expat community, although I warned him not many people are still following this blog. :-) Here you go.
+Make life better. Get in on the ground. Start a career at Anker.
+
+Started by a few ex-Googlers in 2009, Anker set out with one goal in mind: to design reliable, affordable yet inspiring products which we would use ourselves. Today Anker has 100+ employees globally, spread among Changsha, Shenzhen, San Jose, Tokyo and Beijing.
+
+We’re passionate about technology and looking for ways to make life easier, more convenient, less consumed by the day-to-day. Anker thrives on the enthusiasm of a hardworking, earnest family of employees. If you’re looking for a job to challenge, inspire and reward you, we’d love to sit down and start talking about adding you to our team. We could be reached via recruiting@ianker.com. If you know someone who might be a good candidate, we’d also love to hear from you and hopefully thank you with our $2,000 referral bonus once the person is hired.
+
+Position 1: Copywriter (in Changsha/Beijing)
+
+As a copywriter at Anker, you will serve as a representative of our brand by producing the written materials necessary to interact with customers. Both individually and as part of a team, you’ll find ways of reaching out to the public. By thinking from a user’s perspective, you’ll determine how to illustrate our products to the world.
+
+Job Description
+
+- Consider newly developed products from the consumer’s point of view.
+- Craft compelling storylines, taglines, and other narrative “nuggets” to introduce our products to a Western audience.
+- Serve as a written ambassador of our brand by contributing to the company website, leaflets, promotional events, etc.
+
+Job Requirements
+
+- Strong written and time management skills.
+- Ability to view products from the customer’s perspective and figure out ways to attract them.
+- Interest in gadgets and technology (smartphones, tablets, etc.)
+- Outgoing personality with the humility to work as part of a team.
+- Comfortable expressing him/herself in a Chinese work environment, preferably in Chinese.
+
+Position 2: Marketing Supervisor (in Changsha/Beijing)
+
+Be the mouthpiece of our company. We’re looking for someone with a flair for influencing others. Whether this be face-to-face or through online social media, you will be the person who works to spread our name. We need a juggler for this role – the ability to multi-task and plan ahead will be crucial to success.
+
+Job Description
+
+- Build lasting relationships with members of the media to trumpet our brand.
+- Create a strong online presence for our company through social media websites.
+- Wear a variety of hats to communicate with consumers via forums and other channels.
+
+Job Requirements
+
+- Warm personality and eagerness to meet new people.
+- In tune with tech media, preferably with established contacts.
+- Well-versed as to the ins and outs of social media.
+- Excited to use persuasion and influence to ignite our brand.
+
+
+===== 2013-05-26 15:31:46 | I am Back =====
+
+It has been uneasy three years for me. The blog was affected by the unstable mood of myself, and was a honest, and solid reflection of who I am - good times, and more importantly, the bad times.
+
+I am back to blog again. This is different from the previous back. It has been quite some time since I last blogged - that is exactly 4 months ago. It was quite dramatic in the last four months, and I experienced things. This time, it was a calm back, and I don't think I can easily defeated, or went down. The confidence was rebuilt, and I am sure this new version of myself is better, more confident, and more lovely.
+
+Blogging is dead, at least in statistic or media revolution terms. But life is not. Thoughts are not. I will shift with the new technology trends, and adapt that, and move on.
+
+Thanks for everyone who has supported me, and trusted me. People see things. People experience things, and we grow.
+
+
+===== 2014-10-24 20:11:13 | Blog is Dead - Let's Move On =====
+
+Ruanyifeng brought a message to me. He said I was too quiet for too long on the blogshpere. In a typical blogger manner, I response publicly (nothing identify a blogger better than talking publicly on blogs when the mobile phone or other communication channel is easily available).
+
+I have announced that I stopped regular update to blog on my 10th year's anniversary. I joined many people who have predicted that blog was dying. Now should say, I have joine the people who witnessed the death of blogging.
+
+To state something is dying is always over-statement, but it is not far from the truth. There are still many people, and organization blogging, and I am not surprised that the total number of blogging content is still increasing, but that does not mean blogging is not dying. It is already not the best way to do a lot of things. The analogy is that electronic bulb usage is still increasing after almost a century, but making traditional electronic bulbs may not necessarily to be an interesting business.
+
+I will not resume regular update to blogging, since in terms of distribution, and interaction, blogging falls far behind Weibo, or WeChat. Even for self recording, it is not good enough because of lack of mobile and hardware support. I am not a person who enjoy putting labels to myself. Although I was one of the first bunch of bloggers in China, and arguably one of the most famous bloggers in English blogsphere, I have removed blogger label.
+
+Having said that, Ruanyifeng's comment is still valid that I was too quiet. Now it is the time to re-think about the right tool to make some noise. I understand the desperate feeling of a Kong-Fu master see a gun. But the miracle always comes from the person who quickly learn to use the gun, instead of compete with gun by practicing Kong Fu hard.
+
+Blog is dead. R.I.P., and let's move on.
+
+
+===== 2014-01-03 13:01:22 | Delegation as Productivity Tools =====
+
+This sounds very useful:
+Delegation can be one of your best productivity tools!
+There are many good practices, and we keep learning. What is the best way to remember these quote, and turn that into good habit?
+
+http://www.quora.com/Productivity/As-a-startup-CEO-what-is-your-favorite-productivity-hack
+
+
+===== 2014-09-20 12:55:09 | Aspen Photos (Password Required) =====
+
+Antigone After Party
+
+ Antigone After Show
+
+ 
+
+Antigone Rehearsal
+
+
+===== 2016-02-20 19:26:02 | Tickets System for Parents and Kids =====
+
+This is the application that you and your kids can use to track "Tickets"
+
+What is Ticket?
+
+A ticket is an agreement between Kids and Parents.
+
+
+===== 2017-03-05 15:21:54 | Solute to Hackers =====
+
+Look at this piece of code at the header of Hello Dolly plugin by Matt - maybe the first plugin of the WordPress system (you can always find this piece of code in any WordPress installation. Look for it in the /wp-content/plugins/ folder). Think about why the plugin has something to do with music! Think about why the description reads that way. What do you sense from a developer's code?
+/**
+* @package Hello_Dolly
+* @version 1.6
+*/
+/*
+Plugin Name: Hello Dolly
+Plugin URI: http://wordpress.org/extend/plugins/hello-dolly/
+Description: This is not just a plugin, it symbolizes the hope and enthusiasm of an entire generation summed up in two words sung most famously by Louis Armstrong: Hello, Dolly. When activated you will randomly see a lyric from <cite>Hello, Dolly</cite> in the upper right of your admin screen on every page.
+Author: Matt Mullenweg
+Version: 1.6
+Author URI: http://ma.tt/
+*/
+In this particular example, you found again the interesting connection between code and music, code and art, code and books, code and philosophy. Interesting developers are particularly active in other fields.
+
+The vision expressed in the note: "This is not just a plugin, it symbolizes ..." is exactly how developer seem the world differently than others. It is NOT just what it is, it IS something bigger, and code is just an expression of it.
+
+Solute to Matt, and other hackers. I know why WordPress succeeded and MT didn't. It is the lacking of this spirit after Ben left.
+
+
+===== 2017-03-05 17:44:00 | Wangjianshuo's Blog App on Apple App Store =====
+
+During the weekend, as part of my process to learn Swift 3, I wrote a small application to show all the blog posts, and comments of Wangjianshuo's Blog. Here is the link to download the App:
+
+https://itunes.apple.com/cn/app/wangjianshuos-blog/id1210226590?mt=8
+
+All the few thousands post and about 40 thousands comments are quickly available on your iPhone. Try it out.
+
+
+===== 2020-10-12 17:12:01 | Good Stuff for my Fiends =====
+
+This is VPN configuration file for OpenVPN server in Amazon Cloud.
+
+OVPN Configuration file
+
+This is the only file that you actually need. No password is needed. Download this file to your Mac, iPhone, Android, or Windows system. If you have OpenVPN software/App install, just click the OVPN file and you can connect to the server.
+
+aws.ovpnDownload
+
+Download Software
+
+You should search for OpenVPN in Google or AppStore to download the latest version. In case, you cannot access these blocked site, download these:
+
+Tunnelblick_3.8.3_build_5520.dmgDownload
+
+openvpn-connect-3.2.1.1180_signed.msiDownload
+
+
+===== 2021-01-04 15:04:19 | Shanghai es Hermosa Hoy =====
+
+Esta son dos fotografías de Shanghai. Dime en un edificio antiguo en la Bund.
+
+Los edificios no son aquí 40 años antes.
+
+Pudong en Shanghai
+
+Este la Bund. Los edificios son aquí 100 años antes. Shanghai fui muy moderno en 1930s. Fui el más grande en la este del mundo. Hay un rio que se llama Huanpu. Rio Huangpu es un rio muy bien para transporte. Muchas barcos están en el rio.
+
+Puxi de Shanghai
+
+
+===== 2021-01-11 16:01:57 | Sobre mi =====
+
+Me llamo Javier. Tengo 43 años. Vivo en Shanghai en la calle Wulumuqi y la calle Anfu.
+
+Me gustan perros y gatos. Tengo un gato negro y blanco que se llama Mira. A Mira le gusta pollo mucho, y le gusta dormir. Entonces, Mira está muy gordo ahoy.
+
+
+===== 2021-01-03 23:44:27 | Mi primero blog en español =====
+
+Hola a todos!
+
+Este es mi primero blog en español. Tengo un blog en Inglés por 18 años, y ahoy es el tiempo por español.
+
+Voy a escribir algún en el futuro.
+
+Buenas noches!
+
+
+===== 2022-05-19 21:50:25 | Documents for Steve =====
+
+Hi Steve,
+
+Thanks for helping me on my EB1-A application. Here are some documents I have prepared.
+
+Media reports
+
+21jingji-百姓网CEO王建硕详解寒冬活法：盈利第一规模第二-21财经-1Download
+
+
+===== Original Message |  =====
+
+From: "Simon Frappell"
+
+To:
+
+Sent: Thursday, February 27, 2003 12:52 PM
+
+Subject: Net Send Spam Abuse
+
+> Hi,
+
+>
+
+> I'm getting Net Spam coming from this address : 80.116.221.181. Can
+
+> you please see that this is stopped.
+
+>
+
+>
+
+> Spam details :
+
+> 02/27/03 21:29:42 UPLOAD_SUCCEEDED OK REPORT_INSERTED
+
+> FWIN,2003/02/27,21:29:40 +10:00
+
+> GMT,80.116.221.181:26142,203.45.218.24:137,UDP
+
+>
+
+> Event Type: Information
+
+> Event Source: Application Popup
+
+> Event Category: None
+
+> Event ID: 26
+
+> Date: 27/02/2003
+
+> Time: 9:26:53 PM
+
+> User: N/A
+
+> Computer: PSYCHO
+
+> Description:
+
+> Application popup: Messenger Service : Message from GOLARGER to on
+
+> 2/27/2003 8:45:34 PM
+
+>
+
+>
+
+>
+
+> www.golarger.com
+
+> www.golarger.com
+
+> www.golarger.com
+
+>
+
+>
+
+> We are the #1 MALE ORGAN ENLARGEMENT
+
+> supplement on the web. We guarantee the
+
+> success of our program or we will refund every
+
+> penny. Come find out why more men AND WOMEN
+
+> come to us than any other site.
+
+>
+
+> Enlarge your member 1-3 inches in a matter of days!
+
+>
+
+>
+
+> www.golarger.com
+
+> www.golarger.com
+
+> www.golarger.com
+
+>
+
+> Whois information captured by my Firewall. :
+
+>
+
+>
+
+> inetnum: 80.116.128.0 - 80.116.255.255
+
+> netname: TINIT-ADSL-LITE
+
+> descr: Telecom Italia
+
+> descr: Accesso ADSL BBB
+
+> country: IT
+
+> admin-c: BS104-RIPE
+
+> tech-c: BS104-RIPE
+
+> status: ASSIGNED PA
+
+> remarks: Please send abuse notification to
+
+> abuse-bbb@telecomitalia.it
+
+> notify: ripe-staff@telecomitalia.it
+
+> mnt-by: TIWS-MNT
+
+> changed: net_ti@telecomitalia.it 20020801
+
+> source: RIPE
+
+>
+
+> route: 80.116.0.0/16
+
+> descr: INTERBUSINESS
+
+> origin: AS3269
+
+> notify: network@cgi.interbusiness.it
+
+> mnt-by: INTERB-MNT
+
+> changed: net_ti@telecomitalia.it 20020517
+
+> source: RIPE
+
+>
+
+> person: BBBEASYIP STAFF
+
+> address: Via Val Cannuta, 250
+
+> address: I-00100 Roma
+
+> address: Italy
+
+> phone: +39 06 36881
+
+> e-mail: ripe-staff@telecomitalia.it
+
+> nic-hdl: BS104-RIPE
+
+> notify: ripe-staff@telecomitalia.it
+
+> changed: net_ti@telecomitalia.it 20001019
+
+> source: RIPE
+
+>
+
+> Awaiting your reply,
+
+> Simon Frappell.
+
+>
+
+Beautiful fight back, SImo. I wonder what the "due disciplinary measures" are. I am looking to see if there is any further investigation of this issue. Please keep us updated. Thanks.
+
+Easiest way - turn off Messenger service
+
+The easist way to stop receiving this kind of message is to turn off Windows Messenger service. If you are running Windows XP, following these steps:
+
+Click Start button on your toolbar.
+
+Click Run...
+
+Enter "Services.msc" (without quotation marks) and click OK.
+
+Browse the list till you find "Messenger" in Name column
+
+Right click and click "Stop" on the pop up menu. That is not all. If you don't want the service to start the next time you start your computer, continue with the following steps:
+
+Double click it. The Messenger Properties (Local Computer) dialog box comes out.
+
+Choose "Disable" in "Startup type" drop down box.
+
+Click OK.
+
+Related
+
+Simple steps to Stop NET SEND SPAM
+
+What is "NET SEND SPAM"?
+
+More about the net send spammer Golarger.com
