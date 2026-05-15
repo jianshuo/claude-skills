@@ -166,7 +166,7 @@ pandoc article.md -f markdown -t html -o article.html
 脚本内部做了 4 件事（用 `md2wechat` 的低层命令，绕过它高层 `convert` 的 API key 限制）：
 
 1. `md2wechat upload_image cover.png` → 拿到 `thumb_media_id`
-2. `md2wechat upload_image illustration.png` → 拿到 WeChat CDN `wechat_url`
+2. **如果 `illustration.png` 存在但 `article.md` 没引用**：自动在 `## 后注` 之前插入 `![整件事画起来，是这样的](./illustration.png)` 并改写 `article.md`（幂等安全网）。然后 `md2wechat upload_image illustration.png` → 拿到 WeChat CDN `wechat_url`
 3. 从 `article.md` 生成 `content.html`（去掉 frontmatter 和正文 H1，段落加内联样式，`./illustration.png` 替换成 CDN URL），再从 `meta.json` 装出 `draft.json`
 4. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
 
