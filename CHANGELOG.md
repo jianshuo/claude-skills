@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-15]
+
+### Changed
+
+- **`wjs-eating-and-growing`** — expanded from 4 steps to 5. The new fifth step separates "旧权重 (old pattern)" from "新参数 (new parameter)": users now explicitly name the entrenched interpretation pattern they're overwriting (Step 3) before defining the replacement response mode (Step 4), making the L3-weight update more precise. Final output block is now 5 lines: 堑 / 自动输出 / 旧权重 / 新参数 / 下次的那一秒.
+- **`wjs-publishing-wechat`** — multiple iterative content updates (exact scope tracked in skill directory).
+- **README** — updated `wjs-eating-and-growing` entry from 4-step to 5-step description throughout skills table and dedicated section.
+
 ## [2026-05-14]
 
 ### Added

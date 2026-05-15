@@ -96,7 +96,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-uploading-video`](./wjs-uploading-video/) | 批量上传 YouTube | MP4 (+ `UPLOAD_META.md`) → YouTube |
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
-| [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 4 步反思框架：把"吃堑"变成真正的默认反应改变 | 吃亏的经历 → 热瞬间 + 根因 + insight + 最小动作 |
+| [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧权重 + 新参数 + 替代动作 |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
 
 ---
@@ -238,12 +238,12 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ### [`wjs-eating-and-growing`](./wjs-eating-and-growing/)（吃一堑长一智）
 
-当我反思一个失误、反复犯的错，或者"知道道理但做不到"，走这四步。
+当我反思一个失误、反复犯的错，或者"知道道理但做不到"，走这五步。
 
-- **底层框架**：L1（不知道）/ L2（知道但临场来不及）/ L3（本能赢了）—— 三层完全不同，用错修法等于练了寂寞。
+- **底层框架**：L1（不知道）/ L2（知道但临场来不及）/ L3（本能赢了）—— 三层完全不同，用错修法等于练了寂寞。目标永远是 L3——不假思索的第一反应。
 - **一步一问，不可跳**：每步只问一个问题等回答再走下一步。跳步会让复盘变成又一条 L1 笔记。
-- 四步：① 抓住热瞬间（把那个温度找回来）→ ② 挖根因 → ③ 提炼一句话 insight → ④ 给下次同样场景的最小动作。
-- 最终输出：一个 block，4 行，任何一行还是模糊的说明没走完。
+- 五步：① 说清楚这次"堑"（纯事实）→ ② 抓住自动输出（第一反应原话）→ ③ 挖旧权重（解释模式根因）→ ④ 定新参数（一类触发的新响应）→ ⑤ 给出替代动作（那一秒具体做什么）。
+- 最终输出：一个 block，5 行，任何一行还是模糊的说明没走完。
 
 > 触发词：`反思` / `复盘` / `吃一堑` / `这次又栽了` / `为什么我总是…` / `知道道理但做不到`
 
