@@ -66,7 +66,26 @@ THUMB_MEDIA_ID=$(echo "$COVER_DATA" | python3 -c "import json,sys; print(json.lo
 echo "   thumb_media_id: ${THUMB_MEDIA_ID:0:24}..." >&2
 
 ILLUSTRATION_URL=""
-if [[ -f "$ARTICLE_DIR/illustration.png" ]] && grep -q 'illustration\.png' "$ARTICLE_MD"; then
+if [[ -f "$ARTICLE_DIR/illustration.png" ]]; then
+  # Safety net: if illustration.png exists but isn't referenced in article.md,
+  # the upload would silently drop the image. Auto-inject a reference at the
+  # natural close — just before "## 后注" if present, otherwise at the end —
+  # so the markdown is the source of truth and the result is reproducible.
+  if ! grep -q 'illustration\.png' "$ARTICLE_MD"; then
+    echo "→ illustration.png present but not referenced — injecting at natural close ..." >&2
+    python3 - "$ARTICLE_MD" <<'PYEOF'
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+snippet = '\n\n整件事画出来，大概就是这样：\n\n![整件事画起来，是这样的](./illustration.png)\n'
+m = re.search(r'\n##\s*后注\b', text)
+if m:
+    new = text[:m.start()] + snippet + text[m.start():]
+else:
+    new = text.rstrip() + snippet
+open(path, 'w').write(new)
+PYEOF
+  fi
   echo "→ uploading illustration.png ..." >&2
   ILLUSTRATION_DATA=$(md2wechat upload_image illustration.png 2>&1 | parse_upload_data)
   ILLUSTRATION_URL=$(echo "$ILLUSTRATION_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['wechat_url'])")
