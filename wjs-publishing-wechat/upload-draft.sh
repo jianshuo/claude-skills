@@ -103,11 +103,13 @@ meta = json.load(open('meta.json'))
 text = open('article.md').read()
 text = re.sub(r'^---\n.*?\n---\n', '', text, count=1, flags=re.DOTALL).strip()
 
-P_STYLE   = 'margin: 1em 0; line-height: 1.75; font-size: 16px; color: #333;'
+# Body font: 17px to match WeChat MP editor's default. Headings step up
+# proportionally so the hierarchy reads at a glance: 17 / 19 / 22.
+P_STYLE   = 'margin: 1em 0; line-height: 1.75; font-size: 17px; color: #333;'
 IMG_STYLE = 'max-width: 100%; height: auto; display: block; margin: 1.5em auto;'
-H2_STYLE  = 'margin: 1.6em 0 0.6em; font-size: 19px; font-weight: bold; line-height: 1.4; color: #222;'
-H3_STYLE  = 'margin: 1.3em 0 0.5em; font-size: 17px; font-weight: bold; line-height: 1.4; color: #222;'
-LI_STYLE  = 'margin: 0.4em 0; line-height: 1.75; font-size: 16px; color: #333;'
+H2_STYLE  = 'margin: 1.6em 0 0.6em; font-size: 22px; font-weight: bold; line-height: 1.4; color: #222;'
+H3_STYLE  = 'margin: 1.3em 0 0.5em; font-size: 19px; font-weight: bold; line-height: 1.4; color: #222;'
+LI_STYLE  = 'margin: 0.4em 0; line-height: 1.75; font-size: 17px; color: #333;'
 
 def inline(s):
     # Convert inline markdown the WeChat editor would otherwise show as raw text.
