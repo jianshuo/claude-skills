@@ -40,6 +40,45 @@ description: Use when the user wants to write or publish a 微信公众号 (WeCh
 
 写完一定要数字数。`python3 -c "import re; t=open('article.md').read(); t=re.sub(r'\!\[.*?\]\(.*?\)','',t); print(len(re.findall(r'[一-鿿]',t)) + len(re.findall(r'[A-Za-z]+',t)))"`。超过 1200 就回去再砍一轮。
 
+## 介绍 skill 的文章：末尾必须附 5 平台安装方法
+
+**触发条件**：这篇文章是在介绍 / 推荐 / 解释某个具体的 Claude Code skill（不管是王建硕自己写的，还是别人的）。
+
+**前置 — 确认 skill 已发布**：
+- 王建硕自己的 `wjs-*` skill：写完 SKILL.md 后，`~/.claude/skills-publish-hook.sh` 会自动 rsync + commit + push 到 [github.com/jianshuo/claude-skills](https://github.com/jianshuo/claude-skills)，无需手动。可用 `gh api repos/jianshuo/claude-skills/contents/<skill-name>` 确认已上线
+- 其他人的 skill：写文章前先确认它在公开 git repo 里。没有的话回头让作者先发布，不要让读者装不到
+
+**末尾必须附下面这段**（直接套用，把 `<SKILL_NAME>` 和仓库地址替换掉）：
+
+```markdown
+## 安装方法
+
+skill 在 [github.com/jianshuo/claude-skills](https://github.com/jianshuo/claude-skills)。先 clone：
+
+\`\`\`bash
+git clone https://github.com/jianshuo/claude-skills.git
+\`\`\`
+
+然后按你用的工具拷到对应目录：
+
+| 工具 | 命令 |
+|---|---|
+| Claude Code | `cp -r claude-skills/<SKILL_NAME> ~/.claude/skills/` |
+| Codex | `cp -r claude-skills/<SKILL_NAME> ~/.codex/skills/` |
+| OpenClaw | `cp -r claude-skills/<SKILL_NAME> ~/.openclaw/skills/` |
+| Kimi Code | `cp -r claude-skills/<SKILL_NAME> ~/.config/agents/skills/` |
+| Hermes | `hermes skills tap add jianshuo/claude-skills && hermes skills install <SKILL_NAME>` |
+
+装完重启对话即可。
+```
+
+**几条规则**：
+1. 这段**不计入** 800–1000 字预算（是附录性工具信息，不是正文）
+2. 不要为了"显得简单"只写 Claude Code 一种——5 个平台一起列，是这篇 skill 的覆盖面承诺
+3. 命令必须**verified**：本 skill 里 5 行命令是已经核对过文档的（Claude Code / Codex / OpenClaw / Kimi Code 都消费各自的 `skills/<name>/SKILL.md` 目录布局；Hermes 用 `tap add` + `install` 命令）。如果未来某个平台的安装方式变了，**改这里、不要在每篇文章里现编**
+4. 表格放在「## 后注」之前。「## 后注」始终是文章最后一节
+5. 如果将来支持的平台增加（比如出了新的 agent runtime 也消费 SKILL.md），在这里加行，所有未来文章自动受益
+
 ## When This Skill Fires
 
 - 用户提供一段思路、草稿、或语音转写文字
