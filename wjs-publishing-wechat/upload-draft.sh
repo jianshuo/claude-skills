@@ -103,13 +103,9 @@ meta = json.load(open('meta.json'))
 text = open('article.md').read()
 text = re.sub(r'^---\n.*?\n---\n', '', text, count=1, flags=re.DOTALL).strip()
 
-# Body font: 17px to match WeChat MP editor's default. Headings step up
-# proportionally so the hierarchy reads at a glance: 17 / 19 / 22.
-P_STYLE   = 'margin: 1em 0; line-height: 1.75; font-size: 17px; color: #333;'
-IMG_STYLE = 'max-width: 100%; height: auto; display: block; margin: 1.5em auto;'
-H2_STYLE  = 'margin: 1.6em 0 0.6em; font-size: 22px; font-weight: bold; line-height: 1.4; color: #222;'
-H3_STYLE  = 'margin: 1.3em 0 0.5em; font-size: 19px; font-weight: bold; line-height: 1.4; color: #222;'
-LI_STYLE  = 'margin: 0.4em 0; line-height: 1.75; font-size: 17px; color: #333;'
+# No inline CSS — only semantic HTML. The WeChat editor applies its own
+# defaults for line-height / font-size / color, and per-user preference we
+# stay out of its way (回车分段即可，不覆写任何样式).
 
 def inline(s):
     # Convert inline markdown the WeChat editor would otherwise show as raw text.
@@ -128,11 +124,11 @@ for block in re.split(r'\n\s*\n', text):
         alt, src = m.group(1), m.group(2)
         if 'illustration' in src and ILLUSTRATION_URL:
             src = ILLUSTRATION_URL
-        blocks.append(f'<p style="text-align: center;"><img src="{src}" alt="{alt}" style="{IMG_STYLE}"></p>')
+        blocks.append(f'<p><img src="{src}" alt="{alt}"></p>')
     elif block.startswith('### '):
-        blocks.append(f'<h3 style="{H3_STYLE}">{inline(block[4:].strip())}</h3>')
+        blocks.append(f'<h3>{inline(block[4:].strip())}</h3>')
     elif block.startswith('## '):
-        blocks.append(f'<h2 style="{H2_STYLE}">{inline(block[3:].strip())}</h2>')
+        blocks.append(f'<h2>{inline(block[3:].strip())}</h2>')
     elif block.startswith('# '):
         # Drop body H1 — the WeChat editor uses meta.json title as the article title.
         # Keeping a body H1 causes md2wechat inspect's DUPLICATE_H1 warning.
@@ -141,11 +137,11 @@ for block in re.split(r'\n\s*\n', text):
         # A bullet / ordered list block.
         ordered = bool(re.match(r'^\s*\d+\.\s+', block.splitlines()[0]))
         items = [re.sub(r'^\s*([-*]|\d+\.)\s+', '', ln) for ln in block.splitlines()]
-        lis = ''.join(f'<li style="{LI_STYLE}">{inline(it)}</li>' for it in items)
+        lis = ''.join(f'<li>{inline(it)}</li>' for it in items)
         tag = 'ol' if ordered else 'ul'
-        blocks.append(f'<{tag} style="margin: 1em 0; padding-left: 1.5em;">{lis}</{tag}>')
+        blocks.append(f'<{tag}>{lis}</{tag}>')
     else:
-        blocks.append(f'<p style="{P_STYLE}">{inline(block)}</p>')
+        blocks.append(f'<p>{inline(block)}</p>')
 
 content_html = '\n'.join(blocks)
 open('content.html', 'w').write(content_html)
