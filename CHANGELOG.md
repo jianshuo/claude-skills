@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-16]
+
+### Changed
+
+- **`wangjianshuo-perspective`** — added three new expression constraints to the bilingual style guide: (1) **惜字如金** (brevity): short is always the default — if removing a sentence loses nothing, cut it; (2) **平** (plainness): explicit small-word examples, e.g. prefer "用" over "使用", "想" over "思考"; (3) **不用反问句** (no rhetorical questions): say "this is wrong" directly rather than "isn't this wrong?" — genuine open questions are fine, rhetorical装腔 ones are not. The "绝不做的" (never-do) list updated to include all three constraints.
+- **`wjs-eating-and-growing`** — added a full worked example (朋友群约吃饭 scenario) showing what a complete 5-line output looks like in practice, plus a 4-step "why" ladder so both users and Claude can verify that each row genuinely answers the row above it.
+- **`wjs-publishing-wechat`** — multiple iterative content updates.
+- **`.claude` settings** — disabled background worktree isolation for this repo.
+
 ## [2026-05-15]
 
 ### Changed
