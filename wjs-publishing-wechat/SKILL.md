@@ -230,7 +230,7 @@ pandoc article.md -f markdown -t html -o article.html
    - **表格是 inline-style 例外** —— 给 `<table>` 加 `border-collapse:collapse`，每个 `<th>/<td>` 加 `border:1px solid #d9d9d9; padding:6px 10px;`。原因：表格 border 是**结构性**样式（没了表格就看不见），和 line-height 这种**装饰性**样式不是一回事；不加边框，WeChat 默认渲染就是几行裸文字挤在一起
    - `./illustration.png` 替换成 CDN URL
 4. 再从 `meta.json` 装出 `draft.json`
-4. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
+5. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
 
 **前置依赖**：
 - `md2wechat` CLI 已安装并配置好 `WECHAT_APPID` + `WECHAT_SECRET`（`md2wechat config show` 验证）
