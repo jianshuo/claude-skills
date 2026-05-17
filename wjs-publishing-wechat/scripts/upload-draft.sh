@@ -187,6 +187,13 @@ for block in re.split(r'\n\s*\n', text):
         blocks.append(f'<p><code style="{CODE_STYLE}">{inner}</code></p>')
     elif is_table(block):
         blocks.append(build_table(block))
+    elif block.startswith('<'):
+        # Raw HTML pass-through. For visually distinct boxes (e.g. <section>
+        # with light background + muted text for a "previous article's
+        # featured comments" footer) that markdown can't express. Author
+        # owns valid HTML — keep it as one block (no blank lines inside)
+        # so the splitter sees it as one unit.
+        blocks.append(block)
     elif all(re.match(r'^\s*([-*]|\d+\.)\s+', ln) for ln in block.splitlines()):
         # A bullet / ordered list block.
         ordered = bool(re.match(r'^\s*\d+\.\s+', block.splitlines()[0]))
