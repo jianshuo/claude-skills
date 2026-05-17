@@ -344,9 +344,41 @@ fetch-comments.sh <folder>                      # comments.md 出炉
 - 用 `freepublish/submit` 永久链接发的：不算"群发"、不出现在历史消息、`msg_data_id` 也拿不到——同样只能后台看
 
 **常见 errcode**：
-- `48001` — 公众号未认证
+- `48001` — api unauthorized：**最常见原因不是未认证，是 2025-07 政策把个人主体的 API 发布权限回收了**（见本节顶部说明）。换企业主体或走 Step 8 cookie fallback
 - `45028` — 当日群发配额已用完
 - `88000` — 评论未开启（`mass-send.sh --send` 已经会自动 `comment/open`；如果跳过了 --send 直接拉，会撞这个）
+
+### Step 8（可选）—— Cookie fallback：拉留言（个人主体唯一可用路径）
+
+**适用场景**：公众号是**个人主体认证**（Step 7 的官方 API 路径被 48001 卡死），但仍想 programmatic 拉留言。
+
+**原理**：mp.weixin.qq.com 后台是个 SPA，所有留言数据通过内部 endpoint `mp.weixin.qq.com/misc/appmsgcomment?action=...&token=...&begin=...&count=...` 返回 JSON。带上后台登录的 cookie + URL 里的 session token 就能跑通。
+
+**前提**：浏览器登录了 mp.weixin.qq.com（cookie 一般几小时过期，每天可能要重抓 1-2 次）。
+
+**用法**：
+
+```bash
+# 1. 浏览器抓包（一次性，几分钟）
+#    a. 登录 mp.weixin.qq.com → 留言管理 → 找到目标文章
+#    b. 打开 DevTools (Cmd+Opt+I) → Network 标签 → 筛选 Fetch/XHR
+#    c. 在页面上翻一页评论，或点"加载更多"
+#    d. 找请求 URL 含 'appmsgcomment' 的那条，右键 → Copy → "Copy as cURL (bash)"
+#    e. 从 curl 命令里抠出 -H 'Cookie: ...' 那段（整段 cookie 字符串）和 URL
+
+# 2. 跑脚本
+~/.claude/skills/wjs-publishing-wechat/scripts/fetch-comments-by-cookie.sh \
+  <article-folder> \
+  --url '<完整 URL，含 begin=0 那一段>' \
+  --cookie '<整段 cookie 字符串>'
+```
+
+输出：`<article-folder>/comments.md`（同 fetch-comments.sh 格式）。
+
+**caveats**：
+- Cookie 过期就要重抓（几小时一次）
+- 内部 API 的字段名 / endpoint 可能随后台版本变；脚本用 heuristics 找 `comment_list` / `comments` / `data.list` 等常见字段。如果版本变了，让 Claude 现场 patch 几行 JSON path
+- 不要把抓到的 cookie 发到 git 或 chat 公开渠道——它等于你的登录态
 
 输出给用户的最后一段话，固定格式：
 
