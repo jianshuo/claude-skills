@@ -172,6 +172,7 @@ print(f'→ GET {URL[:100]}{"..." if len(URL) > 100 else ""}', file=sys.stderr)
 first = fetch(URL)
 if isinstance(first, dict) and first.get('base_resp', {}).get('ret') not in (None, 0):
     print(f'⚠ base_resp.ret = {first.get("base_resp")} (likely cookie expired or wrong endpoint)', file=sys.stderr)
+first = unwrap_json_strings(first)
 
 comment_path, comments_page1 = find_comments(first)
 if comments_page1 is None:
