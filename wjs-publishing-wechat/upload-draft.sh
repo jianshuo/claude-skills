@@ -106,6 +106,13 @@ text = re.sub(r'^---\n.*?\n---\n', '', text, count=1, flags=re.DOTALL).strip()
 # No inline CSS — only semantic HTML. The WeChat editor applies its own
 # defaults for line-height / font-size / color, and per-user preference we
 # stay out of its way (回车分段即可，不覆写任何样式).
+#
+# But: without inline margins, adjacent <p> elements collapse against each
+# other (no visual gap between paragraphs). The fix is to use the same source
+# WeChat itself produces when a user presses Enter twice in the editor —
+# `<p><br></p>` as a spacer block between every top-level block. This
+# matches editor-native source faithfully and survives the editor's
+# normalization passes (raw <br><br> gets folded; empty <p></p> gets stripped).
 
 def inline(s):
     # Convert inline markdown the WeChat editor would otherwise show as raw text.
@@ -143,7 +150,7 @@ for block in re.split(r'\n\s*\n', text):
     else:
         blocks.append(f'<p>{inline(block)}</p>')
 
-content_html = '\n'.join(blocks)
+content_html = '\n<p><br></p>\n'.join(blocks)
 open('content.html', 'w').write(content_html)
 
 draft = {
