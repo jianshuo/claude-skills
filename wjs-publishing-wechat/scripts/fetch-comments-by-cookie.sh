@@ -156,16 +156,26 @@ def find_comments(payload):
     return path, val
 
 def find_total(payload, comment_path):
-    """Total count near the comment array."""
+    """Locate the comment-count integer.
+
+    Several "*_count" fields can coexist (total_elected_count, total_shield_count,
+    total_top_count, etc.) and many of them are 0 for normal articles — so we
+    can't just grab the first int with 'count' in its path. Prefer the precise
+    `total_count` field; fall back to any *_count without disqualifying tokens.
+    """
+    bad_tokens = ('elected', 'shield', 'top', 'reply', 'reply_count', 'fail')
+    # 1st pass: exact `total_count` key
     for path, val in walk(payload):
-        if isinstance(val, int) and any(k in str(p) for p in path for k in ('total', 'count')):
-            # prefer one near the comment array (shared prefix)
-            if comment_path and len(path) > 0 and path[0] == comment_path[0]:
-                return val
-    # fallback: any int near 'total'
-    for path, val in walk(payload):
-        if isinstance(val, int) and 'total' in '/'.join(str(p) for p in path):
+        if isinstance(val, int) and path and path[-1] == 'total_count':
             return val
+    # 2nd pass: any *_count or *_total without disqualifying tokens in path
+    for path, val in walk(payload):
+        if isinstance(val, int) and path and isinstance(path[-1], str):
+            tail = path[-1].lower()
+            joined = '/'.join(str(p).lower() for p in path)
+            if (tail.endswith('_count') or tail.endswith('_total') or tail == 'total'):
+                if not any(b in joined for b in bad_tokens):
+                    return val
     return None
 
 print(f'→ GET {URL[:100]}{"..." if len(URL) > 100 else ""}', file=sys.stderr)
