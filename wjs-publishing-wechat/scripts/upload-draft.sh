@@ -222,9 +222,47 @@ draft = {
 open('draft.json', 'w').write(json.dumps(draft, ensure_ascii=False, indent=2))
 PYEOF
 
-echo "→ md2wechat create_draft draft.json ..." >&2
-RESULT=$(md2wechat create_draft draft.json 2>&1)
-DRAFT_ID=$(echo "$RESULT" | python3 -c "
+# If publish.json already has a draft_media_id from a previous run AND the
+# user hasn't asked for a brand-new draft, try draft/update first so the
+# existing draft is replaced in place (WeChat backend keeps version history).
+# Falls back to create_draft if the old media_id is gone or the update path
+# isn't usable.
+EXISTING_MEDIA_ID=""
+if [[ -z "${WECHAT_PUBLISH_FORCE_NEW:-}" && -f publish.json ]]; then
+  EXISTING_MEDIA_ID=$(python3 -c "
+import json
+try:
+    print(json.load(open('publish.json')).get('draft_media_id','') or '')
+except Exception:
+    pass
+" 2>/dev/null)
+fi
+
+DRAFT_ID=""
+DRAFT_MODE=""
+
+if [[ -n "$EXISTING_MEDIA_ID" ]]; then
+  echo "→ update existing draft in place (media_id: ${EXISTING_MEDIA_ID:0:24}...)" >&2
+  SCRIPT_DIR_LOCAL="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  set +e
+  UPDATE_OUT=$("$SCRIPT_DIR_LOCAL/update-draft-via-api.py" --draft draft.json --media-id "$EXISTING_MEDIA_ID" 2>&1)
+  UPDATE_RC=$?
+  set -e
+  if [[ $UPDATE_RC -eq 0 ]]; then
+    DRAFT_ID="$EXISTING_MEDIA_ID"
+    DRAFT_MODE="updated"
+  elif [[ $UPDATE_RC -eq 3 ]]; then
+    echo "  (old draft is gone, creating new)" >&2
+  else
+    echo "$UPDATE_OUT" >&2
+    exit 1
+  fi
+fi
+
+if [[ -z "$DRAFT_ID" ]]; then
+  echo "→ md2wechat create_draft draft.json ..." >&2
+  RESULT=$(md2wechat create_draft draft.json 2>&1)
+  DRAFT_ID=$(echo "$RESULT" | python3 -c "
 import sys, json, re
 data = sys.stdin.read()
 m = re.search(r'(\{\s*\"success\"[\s\S]*\})\s*\$', data)
@@ -237,6 +275,8 @@ if not obj.get('success'):
     sys.exit(1)
 print(obj['data']['media_id'])
 ")
+  DRAFT_MODE="created"
+fi
 
 echo "" >&2
 echo "✓ draft created" >&2
