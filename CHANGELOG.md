@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-17]
+
+### Changed
+
+- **`wjs-publishing-wechat`** — Scripts reorganized into a `scripts/` subdirectory (gen-cover-ai.sh, gen-illustration.sh, publish.sh, upload-draft.sh moved); two new comment-fetching scripts added: `fetch-comments.sh` (API-based) and `fetch-comments-by-cookie.sh` (browser-cookie auth, no API key needed); `mass-send.sh` added for batch messaging; `upload-draft.sh` substantially expanded. Installation instructions in skill-promo articles simplified: replaced the per-platform `cp -r` command table with a single "tell your AI agent to install the SKILL.md URL" instruction (agent installs it natively; Hermes gets its own one-liner). `## 后注` is no longer a default article section — it's opt-in only for genuine footnotes. Illustration placement logic updated to match.
+- **`wjs-eating-and-growing`** — Skill description made fully user-agnostic ("帮用户" not "帮王建硕"). Step 3 renamed from "旧权重" to "旧参数" throughout — a terminology clarification that makes the distinction from Step 4's "新参数" cleaner. Removed attribution to Mars 任鑫 from the framework table. Refined example prompts in Steps 1 and 2.
+- **`wangjianshuo-perspective`** — Minor style refinement in the out-of-scope handling note: removed the illustrative "correct me if I am wrong" phrase (the broader guidance still instructs Claude to handle uncertainty with humility).
+
 ## [2026-05-16]
 
 ### Changed
