@@ -27,7 +27,11 @@ API_TOKEN = "https://api.weixin.qq.com/cgi-bin/token"
 API_UPDATE = "https://api.weixin.qq.com/cgi-bin/draft/update"
 
 # Errcodes that mean "this draft is gone, please create a fresh one".
-GONE_ERRCODES = {46003, 47001, 88000}  # media_invalid, parse_error, also fallback
+GONE_ERRCODES = {
+    40007,  # invalid media_id (stale; was deleted/replaced)
+    46003,  # media data invalid
+    47001,  # data format error
+}
 
 def http_post_json(url: str, body: dict, timeout: float = 30.0) -> dict:
     data = json.dumps(body, ensure_ascii=False).encode("utf-8")
