@@ -34,9 +34,11 @@ description: Use when the user wants to write or publish a 微信公众号 (WeCh
 
 后者直接删，让 `illustration.png` 自己承担"演示结构"的功能——结构图已经把整套流程画出来了，正文再用文字把同一套结构展开一遍，是双倍的、空的内容。
 
-**优先保留**：开头反差 / 钩子 + 核心框架 + 1 句点睛 + 软着陆结尾 + 后注。
+**优先保留**：开头反差 / 钩子 + 核心框架 + 1 句点睛 + 软着陆结尾。
 
 **优先砍掉**：演示性例子、重复阐释、"怎么用 / 入口在哪"这类 instructional 段落（让被介绍的工具 / skill 的 README 自己说）。
+
+**默认不要写 `## 后注`**。文章在正文最后落点收束即可。只有当**真的有必要**的致谢、来源标注、对前文的重要补充（不是凑数）时才加——比如转述别人的框架必须致谢原作者。"correct me if I am wrong——欢迎拍砖"这类签名收尾，不构成加后注的理由。
 
 写完一定要数字数。`python3 -c "import re; t=open('article.md').read(); t=re.sub(r'\!\[.*?\]\(.*?\)','',t); print(len(re.findall(r'[一-鿿]',t)) + len(re.findall(r'[A-Za-z]+',t)))"`。超过 1200 就回去再砍一轮。
 
