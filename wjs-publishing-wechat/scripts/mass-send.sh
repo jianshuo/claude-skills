@@ -117,7 +117,12 @@ else:  # --send
 if r.get('errcode', 0) != 0:
     hint = ''
     if r.get('errcode') == 48001:
-        hint = '\n  hint: 48001 = 公众号未认证 (API mass send needs 已认证). 去 mp.weixin.qq.com → 设置 → 认证'
+        hint = ('\n  hint: 48001 = api unauthorized — but it\'s probably NOT what you think.'
+                '\n  自 2025-07 起，微信回收了「个人主体」账号的「发布能力 API」权限。'
+                '\n  即使你公众号有黄色 V（个人认证），mass/preview + mass/sendall 都返回 48001。'
+                '\n  只有「企业主体认证」的服务号/订阅号才有这个 API 权限。'
+                '\n  fallback：用 fetch-comments-by-cookie.sh + 浏览器抓包 cookie 拉留言（不依赖 API）'
+                '\n  或者 mp.weixin.qq.com 后台 → 留言管理 → 人肉看 / 导出')
     elif r.get('errcode') == 45028:
         hint = '\n  hint: 45028 = today\'s mass-send quota exhausted (订阅号 1/day, 服务号 4/month)'
     sys.exit(f'mass send failed: {r}{hint}')
