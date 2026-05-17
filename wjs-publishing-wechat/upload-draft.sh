@@ -173,6 +173,18 @@ for block in re.split(r'\n\s*\n', text):
         # Drop body H1 — the WeChat editor uses meta.json title as the article title.
         # Keeping a body H1 causes md2wechat inspect's DUPLICATE_H1 warning.
         continue
+    elif block.startswith('```'):
+        # Fenced code block: strip the ``` fences AND any language hint (the
+        # "bash" / "python" / etc would otherwise be rendered as literal text
+        # by WeChat). Render as <p><code>…</code></p> so it sits inline with
+        # surrounding paragraphs — WeChat's editor doesn't handle <pre> blocks
+        # well, and a fenced block of short commands (the common case) reads
+        # better as a styled inline `code` than as a separate code box.
+        lines = block.splitlines()
+        inner_lines = lines[1:-1] if len(lines) >= 2 and lines[-1].strip().startswith('```') else lines[1:]
+        escaped = [ln.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;') for ln in inner_lines]
+        inner = '<br>'.join(escaped)
+        blocks.append(f'<p><code style="{CODE_STYLE}">{inner}</code></p>')
     elif is_table(block):
         blocks.append(build_table(block))
     elif all(re.match(r'^\s*([-*]|\d+\.)\s+', ln) for ln in block.splitlines()):
