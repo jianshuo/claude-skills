@@ -236,6 +236,25 @@ echo "✓ draft created" >&2
 echo "  media_id: $DRAFT_ID" >&2
 echo "  → https://mp.weixin.qq.com/ → 草稿箱 → 预览 / 发布" >&2
 
+# Persist draft media_id + minimal metadata to publish.json so downstream
+# commands (mass-send.sh, fetch-comments.sh) can find it. Merge with any
+# existing publish.json fields (e.g. previous mass_sent_at / msg_data_id
+# from an earlier publish of the same article).
+DRAFT_ID="$DRAFT_ID" python3 <<'PYEOF'
+import json, os, datetime
+meta = json.load(open('meta.json'))
+pub = {}
+if os.path.exists('publish.json'):
+    try: pub = json.load(open('publish.json'))
+    except Exception: pub = {}
+pub['draft_media_id']   = os.environ['DRAFT_ID']
+pub['draft_created_at'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+pub['title']            = meta.get('title', '')
+pub['slug']             = meta.get('slug', '')
+open('publish.json', 'w').write(json.dumps(pub, ensure_ascii=False, indent=2))
+PYEOF
+echo "  (publish.json updated)" >&2
+
 # Auto-open the WeChat MP draft box in the default browser. The actual
 # per-draft edit URL requires a session token + internal appmsgid that we
 # can't construct from the API-returned media_id, so we open the home page —
