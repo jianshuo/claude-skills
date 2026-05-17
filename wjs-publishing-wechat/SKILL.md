@@ -222,7 +222,14 @@ pandoc article.md -f markdown -t html -o article.html
 
 1. `md2wechat upload_image cover.png` → 拿到 `thumb_media_id`
 2. **如果 `illustration.png` 存在但 `article.md` 没引用**：自动在 `## 后注` 之前插入 `![整件事画起来，是这样的](./illustration.png)` 并改写 `article.md`（幂等安全网）。然后 `md2wechat upload_image illustration.png` → 拿到 WeChat CDN `wechat_url`
-3. 从 `article.md` 生成 `content.html`（去掉 frontmatter 和正文 H1，只用语义标签 `<p>` / `<h2>` / `<h3>` / `<img>` / `<strong>` / `<ul>` / `<li>`，**不写任何 inline CSS**——让微信编辑器的默认 line-height / font-size / color 接管。段落之间用 `<p><br></p>` 作为间距块（和编辑器里手动按两次回车的源码一致；不能省，否则相邻 `<p>` 在没有 margin 的情况下会贴在一起；也不能用 `<br><br>` 或空 `<p></p>`，会被编辑器规范化吃掉）。`./illustration.png` 替换成 CDN URL），再从 `meta.json` 装出 `draft.json`
+3. 从 `article.md` 生成 `content.html`：
+   - 去掉 frontmatter 和正文 H1（避免 md2wechat inspect 的 DUPLICATE_H1 警告）
+   - 支持的 markdown 块：`<p>` / `<h2>` / `<h3>` / `<img>` / `<strong>` / `<em>` / `<code>` / `<ul>` / `<ol>` / `<li>` / `<table>`（markdown pipe table）
+   - **段落和图片等不写 inline CSS** —— 让微信编辑器的默认 line-height / font-size / color 接管
+   - 段落之间用 `<p><br></p>` 作为间距块（和编辑器里手动按两次回车的源码一致；不能省，否则相邻 `<p>` 在没有 margin 的情况下会贴在一起；也不能用 `<br><br>` 或空 `<p></p>`，会被编辑器规范化吃掉）
+   - **表格是 inline-style 例外** —— 给 `<table>` 加 `border-collapse:collapse`，每个 `<th>/<td>` 加 `border:1px solid #d9d9d9; padding:6px 10px;`。原因：表格 border 是**结构性**样式（没了表格就看不见），和 line-height 这种**装饰性**样式不是一回事；不加边框，WeChat 默认渲染就是几行裸文字挤在一起
+   - `./illustration.png` 替换成 CDN URL
+4. 再从 `meta.json` 装出 `draft.json`
 4. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
 
 **前置依赖**：
