@@ -235,3 +235,19 @@ echo "" >&2
 echo "✓ draft created" >&2
 echo "  media_id: $DRAFT_ID" >&2
 echo "  → https://mp.weixin.qq.com/ → 草稿箱 → 预览 / 发布" >&2
+
+# Auto-open the WeChat MP draft box in the default browser. The actual
+# per-draft edit URL requires a session token + internal appmsgid that we
+# can't construct from the API-returned media_id, so we open the home page —
+# if the user is logged in, the browser lands at 草稿箱 in 1 click.
+# Disable with: export WECHAT_PUBLISH_NO_OPEN=1
+if [[ -z "${WECHAT_PUBLISH_NO_OPEN:-}" ]]; then
+  WECHAT_HOME="https://mp.weixin.qq.com/"
+  if command -v open >/dev/null 2>&1; then
+    open "$WECHAT_HOME" >/dev/null 2>&1 || true
+    echo "  (opened in browser)" >&2
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$WECHAT_HOME" >/dev/null 2>&1 || true
+    echo "  (opened in browser)" >&2
+  fi
+fi
