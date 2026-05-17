@@ -161,9 +161,12 @@ for block in re.split(r'\n\s*\n', text):
             src = ILLUSTRATION_URL
         blocks.append(f'<p><img src="{src}" alt="{alt}"></p>')
     elif block.startswith('### '):
-        blocks.append(f'<h3>{inline(block[4:].strip())}</h3>')
+        # h3: ~1 号大于正文 + bold. Structural style (without it WeChat renders
+        # headers indistinguishably from paragraphs — defeats the purpose).
+        blocks.append(f'<h3 style="font-size:1.2em;font-weight:bold;">{inline(block[4:].strip())}</h3>')
     elif block.startswith('## '):
-        blocks.append(f'<h2>{inline(block[3:].strip())}</h2>')
+        # h2: ~2 号大于正文 + bold. Same rationale as h3.
+        blocks.append(f'<h2 style="font-size:1.4em;font-weight:bold;">{inline(block[3:].strip())}</h2>')
     elif block.startswith('# '):
         # Drop body H1 — the WeChat editor uses meta.json title as the article title.
         # Keeping a body H1 causes md2wechat inspect's DUPLICATE_H1 warning.
