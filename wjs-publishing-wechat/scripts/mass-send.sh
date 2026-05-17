@@ -97,8 +97,14 @@ if 'access_token' not in tok:
 TOKEN = tok['access_token']
 
 if MODE == '--preview':
-    print(f'→ mass/preview to {TARGET} ...', file=sys.stderr)
-    body = {'touser': TARGET, 'mpnews': {'media_id': media_id}, 'msgtype': 'mpnews'}
+    # Auto-detect: OpenID is 28 chars, starts with 'o', alphanumeric+_-.
+    # Anything else is a WeChat ID (微信号) → towxname field.
+    import re
+    is_openid = bool(re.fullmatch(r'o[A-Za-z0-9_-]{27}', TARGET))
+    field = 'touser' if is_openid else 'towxname'
+    label = 'OpenID' if is_openid else '微信号 (wxname)'
+    print(f'→ mass/preview to {label}={TARGET} ...', file=sys.stderr)
+    body = {field: TARGET, 'mpnews': {'media_id': media_id}, 'msgtype': 'mpnews'}
     r = api('POST', f'message/mass/preview?access_token={TOKEN}', body)
 else:  # --send
     print('→ mass/sendall to ALL subscribers (burning today\'s 1 quota) ...', file=sys.stderr)
