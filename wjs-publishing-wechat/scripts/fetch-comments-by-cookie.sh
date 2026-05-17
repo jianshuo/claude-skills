@@ -106,6 +106,24 @@ def fetch(url):
         sys.stderr.write('  if you see HTML/login page → cookie expired, re-grab\n')
         sys.exit(1)
 
+def unwrap_json_strings(obj):
+    """Some WeChat endpoints (notably list_comment) return comment_list as a
+    JSON-encoded string nested inside the outer JSON. Recursively detect such
+    strings and parse them so the rest of the code sees real arrays/dicts."""
+    if isinstance(obj, dict):
+        return {k: unwrap_json_strings(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [unwrap_json_strings(v) for v in obj]
+    if isinstance(obj, str):
+        s = obj.lstrip()
+        if s.startswith('{') or s.startswith('['):
+            try:
+                parsed = json.loads(obj)
+                return unwrap_json_strings(parsed)
+            except (json.JSONDecodeError, ValueError):
+                pass
+    return obj
+
 def walk(obj, path=()):
     """Yield (path, value) for every leaf+container so we can heuristically find arrays."""
     yield path, obj
