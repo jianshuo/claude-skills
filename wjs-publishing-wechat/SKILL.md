@@ -272,7 +272,13 @@ md2wechat preview article.md      # 生成本地 HTML 预览（degraded 模式�
 
 **Step 6.3 — 后台预览发布**
 
-登录 https://mp.weixin.qq.com → 草稿箱 → 找到刚上传的文章 → 手机预览 → 发布。
+`upload-draft.sh` 成功后**会自动用默认浏览器打开 `https://mp.weixin.qq.com/`**（macOS 用 `open`，Linux 用 `xdg-open`）。如果浏览器已登录，会直接进 home，点一下「草稿箱」就能看到刚才那条。
+
+要禁用 auto-open（比如批量跑多篇时怕开一堆 tab）：`export WECHAT_PUBLISH_NO_OPEN=1`。
+
+注：草稿的**精确编辑深链** URL 形如 `…appmsg_edit_v2?action=edit&appmsgid=XXX&token=YYY&…`，但 `appmsgid` 是后台数据库内部 ID（不等于 API 返回的 `media_id`），`token` 又是 session-bound，所以**没法**从 API 返回值拼出深链。打开草稿箱让用户选是当前能做的最稳的事。
+
+到草稿箱 → 找到刚上传的文章 → 手机预览 → 发布。
 
 **如果出错**：
 - `errcode=40164 not in whitelist`：把当前公网 IP 加进 WeChat MP 后台白名单
