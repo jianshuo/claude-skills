@@ -232,7 +232,10 @@ pandoc article.md -f markdown -t html -o article.html
      - `<h3>`：`font-size:1.2em; font-weight:bold;`（比正文大一号 + 粗体）
      - `<table>`：`border-collapse:collapse; width:100%;`
      - `<th>/<td>`：`border:1px solid #d9d9d9; padding:6px 10px;`（`<th>` 另加 `background:#f6f6f6`）
-   - **判定原则**：装饰性样式（行高、颜色、字体）让微信编辑器接管；结构性样式（标题层级、表格边框）必须 inline——不加就退化成正文 / 几行裸文字，块的意义丢失
+     - `<code>`：`font-family:Menlo,Consolas,monospace; background:#f4f4f4; padding:1px 6px; border-radius:3px; font-size:0.92em;`（不加，命令和普通文字混一起看不出是命令）
+   - **判定原则**：装饰性样式（行高、颜色、字体）让微信编辑器接管；结构性样式（标题层级、表格边框、代码视觉块）必须 inline——不加就退化成正文 / 几行裸文字，块的意义丢失
+   - **Fenced code block (` ```bash ... ``` `)**：脚本自动剥掉 ``` 围栏 **和**语言名（"bash" / "python" 等），转成 `<p><code>…</code></p>`，多行用 `<br>` 连接。不做 `<pre>` —— WeChat 编辑器对 `<pre>` 块不友好，而单行短命令用 inline-styled `<code>` 视觉更干净
+   - **命令展示的首选写法**：在 article.md 里直接用 inline `` `...` ``（一对反引号包命令），而不是 fenced ```bash 块。除非真的有多行连续 shell 流程必须用块，否则 inline 比 block 更适合公众号阅读
    - `./illustration.png` 替换成 CDN URL
 4. 再从 `meta.json` 装出 `draft.json`
 5. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
