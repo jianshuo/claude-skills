@@ -114,11 +114,13 @@ text = re.sub(r'^---\n.*?\n---\n', '', text, count=1, flags=re.DOTALL).strip()
 # matches editor-native source faithfully and survives the editor's
 # normalization passes (raw <br><br> gets folded; empty <p></p> gets stripped).
 
+CODE_STYLE = 'font-family:Menlo,Consolas,monospace;background:#f4f4f4;padding:1px 6px;border-radius:3px;font-size:0.92em;'
+
 def inline(s):
     # Convert inline markdown the WeChat editor would otherwise show as raw text.
     s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)   # **bold**
     s = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'<em>\1</em>', s)  # *italic*
-    s = re.sub(r'`([^`]+)`', r'<code>\1</code>', s)           # `code`
+    s = re.sub(r'`([^`]+)`', rf'<code style="{CODE_STYLE}">\1</code>', s)  # `code` (structural: monospace + light bg)
     return s
 
 def is_table(block):
