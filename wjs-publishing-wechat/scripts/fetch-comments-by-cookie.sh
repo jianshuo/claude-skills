@@ -193,22 +193,23 @@ if comments_page1 is None:
 total = find_total(first, comment_path)
 print(f'  found {len(comments_page1)} on page 1; reported total: {total}', file=sys.stderr)
 
-# Paginate
+# Paginate. Two stop conditions: page returns empty/short, OR (when known) total reached.
+# Don't trust total == 0 as "done" — that's almost always a misidentified count field;
+# the actual stop signal in that case is a short/empty page.
 all_comments = list(comments_page1)
 begin = page_size
-while True:
-    if total is not None and begin >= total: break
-    next_url = build_url(begin)
-    print(f'→ GET begin={begin} ...', file=sys.stderr)
-    payload = unwrap_json_strings(fetch(next_url))
-    _, page = find_comments(payload)
-    if not page:
-        break
-    all_comments.extend(page)
-    begin += len(page)
-    if total is None and len(page) < page_size:
-        break  # no total; stop when page is short
-    time.sleep(0.3)
+if len(comments_page1) >= page_size:  # first page was full → there might be more
+    while True:
+        if total is not None and total > 0 and begin >= total: break
+        next_url = build_url(begin)
+        print(f'→ GET begin={begin} ...', file=sys.stderr)
+        payload = unwrap_json_strings(fetch(next_url))
+        _, page = find_comments(payload)
+        if not page: break
+        all_comments.extend(page)
+        begin += len(page)
+        if len(page) < page_size: break  # short page = done
+        time.sleep(0.3)
 
 print(f'  total fetched: {len(all_comments)}', file=sys.stderr)
 
