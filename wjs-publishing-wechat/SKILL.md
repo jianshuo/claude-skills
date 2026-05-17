@@ -407,8 +407,9 @@ article.md 是源文件，下次改用这个。
     ├── gen-cover-ai.sh            # 题图: 2.35:1 强约束, 自动裁到 900×383
     ├── gen-illustration.sh        # 解释图: 比例自适应, 不裁剪
     ├── upload-draft.sh            # Step 6 主路径：upload_image × 2 + create_draft + 写 publish.json + 打开浏览器
-    ├── mass-send.sh               # Step 7（可选）：mass/preview 或 mass/sendall + 自动 comment/open
-    ├── fetch-comments.sh          # Step 7（可选）：拉 msg_data_id 对应的所有留言 → comments.md
+    ├── mass-send.sh               # Step 7（可选, 仅企业主体）：mass/preview 或 mass/sendall + 自动 comment/open
+    ├── fetch-comments.sh          # Step 7（可选, 仅企业主体）：拉 msg_data_id 对应的所有留言 → comments.md
+    ├── fetch-comments-by-cookie.sh # Step 8（可选, 个人主体唯一可用）：cookie fallback，浏览器抓包后拉留言
     └── publish.sh                 # legacy 备用：浏览器 + 剪贴板手动流（md2wechat 不可用时的兜底）
 ```
 
