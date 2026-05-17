@@ -20,8 +20,9 @@ if [[ -z "$ARTICLE_DIR" || ! -d "$ARTICLE_DIR" ]]; then
 fi
 ARTICLE_DIR="$(cd "$ARTICLE_DIR" && pwd)"
 
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEMPLATE="$SKILL_DIR/illustration-prompt.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"  # scripts/ → skill root
+TEMPLATE="$SKILL_DIR/prompts/illustration-prompt.md"
 WRAPPER="$HOME/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.cjs"
 
 [[ -f "$TEMPLATE" ]] || { echo "error: template missing: $TEMPLATE" >&2; exit 1; }
