@@ -12,7 +12,13 @@
 #
 # Usage:
 #   mass-send.sh <article-folder> --preview <openid>   # send to ONE person (yourself), 0 quota cost
-#   mass-send.sh <article-folder> --send               # real broadcast to all subscribers
+#   mass-send.sh <article-folder> --preview <wxname>    # OR a WeChat ID (e.g. "jianshuo")
+#   mass-send.sh <article-folder> --send                 # real broadcast to all subscribers
+#
+# --preview target auto-detection:
+#   - Looks like an OpenID (28 chars, starts with 'o', alphanumeric) → uses `touser` field
+#   - Otherwise treated as a WeChat ID (微信号) → uses `towxname` field
+#   - Preview quota is 100/day per account (separate from the 1/day mass-send quota)
 #
 # Run --preview first. Inspect the message in your WeChat. If happy, run --send.
 #
