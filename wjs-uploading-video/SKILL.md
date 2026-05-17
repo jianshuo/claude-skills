@@ -62,7 +62,7 @@ python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py \
 
 | Flag | Default | Notes |
 |---|---|---|
-| `--privacy` | `unlisted` | `private` / `unlisted` / `public` |
+| `--privacy` | `public` | `private` / `unlisted` / `public` |
 | `--category` | `28` | 28 = Science & Tech. 27 = Education. 24 = Entertainment. |
 | `--made-for-kids` | `false` | YouTube requires this declaration |
 | `--playlist <ID>` | none | Add each uploaded video to a playlist |
@@ -102,7 +102,7 @@ Filename in the heading must match an actual file in `--dir`. If a file exists b
 
 ## Sensible defaults this skill bakes in
 
-- **Privacy = unlisted**: lets the user review before going public; flip in YouTube Studio when ready (or pass `--privacy public`)
+- **Privacy = public**: videos go live immediately and appear in subscriber feeds + search. Override per call with `--privacy unlisted` (link-only) or `--privacy private` (owner-only) when you want to review first
 - **Category = 28 (Science & Tech)**: matches 王建硕 channel's main content; override with `--category` per upload
 - **selfDeclaredMadeForKids = false**: YouTube requires this; the user's content is adult-targeted
 - **Chunk size = 8 MB**: validated working size through this user's local proxy (256 KB stalled)
