@@ -48,36 +48,34 @@ description: Use when the user wants to write or publish a 微信公众号 (WeCh
 - 王建硕自己的 `wjs-*` skill：写完 SKILL.md 后，`~/.claude/skills-publish-hook.sh` 会自动 rsync + commit + push 到 [github.com/jianshuo/claude-skills](https://github.com/jianshuo/claude-skills)，无需手动。可用 `gh api repos/jianshuo/claude-skills/contents/<skill-name>` 确认已上线
 - 其他人的 skill：写文章前先确认它在公开 git repo 里。没有的话回头让作者先发布，不要让读者装不到
 
-**末尾必须附下面这段**（直接套用，把 `<SKILL_NAME>` 和仓库地址替换掉）：
+**末尾必须附下面这段**（直接套用，把 `<SKILL_NAME>` 替换成实际 skill 名）：
 
 ```markdown
 ## 安装方法
 
-skill 在 [github.com/jianshuo/claude-skills](https://github.com/jianshuo/claude-skills)。先 clone：
+不用复制命令。打开你用的 AI agent——Claude Code、Codex、Kimi Code、OpenClaw 都可以，对它说一句：
+
+> 安装 https://github.com/jianshuo/claude-skills/blob/main/<SKILL_NAME>/SKILL.md
+
+它会自己 fetch、放到自己平台的 skill 目录里、提示你重启对话。
+
+用 Hermes 的话直接命令行：
 
 \`\`\`bash
-git clone https://github.com/jianshuo/claude-skills.git
+hermes skills install https://github.com/jianshuo/claude-skills/blob/main/<SKILL_NAME>/SKILL.md
 \`\`\`
 
-然后按你用的工具拷到对应目录：
-
-| 工具 | 命令 |
-|---|---|
-| Claude Code | `cp -r claude-skills/<SKILL_NAME> ~/.claude/skills/` |
-| Codex | `cp -r claude-skills/<SKILL_NAME> ~/.codex/skills/` |
-| OpenClaw | `cp -r claude-skills/<SKILL_NAME> ~/.openclaw/skills/` |
-| Kimi Code | `cp -r claude-skills/<SKILL_NAME> ~/.config/agents/skills/` |
-| Hermes | `hermes skills tap add jianshuo/claude-skills && hermes skills install <SKILL_NAME>` |
-
-装完重启对话即可。
+装完之后，对 agent 说一句「<一句最自然的触发语，紧扣这个 skill 的入口>」，就能用。
 ```
 
 **几条规则**：
 1. 这段**不计入** 800–1000 字预算（是附录性工具信息，不是正文）
-2. 不要为了"显得简单"只写 Claude Code 一种——5 个平台一起列，是这篇 skill 的覆盖面承诺
-3. 命令必须**verified**：本 skill 里 5 行命令是已经核对过文档的（Claude Code / Codex / OpenClaw / Kimi Code 都消费各自的 `skills/<name>/SKILL.md` 目录布局；Hermes 用 `tap add` + `install` 命令）。如果未来某个平台的安装方式变了，**改这里、不要在每篇文章里现编**
-4. 表格放在「## 后注」之前。「## 后注」始终是文章最后一节
-5. 如果将来支持的平台增加（比如出了新的 agent runtime 也消费 SKILL.md），在这里加行，所有未来文章自动受益
+2. **为什么是"对 agent 说一句话"而不是 `cp -r` 命令**：在 agent 时代，安装 = 让 agent fetch URL 并写到自己平台的 skill 目录。任何能上网的 agent 都能搞定，不需要用户记每个平台的目录路径。`cp -r` 命令对公众号读者过于技术，已经是上一时代的安装方式
+3. URL 用 `github.com/<owner>/<repo>/blob/main/<path>` 形式：在浏览器能直接看到内容（读者可以先点开看再决定装不装），LLM agent 也能自动从 blob URL 抽出 markdown 原文（不需要手动转 raw.githubusercontent.com）
+4. Hermes 单独列**命令行**形式：因为 Hermes 是 skill registry CLI 而非 chat agent，没有"对它说一句话"的入口，但它的 `hermes skills install <URL>` 接受同一个 URL，是最干净的等价物
+5. 最后那句「装完之后，对 agent 说一句『……』」要根据当前 skill 的实际触发语写。例如「我想吃一堑长一智，最近这件事——」/「帮我准备一篇公众号」。**不要漏这一句**——读者装完不知道怎么开始用，整个安装段就白费
+6. 放在「## 后注」之前。「## 后注」始终是文章最后一节
+7. 如果将来出了新的支持 SKILL.md 的 agent 平台，**在第一段平台列表加一个名字即可**（"Claude Code、Codex、Kimi Code、OpenClaw、新平台 都可以"），不需要为它写新一行命令
 
 ## When This Skill Fires
 
