@@ -121,6 +121,34 @@ def inline(s):
     s = re.sub(r'`([^`]+)`', r'<code>\1</code>', s)           # `code`
     return s
 
+def is_table(block):
+    # Markdown pipe table: first row is header (starts with |), second row is
+    # a separator row of dashes/colons separated by pipes.
+    lines = block.splitlines()
+    if len(lines) < 2 or not lines[0].lstrip().startswith('|'):
+        return False
+    sep = lines[1].strip()
+    return bool(re.match(r'^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?$', sep))
+
+def parse_row(line):
+    line = line.strip()
+    if line.startswith('|'): line = line[1:]
+    if line.endswith('|'): line = line[:-1]
+    return [c.strip() for c in line.split('|')]
+
+def build_table(block):
+    # Inline styles ARE used here — table borders are structural (without them
+    # the table is invisible in WeChat), unlike line-height/font-size which are
+    # decorative and should defer to the editor's defaults.
+    lines = [ln for ln in block.splitlines() if ln.strip()]
+    headers = parse_row(lines[0])
+    rows = [parse_row(ln) for ln in lines[2:]]
+    th_s = 'border:1px solid #d9d9d9;padding:6px 10px;background:#f6f6f6;text-align:left;'
+    td_s = 'border:1px solid #d9d9d9;padding:6px 10px;'
+    thead = '<thead><tr>' + ''.join(f'<th style="{th_s}">{inline(h)}</th>' for h in headers) + '</tr></thead>'
+    tbody = '<tbody>' + ''.join('<tr>' + ''.join(f'<td style="{td_s}">{inline(c)}</td>' for c in row) + '</tr>' for row in rows) + '</tbody>'
+    return f'<table style="border-collapse:collapse;width:100%;">{thead}{tbody}</table>'
+
 blocks = []
 for block in re.split(r'\n\s*\n', text):
     block = block.strip()
@@ -140,6 +168,8 @@ for block in re.split(r'\n\s*\n', text):
         # Drop body H1 — the WeChat editor uses meta.json title as the article title.
         # Keeping a body H1 causes md2wechat inspect's DUPLICATE_H1 warning.
         continue
+    elif is_table(block):
+        blocks.append(build_table(block))
     elif all(re.match(r'^\s*([-*]|\d+\.)\s+', ln) for ln in block.splitlines()):
         # A bullet / ordered list block.
         ordered = bool(re.match(r'^\s*\d+\.\s+', block.splitlines()[0]))
