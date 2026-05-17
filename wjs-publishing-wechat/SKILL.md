@@ -239,7 +239,15 @@ pandoc article.md -f markdown -t html -o article.html
    - **命令展示的首选写法**：在 article.md 里直接用 inline `` `...` ``（一对反引号包命令），而不是 fenced ```bash 块。除非真的有多行连续 shell 流程必须用块，否则 inline 比 block 更适合公众号阅读
    - `./illustration.png` 替换成 CDN URL
 4. 再从 `meta.json` 装出 `draft.json`
-5. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
+5. **草稿写入 / 更新**：
+   - 如果 `publish.json` 里已经有 `draft_media_id`（说明这篇之前发过草稿了），先跑 `update-draft-via-api.py` 复用同一个 media_id 在 backend **原地更新**——WeChat 后台自带版本控制，不会产生新草稿；只有 `draft_updated_at` 时间戳被刷新
+   - 老 media_id 被用户在后台删了 → API 返回 `errcode=40007`，脚本自动 fallback 到 `md2wechat create_draft` 建一个新的
+   - 想强制建新的（比如要保留旧版做对照）：`export WECHAT_PUBLISH_FORCE_NEW=1`
+   - 这条「优先 update」是 2026-05 加的，之前每次都建新草稿——同一篇反复改会污染草稿箱
+
+**为什么自己写 update？** md2wechat 的 CLI 只暴露了 `create_draft`，但 WeChat 后台 API 是有 `draft/update` 的（md2wechat binary 里都能 grep 到这个 URL，只是没接出来）。所以本 skill 用 30 行 Python 直接调，绕过 md2wechat CLI 这层限制。
+- 走的是当前 shell 的 `HTTPS_PROXY`（必要！WeChat IP 白名单认的是 proxy 出口 IP，不是本机直出 IP）
+- 老 `40007 invalid media_id` 自动 fallback；其他错误（45004 description 超长等）直接 bubble up，跟创建路径一致
 
 **前置依赖**：
 - `md2wechat` CLI 已安装并配置好 `WECHAT_APPID` + `WECHAT_SECRET`（`md2wechat config show` 验证）
