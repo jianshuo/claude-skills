@@ -361,7 +361,9 @@ article.md 是源文件，下次改用这个。
 ├── gen-cover-ai.sh                # 题图: 2.35:1 强约束, 自动裁到 900×383
 ├── illustration-prompt.md         # AI 解释图 prompt 模板（[文章内容] 占位符）
 ├── gen-illustration.sh            # 解释图: 比例自适应, 不裁剪
-└── upload-draft.sh                # Step 6 主路径：upload_image × 2 + create_draft
+├── upload-draft.sh                # Step 6 主路径：upload_image × 2 + create_draft + 写 publish.json
+├── mass-send.sh                   # Step 7（可选）：mass/preview 或 mass/sendall + 自动 comment/open
+└── fetch-comments.sh              # Step 7（可选）：拉 msg_data_id 对应的所有留言 → comments.md
 ```
 
 依赖的外部 skill：
