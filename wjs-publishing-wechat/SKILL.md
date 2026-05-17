@@ -137,7 +137,7 @@ hermes skills install https://github.com/jianshuo/claude-skills/blob/main/<SKILL
 **题图固定走 AI 生成**（不问用户，每张约 $0.05–0.20）：
 
 ```bash
-~/.claude/skills/wjs-publishing-wechat/gen-cover-ai.sh <article-folder> ["目标字词"]
+~/.claude/skills/wjs-publishing-wechat/scripts/gen-cover-ai.sh <article-folder> ["目标字词"]
 ```
 
 - 不传第二个参数时，从 `meta.json` 取 `title` 当目标字词
@@ -165,7 +165,7 @@ cp -r /tmp/g/skills/gpt-image-2-skill ~/.claude/skills/
 **然后生成解释图**(无需问用户,自动跑):
 
 ```bash
-~/.claude/skills/wjs-publishing-wechat/gen-illustration.sh <article-folder>
+~/.claude/skills/wjs-publishing-wechat/scripts/gen-illustration.sh <article-folder>
 ```
 
 - 读 `article.md` 全文,作为 instructions 传给 gpt-image-2
@@ -214,7 +214,7 @@ pandoc article.md -f markdown -t html -o article.html
 文章包准备好后，跑一行就能把文章作为草稿推到公众号后台：
 
 ```bash
-~/.claude/skills/wjs-publishing-wechat/upload-draft.sh \
+~/.claude/skills/wjs-publishing-wechat/scripts/upload-draft.sh \
   <workspace>/articles/YYYY-MM-DD-{slug}
 ```
 
@@ -264,7 +264,7 @@ md2wechat preview article.md      # 生成本地 HTML 预览（degraded 模式�
 **Step 6.2 — 一行发布**
 
 ```bash
-~/.claude/skills/wjs-publishing-wechat/upload-draft.sh \
+~/.claude/skills/wjs-publishing-wechat/scripts/upload-draft.sh \
   /Users/jianshuo/code/wechat-publish/articles/YYYY-MM-DD-{slug}
 ```
 
@@ -344,7 +344,7 @@ fetch-comments.sh <folder>                      # comments.md 出炉
 准备好了。文章在 articles/YYYY-MM-DD-{slug}/
 
 发布（一行）：
-  ~/.claude/skills/wjs-publishing-wechat/upload-draft.sh \
+  ~/.claude/skills/wjs-publishing-wechat/scripts/upload-draft.sh \
     articles/YYYY-MM-DD-{slug}
 
 成功后到 mp.weixin.qq.com 草稿箱预览 / 发布。
@@ -357,13 +357,17 @@ article.md 是源文件，下次改用这个。
 ```
 ~/.claude/skills/wjs-publishing-wechat/
 ├── SKILL.md                       # 本文件
-├── cover-prompt.md                # AI 题图 prompt 模板（[目标字词] 占位符）
-├── gen-cover-ai.sh                # 题图: 2.35:1 强约束, 自动裁到 900×383
-├── illustration-prompt.md         # AI 解释图 prompt 模板（[文章内容] 占位符）
-├── gen-illustration.sh            # 解释图: 比例自适应, 不裁剪
-├── upload-draft.sh                # Step 6 主路径：upload_image × 2 + create_draft + 写 publish.json
-├── mass-send.sh                   # Step 7（可选）：mass/preview 或 mass/sendall + 自动 comment/open
-└── fetch-comments.sh              # Step 7（可选）：拉 msg_data_id 对应的所有留言 → comments.md
+├── README.md                      # 公开版 readme（GitHub 上展示用）
+├── prompts/
+│   ├── cover-prompt.md            # AI 题图 prompt 模板（[目标字词] 占位符）
+│   └── illustration-prompt.md     # AI 解释图 prompt 模板（[文章内容] 占位符）
+└── scripts/
+    ├── gen-cover-ai.sh            # 题图: 2.35:1 强约束, 自动裁到 900×383
+    ├── gen-illustration.sh        # 解释图: 比例自适应, 不裁剪
+    ├── upload-draft.sh            # Step 6 主路径：upload_image × 2 + create_draft + 写 publish.json + 打开浏览器
+    ├── mass-send.sh               # Step 7（可选）：mass/preview 或 mass/sendall + 自动 comment/open
+    ├── fetch-comments.sh          # Step 7（可选）：拉 msg_data_id 对应的所有留言 → comments.md
+    └── publish.sh                 # legacy 备用：浏览器 + 剪贴板手动流（md2wechat 不可用时的兜底）
 ```
 
 依赖的外部 skill：
