@@ -337,7 +337,7 @@ def main():
 
     # Status flags
     p.add_argument("--privacy", choices=["private", "unlisted", "public"],
-                   default="unlisted")
+                   default="public")
     p.add_argument("--category", default="28",
                    help="Numeric YouTube category id; 28=Science&Tech, 27=Education, 24=Entertainment")
     p.add_argument("--made-for-kids", action="store_true",
