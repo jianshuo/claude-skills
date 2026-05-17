@@ -225,6 +225,7 @@ pandoc article.md -f markdown -t html -o article.html
 3. 从 `article.md` 生成 `content.html`：
    - 去掉 frontmatter 和正文 H1（避免 md2wechat inspect 的 DUPLICATE_H1 警告）
    - 支持的 markdown 块：`<p>` / `<h2>` / `<h3>` / `<img>` / `<strong>` / `<em>` / `<code>` / `<ul>` / `<ol>` / `<li>` / `<table>`（markdown pipe table）
+   - **Raw HTML 块透传**：以 `<` 开头的块（典型用例：`<section style="background:#f7f5f0;…">…</section>` 包一段"上篇精选"footer，淡底色 + 灰字 + 内嵌上一篇链接）会原样输出，不被包成 `<p>`。整段必须是**一个块**——内部不能有空行打断，否则会被切碎。作者自己负责 HTML 合法 + WeChat 编辑器能吃
    - **段落和图片等不写 inline CSS** —— 让微信编辑器的默认 line-height / font-size / color 接管
    - 段落之间用 `<p><br></p>` 作为间距块（和编辑器里手动按两次回车的源码一致；不能省，否则相邻 `<p>` 在没有 margin 的情况下会贴在一起；也不能用 `<br><br>` 或空 `<p></p>`，会被编辑器规范化吃掉）
    - **结构性样式例外**（这些 inline style 必须加，不加就破坏可读性）：
