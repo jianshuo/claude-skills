@@ -227,7 +227,12 @@ pandoc article.md -f markdown -t html -o article.html
    - 支持的 markdown 块：`<p>` / `<h2>` / `<h3>` / `<img>` / `<strong>` / `<em>` / `<code>` / `<ul>` / `<ol>` / `<li>` / `<table>`（markdown pipe table）
    - **段落和图片等不写 inline CSS** —— 让微信编辑器的默认 line-height / font-size / color 接管
    - 段落之间用 `<p><br></p>` 作为间距块（和编辑器里手动按两次回车的源码一致；不能省，否则相邻 `<p>` 在没有 margin 的情况下会贴在一起；也不能用 `<br><br>` 或空 `<p></p>`，会被编辑器规范化吃掉）
-   - **表格是 inline-style 例外** —— 给 `<table>` 加 `border-collapse:collapse`，每个 `<th>/<td>` 加 `border:1px solid #d9d9d9; padding:6px 10px;`。原因：表格 border 是**结构性**样式（没了表格就看不见），和 line-height 这种**装饰性**样式不是一回事；不加边框，WeChat 默认渲染就是几行裸文字挤在一起
+   - **结构性样式例外**（这些 inline style 必须加，不加就破坏可读性）：
+     - `<h2>`：`font-size:1.4em; font-weight:bold;`（比正文大两号 + 粗体）
+     - `<h3>`：`font-size:1.2em; font-weight:bold;`（比正文大一号 + 粗体）
+     - `<table>`：`border-collapse:collapse; width:100%;`
+     - `<th>/<td>`：`border:1px solid #d9d9d9; padding:6px 10px;`（`<th>` 另加 `background:#f6f6f6`）
+   - **判定原则**：装饰性样式（行高、颜色、字体）让微信编辑器接管；结构性样式（标题层级、表格边框）必须 inline——不加就退化成正文 / 几行裸文字，块的意义丢失
    - `./illustration.png` 替换成 CDN URL
 4. 再从 `meta.json` 装出 `draft.json`
 5. `md2wechat create_draft draft.json` → 返回草稿 `media_id`
