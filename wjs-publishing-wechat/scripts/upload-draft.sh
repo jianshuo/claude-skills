@@ -279,7 +279,11 @@ print(obj['data']['media_id'])
 fi
 
 echo "" >&2
-echo "✓ draft created" >&2
+if [[ "$DRAFT_MODE" == "updated" ]]; then
+  echo "✓ draft updated in place (reused media_id)" >&2
+else
+  echo "✓ draft created" >&2
+fi
 echo "  media_id: $DRAFT_ID" >&2
 echo "  → https://mp.weixin.qq.com/ → 草稿箱 → 预览 / 发布" >&2
 
@@ -287,7 +291,7 @@ echo "  → https://mp.weixin.qq.com/ → 草稿箱 → 预览 / 发布" >&2
 # commands (mass-send.sh, fetch-comments.sh) can find it. Merge with any
 # existing publish.json fields (e.g. previous mass_sent_at / msg_data_id
 # from an earlier publish of the same article).
-DRAFT_ID="$DRAFT_ID" python3 <<'PYEOF'
+DRAFT_ID="$DRAFT_ID" DRAFT_MODE="$DRAFT_MODE" python3 <<'PYEOF'
 import json, os, datetime
 meta = json.load(open('meta.json'))
 pub = {}
@@ -295,7 +299,14 @@ if os.path.exists('publish.json'):
     try: pub = json.load(open('publish.json'))
     except Exception: pub = {}
 pub['draft_media_id']   = os.environ['DRAFT_ID']
-pub['draft_created_at'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+if os.environ.get('DRAFT_MODE') == 'updated':
+    pub['draft_updated_at'] = now
+else:
+    pub['draft_created_at'] = now
+    # If this is a fresh create that re-occupies the same slot, clear any
+    # stale draft_updated_at from a previous lifecycle.
+    pub.pop('draft_updated_at', None)
 pub['title']            = meta.get('title', '')
 pub['slug']             = meta.get('slug', '')
 open('publish.json', 'w').write(json.dumps(pub, ensure_ascii=False, indent=2))
