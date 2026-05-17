@@ -190,7 +190,7 @@ while True:
     if total is not None and begin >= total: break
     next_url = build_url(begin)
     print(f'→ GET begin={begin} ...', file=sys.stderr)
-    payload = fetch(next_url)
+    payload = unwrap_json_strings(fetch(next_url))
     _, page = find_comments(payload)
     if not page:
         break
@@ -244,19 +244,37 @@ if FMT in ('--md', '--both'):
     for c in all_comments:
         nick = g(c, 'nick_name', 'nickname', 'NickName', default='匿名')
         content = g(c, 'content', 'Content')
-        ctime = fmt_ts(g(c, 'create_time', 'createTime', 'CreateTime', default=0))
+        # Timestamp field names differ by endpoint: post_time (内部接口) vs create_time (官方 API)
+        ctime = fmt_ts(g(c, 'post_time', 'create_time', 'createTime', 'CreateTime', default=0))
         elected = g(c, 'is_elected', 'isElected', 'comment_type', default=0)
         elected_s = ' **[精选]**' if elected else ''
+        is_top = g(c, 'is_top', default=False)
+        top_s = ' **[置顶]**' if is_top else ''
         like = g(c, 'like_num', 'likeNum', 'LikeNum', default=0)
         like_s = f' · 👍 {like}' if like else ''
-        lines.append(f'## {nick}  ({ctime}){elected_s}{like_s}')
+        ip = g(c, 'ip_wording', default='')
+        ip_s = f' · {ip}' if ip else ''
+        lines.append(f'## {nick}  ({ctime}){top_s}{elected_s}{like_s}{ip_s}')
         lines.append('')
         lines.append((str(content) or '_（空）_').strip())
+        # Public reply: official API uses reply.content; internal endpoint uses
+        # reply.reply_list[] (each with content + post_time). Handle both.
         reply = g(c, 'reply', 'Reply', default=None)
-        if isinstance(reply, dict) and reply.get('content'):
-            rtime = fmt_ts(reply.get('create_time', 0))
+        new_reply = g(c, 'new_reply', default=None)
+        replies = []
+        if isinstance(reply, dict):
+            if reply.get('content'):
+                replies.append((reply.get('create_time', 0), reply['content']))
+            for r in (reply.get('reply_list') or []):
+                if isinstance(r, dict) and r.get('content'):
+                    replies.append((r.get('create_time') or r.get('post_time') or 0, r['content']))
+        if isinstance(new_reply, dict):
+            for r in (new_reply.get('reply_list') or []):
+                if isinstance(r, dict) and r.get('content'):
+                    replies.append((r.get('create_time') or r.get('post_time') or 0, r['content']))
+        for rtime_raw, rcontent in replies:
             lines.append('')
-            lines.append(f'> **公开回复** ({rtime})：{reply["content"]}')
+            lines.append(f'> **公开回复** ({fmt_ts(rtime_raw)})：{rcontent}')
         lines.append('')
         lines.append('---')
         lines.append('')
