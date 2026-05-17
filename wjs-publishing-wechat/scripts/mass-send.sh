@@ -36,11 +36,14 @@ TARGET="${3:-}"
 usage() {
   cat <<'EOF' >&2
 usage:
-  mass-send.sh <article-folder> --preview <openid>
+  mass-send.sh <article-folder> --preview <openid-or-wxname>
   mass-send.sh <article-folder> --send
 
-  --preview <openid>: mass/preview to one user (you). Does not consume daily quota.
-  --send:             mass/sendall to all subscribers. Burns today's 1 send slot.
+  --preview: mass/preview to one user (typically yourself). Argument is auto-detected:
+              28-char string starting with 'o' → OpenID (touser)
+              anything else                    → WeChat ID 微信号 (towxname)
+              100/day preview quota; does NOT consume mass-send quota.
+  --send:    mass/sendall to all subscribers. Burns today's 1 mass-send slot.
 EOF
   exit 1
 }
