@@ -288,6 +288,56 @@ md2wechat preview article.md      # 生成本地 HTML 预览（degraded 模式�
 
 **Optional — 高级排版**：如需第一屏判断、CTA、作者名片等模块，在 `article.md` 加 `:::block` 语法（需要 `MD2WECHAT_API_KEY` 才能渲染）。本 skill 默认不加，保持作者原文清洁。
 
+### Step 7（可选）—— API 群发 + 拉留言
+
+**前提**：公众号是**已认证**订阅号（黄色 V）或服务号。未认证账号 API 群发会返回 `errcode=48001`。
+
+**为什么单独设计成两个命令、不并进 `upload-draft.sh`**：
+1. 订阅号每天**只有 1 次** API 群发配额，自动触发跑错就废了
+2. 群发跳过"草稿箱后台预览 → 改个错别字"这道人工把关——保留它
+
+**两个命令各自做什么**：
+
+`mass-send.sh <folder> --preview <my-openid>`
+- 调 `cgi-bin/message/mass/preview`，把已创建的草稿发给**你自己**的微信
+- 不消耗当日群发配额，专用于"群发前最后看一眼实际效果"
+- 微信里看 OK 了再走 `--send`
+
+`mass-send.sh <folder> --send`
+- 调 `cgi-bin/message/mass/sendall` (`filter.is_to_all=true`)，**真群发给所有粉丝**
+- 成功后**自动**调 `cgi-bin/comment/open` 打开这篇的评论功能（不打开拉评论会返回 `errcode=88000`）
+- 把 `msg_id` + `msg_data_id` 写回 `publish.json`，下游 `fetch-comments.sh` 凭这个找到这篇
+
+`fetch-comments.sh <folder> [--md|--json|--both]`
+- 从 `publish.json` 读 `msg_data_id`
+- 翻页拉所有留言（`comment/list` 一页 50 条，自动翻完）
+- 默认输出 Markdown 到 `comments.md`（含昵称前缀、时间、精选标记、点赞数、公开回复）；`--json` 输出原始 API payload 到 `comments.json`
+
+**典型流程**（已认证账号）：
+
+```
+upload-draft.sh <folder>                        # 创建草稿 + 写 publish.json
+mass-send.sh <folder> --preview <my-openid>     # 自己手机里看一眼
+mass-send.sh <folder> --send                    # 真群发 + 打开评论
+# 等几分钟到几小时让粉丝看到 + 留言
+fetch-comments.sh <folder>                      # comments.md 出炉
+```
+
+**publish.json 字段**（增量写，永不丢之前的字段）：
+- `draft_media_id` / `draft_created_at` — `upload-draft.sh` 写
+- `preview_msg_id` / `preview_sent_at` / `preview_to` — `mass-send.sh --preview` 写
+- `msg_id` / `msg_data_id` / `mass_sent_at` / `comments_open` — `mass-send.sh --send` 写
+
+**何时不要走这条路**：
+- 未认证账号（48001）：去做个人认证再来
+- 已经用后台手动群发了这一篇：`msg_data_id` 拿不到了，只能 mp.weixin.qq.com 后台留言管理人肉看 / 导出
+- 用 `freepublish/submit` 永久链接发的：不算"群发"、不出现在历史消息、`msg_data_id` 也拿不到——同样只能后台看
+
+**常见 errcode**：
+- `48001` — 公众号未认证
+- `45028` — 当日群发配额已用完
+- `88000` — 评论未开启（`mass-send.sh --send` 已经会自动 `comment/open`；如果跳过了 --send 直接拉，会撞这个）
+
 输出给用户的最后一段话，固定格式：
 
 ```
