@@ -76,7 +76,7 @@ hermes skills install https://github.com/jianshuo/claude-skills/blob/main/<SKILL
 3. URL 用 `github.com/<owner>/<repo>/blob/main/<path>` 形式：在浏览器能直接看到内容（读者可以先点开看再决定装不装），LLM agent 也能自动从 blob URL 抽出 markdown 原文（不需要手动转 raw.githubusercontent.com）
 4. Hermes 单独列**命令行**形式：因为 Hermes 是 skill registry CLI 而非 chat agent，没有"对它说一句话"的入口，但它的 `hermes skills install <URL>` 接受同一个 URL，是最干净的等价物
 5. 最后那句「装完之后，对 agent 说一句『……』」要根据当前 skill 的实际触发语写。例如「我想吃一堑长一智，最近这件事——」/「帮我准备一篇公众号」。**不要漏这一句**——读者装完不知道怎么开始用，整个安装段就白费
-6. 放在「## 后注」之前。「## 后注」始终是文章最后一节
+6. 通常放在文章最后（默认无 `## 后注`）；如果这篇例外性地有 `## 后注`，安装方法放在后注之前
 7. 如果将来出了新的支持 SKILL.md 的 agent 平台，**在第一段平台列表加一个名字即可**（"Claude Code、Codex、Kimi Code、OpenClaw、新平台 都可以"），不需要为它写新一行命令
 
 ## When This Skill Fires
