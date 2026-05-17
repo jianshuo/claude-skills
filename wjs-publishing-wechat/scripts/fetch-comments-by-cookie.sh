@@ -272,7 +272,11 @@ if FMT in ('--md', '--both'):
             for r in (new_reply.get('reply_list') or []):
                 if isinstance(r, dict) and r.get('content'):
                     replies.append((r.get('create_time') or r.get('post_time') or 0, r['content']))
+        seen = set()
         for rtime_raw, rcontent in replies:
+            key = (rtime_raw, rcontent)
+            if key in seen: continue
+            seen.add(key)
             lines.append('')
             lines.append(f'> **公开回复** ({fmt_ts(rtime_raw)})：{rcontent}')
         lines.append('')
