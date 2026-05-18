@@ -76,7 +76,7 @@ Hard constraints on each candidate:
 - ≤ 140 Chinese characters (X allows 280 latin = 140 CJK characters)
 - Preserve 王建硕 voice: plain, honest, conversational, family-style metaphors
 - NO hashtags, NO @mentions, NO emoji (unless original article has them), NO marketing tone
-- Material MUST come from the article text — don't invent new examples
+- Material MUST come from the article text — do not invent new examples
 - NO mp.weixin link, NO "click here", NO call-to-action
 
 Then pick the strongest of the 3 (the one with most resonance + tightest line).
