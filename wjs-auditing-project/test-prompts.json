@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "scenario": "happy path — holistic 'make it right' audit returns grouped checklist (Phase 1 only, no fixes)",
+    "prompt": "看看 Cathier 现在到底出了什么问题,make it right。",
+    "expected": "应该:(1) 严格遵循 Phase 1 — Investigate(line 28-73) 的 hard two-phase split,在『一条消息里并行』跑 A-G 全部 read-only 检查(line 30),不要先问用户跑哪几个,不要边跑边修;(2) A: git status + stash list + branch -vv + main..HEAD + fetch + HEAD..@{upstream} + remote branches merged/no-merged(line 33-38);(3) B: gh pr list open + 对 >7 天或 mergeStateStatus≠CLEAN 的 PR 跑 gh pr checks,并单独查 app/claude 作者的自动合入 PR(line 41-43);(4) C: gh run list + failure + 对 main 或 open PR 分支的失败跑 gh run view --log-failed | tail -100(line 46-48);(5) D iOS 专属: 抓 MARKETING_VERSION/CURRENT_PROJECT_VERSION + git tag + last-tag..main + fastlane/ 最后改动时间(line 52-56);(6) E: 读 TODOS.md / CHANGELOG.md / APP_STORE_SUBMISSION_GUIDE.md / ROADMAP.md + grep TODO/FIXME/XXX(line 59-61);(7) F: DiagnosticReports/Cathier* + log show + xcactivitylog 最近三条(line 64-66);(8) G: 三步法回答『为什么 feedback 没上线』(line 69-73);(9) 输出严格遵循 line 80-101 的『🔴 Blocking / 🟡 Open work / 🟢 Plan drift / Logs / Looks fine』五段式 grouped checklist,每条都带 what's wrong + evidence(numbers/dates/file paths)+ proposed action(line 77);(10) 结尾必须用 line 103 的原话:『想让我把这些都修好吗?还是挑一部分?或者先讨论某一项?』;(11) 即使用户说了 'make it right',也不要在 Phase 1 阶段做任何 commit / merge / push / tag push / fastlane 调用(line 14, 17)。"
+  },
+  {
+    "id": 2,
+    "scenario": "read-only first rule — must NOT auto-fix even when problem is obvious",
+    "prompt": "为什么我的反馈还没上线?有 PR 没合的就直接合了吧,version 该 bump 就 bump,我懒得管。",
+    "expected": "应该:(1) 即使用户说『直接合』『懒得管』,也必须先跑 Phase 1 完整 audit,不要跳过 checklist(line 17 明确说『Just go ahead and fix everything is fine as confirmation, but you still produce the checklist first so they can scan it』);(2) 针对『反馈没上线』走 G 的三步法(line 69-73): 查 app/claude PR → 查是否 merged → 比对 TestFlight build 日期 vs merge commit 日期,如果 merged 但没新 build,这就是答案,『The fix is a new TestFlight build, not more code changes』(line 139);(3) 即便用户口头授权,合 PR 仍需『they confirmed this PR by name in their reply』(line 147),不能用通用授权一次合多个;(4) 任何 destructive 动作(git reset --hard / push --force / 删分支)无论用户怎么说都要 per-action 单独确认(line 128, 148);(5) fastlane pilot upload 永远不要替用户跑,只能打印 `! fastlane pilot upload` 让用户自己执行(line 126-127, 150);(6) 不要假设 TODOS.md 里过期的 plan item 是 obsolete 就删掉(line 152);(7) 不要因为 crash report 看起来无关紧要就跳过,必须 pull stack 让用户决定(line 151)。"
+  },
+  {
+    "id": 3,
+    "scenario": "Cathier iOS-specific awareness — fastlane / pbxproj / @claude auto-merge workflow",
+    "prompt": "为什么很久没有新 build 了?上次 TestFlight 是什么时候?",
+    "expected": "应该:(1) 默认 cwd 用 /Users/jianshuo/code/Cathier(line 156),除非在别处被调用;(2) 跑 D 段 iOS 专属检查(line 52-56): grep MARKETING_VERSION/CURRENT_PROJECT_VERSION from *.xcodeproj/project.pbxproj + git tag --sort=-creatordate | head -5 + git log <last-tag>..main + 检查 fastlane/ 和 fastlane/report.xml + git log -1 fastlane/ 最后改动;(3) 跑 G 段(line 69-73) 把 app/claude 自动合入的 PR 列出来,逐个比对 merge commit 日期 vs 最近 TestFlight build 日期,若 PR merged 后没新 build → 直接指出『merged into main but never built/submitted』;(4) 读 TODOS.md + APP_STORE_SUBMISSION_GUIDE.md 两个 plan source of truth(line 158);(5) checklist 里把『N 个 auto-merged @claude PRs 在 last TestFlight build 之后合入』作为 🟢 Plan drift 一条(参考 line 93);(6) 标准修法走 line 139 这一行: 修法 = 新 build,不是改代码;line 136 = bump 版本号、tag、写 release notes,然后『prompt user to run fastlane pilot』;(7) bump MARKETING_VERSION / CURRENT_PROJECT_VERSION 可以自己做(line 120),tag 可以打但『don't push tag until user confirms』(line 121),最终的 `! fastlane pilot upload` 必须打印让用户自己跑(line 126-127),因为签名只能他来。"
+  },
+  {
+    "id": 4,
+    "scenario": "trigger phrase routing — '为什么没提交App Store' must route here, not to a generic fix-it loop",
+    "prompt": "为什么没提交App Store?",
+    "expected": "应该:(1) 命中 SKILL.md frontmatter description 里明确列的触发短语『为什么没提交App Store』(line 3),触发本 skill 的 audit-then-confirm 流程,而不是直接去跑 fastlane 或改代码;(2) 进入 Phase 1 完整跑 D 段(line 52-56) + G 段(line 69-73) + E 段读 APP_STORE_SUBMISSION_GUIDE.md(line 59, 158);(3) 把发现按 line 80-101 五段式分组输出 — 比如 last fastlane invocation 时间 + 当前 build number + 自上次 tag 之后的 commit 数,作为🔴 Blocking 或 🟢 Plan drift 一条;(4) 用 line 91 的格式呈现 plan drift 一条:『TODOS.md line X: 提交 App Store 截止日 YYYY-MM-DD — 逾期 Nd, fastlane pilot 自 YYYY-MM-DD 起未调用』;(5) 永远不要替用户提交 App Store(line 150『Never. Print the ! fastlane … command and stop.』),只能打印 `! fastlane pilot upload`;(6) 结尾必须用 line 103 原话兜底询问;(7) 不要在 Phase 1 自作主张 bump 版本或打 tag — 即使发现明显需要,也是先列进 checklist 等用户挑。"
+  },
+  {
+    "id": 5,
+    "scenario": "negative case — narrow single-question debug should NOT trigger full audit",
+    "prompt": "我刚跑的 testJokeViewModel 这个单测一直失败,报 'expected 3 got 0',帮我看下哪里写错了。",
+    "expected": "应该:(1) 不要触发本 skill — 这是一个具体到单个测试 + 具体错误信息的 narrow debug 请求,不属于『holistic state-of-the-project check』(line 10) 也不命中 description(line 3) 里任何一个触发短语(『make it right / 出了什么问题 / 反馈没上线 / 没新 build / 没提交 App Store / PR 没合』都不沾边);(2) 不要跑 Phase 1 的 7 大类并行检查 — 没必要为一个单测失败去 git status / gh pr list / log show / DiagnosticReports;(3) 不要输出 line 80-101 的 grouped checklist,也不要用 line 103 的兜底问句结尾 — 这两个都是 audit 流程的产物;(4) 正确做法是路由到 systematic-debugging(或直接读测试 + 被测代码 + 错误堆栈),用户已经给了完整复现信息,直接调试;(5) 只有当用户后续主动升级到 'project 是不是整体出了什么问题' 类问题时,才考虑切到本 skill;(6) 反例守则印证:line 144-152 的 Red flags 表反复强调 audit skill 是『two-phase, confirm-first, never collapse』,把它套到一个单测 bug 上既浪费上下文又违反 skill 自身的 scope。"
+  }
+]
