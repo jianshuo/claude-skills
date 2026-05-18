@@ -120,7 +120,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 #### 配色硬规则（反"全片一个色"惯性）
 
-- [ ] **≥4 种不同的 scene 背景色**（不能 12 个 scene 都是 `#0e0b08`。每个 scene 根据内容主题挑 [Scene 背景 palette](#scene-背景-palette每片用-4-6-种)：个人/技术/反思/警示 各有自己 tint）
+- [ ] **大部分 scene 没有 `background:` 色**，让 bg-image 透出来（普通 scene 完全透明；只有 color-flip scene 才用纯色 bg）。**不要给每个 scene 都加 bg 色**——bg-image 就是统一的色调氛围，scene 加 bg 等于把它盖死
 - [ ] **color-flip scene 颜色不只是橙/蓝/白**（深红 / 深金 / 翠绿 / 青松 / 暗紫 / 暗粉 都可以用，根据 scene 主题选）
 - [ ] **emphasis 至少用 2-3 种颜色**（不能 12 个 scene 都只有橙色 sweep。技术词用蓝，价值词用金，增长词用绿，警告词用红…）
 
@@ -310,29 +310,23 @@ tl.fromTo('#bg-image',
 | 划掉文字 | `#6d635a` (暗灰) | strikethrough |
 | Outline 描边 | `#f5efe5` 4-8px stroke + `color: transparent` | A2 空心字 |
 
-##### Scene 背景 palette（每片用 4-6 种）
+##### Scene 背景：让 bg-image 透出来，普通 scene 不写 `background`
 
-不要每个 scene 都用 `#0e0b08`。普通 scene（不是 color-flip）也可以有 scene-specific 的深色 tint，根据该 scene 的内容主题选：
+**重要规则**：bg-image 是视觉主基调（水彩抽象），它已经提供了丰富的色相。**普通 scene 不要再写 `background:` 色** —— 那会盖掉 bg-image，把视觉退化成单色。
 
-| 主题 | bg 色 | 适合 |
-|---|---|---|
-| 默认 / 中性 | `#0e0b08` (深暖黑) | 起手 scene、quote scene |
-| 个人 / 手作 / 温暖 | `#1a1208` (深暖棕) | "我画画" "我写" "手感" 类 scene |
-| 技术 / 数据 / 冷静 | `#0a1428` (深海军蓝) | code/AI/算法/数据 类 scene |
-| 思考 / 静水 / 沉静 | `#0e2422` (深墨绿青) | 反思、长线观察类 |
-| 神秘 / 复杂 / 高级 | `#1e1020` (深紫罗兰) | 抽象概念、哲学命题 |
-| 警示 / 张力 | `#2a0e0a` (深焦红) | 错误案例、警告、反差 |
-| 工业 / 系统 | `#161b22` (深石板) | 工具、系统、组织 |
-| 自然 / 生长 | `#0e1a12` (深苔绿) | 演化、积累、复利 |
-
-**用法**：在 CSS 里给特定 scene 加 `background:`：
+普通 scene 的 CSS 应该是这样（**没有** background 行）：
 ```css
-#s3 { background: #1a1208; }  /* 个人 scene */
-#s7 { background: #0a1428; }  /* 技术 scene */
-#s9 { background: #0e2422; }  /* 反思 scene */
+#s3 { /* 没 background 行 — bg-image + overlay 透出来 */ }
+.scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; }
 ```
 
-Scene-specific bg 会盖住 #bg-image — 这是 OK 的，scene 用 bg 时就主动放弃 bg-image 的视觉氛围，换取该 scene 自己的色调。建议 12 个 scene 里 6-8 个用 scene-bg、4-6 个让 bg-image 透出。
+**唯一例外：color-flip scene (A3)** 才用纯色 background 盖住 bg-image，做 punch 反差：
+```css
+#s6 { background: #e87a3e; }  /* 橙色 color-flip punch */
+#s9 { background: #5a8c6a; }  /* 翠绿 punch */
+```
+
+**建议 12 个 scene 里**：10 个无 background（bg-image 透出）、1-2 个 color-flip（盖 bg-image 做反差）。这样既有连贯的水彩氛围，又有节奏 punch。
 
 ##### Color-flip 背景 palette（A3，不只是橙/蓝/白）
 
