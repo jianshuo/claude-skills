@@ -91,7 +91,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 | **F1. 格子 + spinner / 进度条** | "10 个 tab 在跑" "很多 worker 在干活" 等并发画面 |
 | **F2. 对话气泡 ↔ 回应** | 角色 A 说 → 角色 B 做。两个不对称气泡 |
 
-**每个 scene 的旁白控制在 4-12 秒**（短 punch 4s，长 breath 10-12s，**不要全部都是 5-7s**）。所有 scene 加起来 1.5-3 分钟。**不要超过 3 分钟**。
+**每个 scene 的旁白控制在 4-12 秒**（短 punch 4s，长 breath 10-12s，**不要全部都是 5-7s**）。所有 scene 加起来 **60-90 秒**。**不要超过 90 秒**。
 
 ### Step 1b: Scene Mix Rule（强制）
 
