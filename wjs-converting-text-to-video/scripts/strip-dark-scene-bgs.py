@@ -77,13 +77,13 @@ def strip(video_dir: Path) -> int:
     # Also update tuned CSS values for bg-image / bg-overlay
     new_html = re.sub(
         r"filter:\s*blur\([^)]+\)\s*brightness\([^)]+\)\s*saturate\([^)]+\);",
-        "filter: blur(15px) brightness(0.85) saturate(1);",
+        "filter: blur(30px) brightness(0.65) saturate(0.85);",
         new_html,
         count=1,
     )
     new_html = re.sub(
         r"background:\s*rgba\(14,\s*11,\s*8,\s*[\d.]+\);",
-        "background: rgba(14, 11, 8, 0.18);",
+        "background: rgba(14, 11, 8, 0.28);",
         new_html,
         count=1,
     )
