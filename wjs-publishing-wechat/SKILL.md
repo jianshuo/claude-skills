@@ -404,9 +404,38 @@ fetch-comments.sh <folder>                      # comments.md 出炉
 
 **原理**：mp.weixin.qq.com 后台是个 SPA，所有留言数据通过内部 endpoint `mp.weixin.qq.com/misc/appmsgcomment?action=...&token=...&begin=...&count=...` 返回 JSON。带上后台登录的 cookie + URL 里的 session token 就能跑通。
 
-**前提**：浏览器登录了 mp.weixin.qq.com（cookie 一般几小时过期，每天可能要重抓 1-2 次）。
+**前提**：浏览器登录了 mp.weixin.qq.com。两条路径，选一条：
 
-**用法**：
+#### 路径 A（推荐）：复用 gstack 持久浏览器 — `fetch-comments-via-gstack.sh`
+
+原始 cookie 几小时就过期；但 gstack 维护的 Chromium profile（`~/.gstack/chromium-profile/`）里的登录态可以撑**几周**——只要偶尔有访问保持热度。这条路径把所有手工抓包步骤都消掉了。
+
+```bash
+# 一次性 setup（per machine）：扫码登录 mp.weixin.qq.com 到 gstack profile
+~/.claude/skills/gstack/browse/dist/browse goto https://mp.weixin.qq.com/
+# 用手机微信扫码
+
+# 一次性 setup（per article）：保存 appmsgcomment URL 模板
+# （URL 是 per-article 稳定的；token 部分脚本会每次从浏览器读最新值替换掉）
+echo '<完整 appmsgcomment URL>' > <article-folder>/comment-url.txt
+
+# 之后每次拉留言（零手工步骤）：
+~/.claude/skills/wjs-publishing-wechat/scripts/fetch-comments-via-gstack.sh \
+  <article-folder> [--md|--json|--both]
+```
+
+脚本流程：
+1. `browse goto mp.weixin.qq.com/cgi-bin/home` — 刷新会话 + 校验登录
+2. `browse url` — 抓当前 `token=`
+3. `browse cookies` — 拿全套 cookie，过滤 weixin.qq.com 域，转成 Cookie header
+4. 把 `comment-url.txt` 里的 token 替换成最新的
+5. 调 `fetch-comments-by-cookie.sh`（下面路径 B 的脚本）跑完拉取
+
+何时会失败：浏览器 profile 被微信踢出登录（异地登录 / 长期不用）。这时脚本会清楚告诉你重跑 `browse goto https://mp.weixin.qq.com/` + 扫码。
+
+#### 路径 B（fallback）：手抓 cookie — `fetch-comments-by-cookie.sh`
+
+gstack 没装、或想一次性快速拉，可以直接走这条：
 
 ```bash
 # 1. 浏览器抓包（一次性，几分钟）
@@ -426,7 +455,7 @@ fetch-comments.sh <folder>                      # comments.md 出炉
 输出：`<article-folder>/comments.md`（同 fetch-comments.sh 格式）。
 
 **caveats**：
-- Cookie 过期就要重抓（几小时一次）
+- 路径 B 的 cookie 几小时就要重抓——这正是路径 A 存在的理由
 - 内部 API 的字段名 / endpoint 可能随后台版本变；脚本用 heuristics 找 `comment_list` / `comments` / `data.list` 等常见字段。如果版本变了，让 Claude 现场 patch 几行 JSON path
 - 不要把抓到的 cookie 发到 git 或 chat 公开渠道——它等于你的登录态
 
