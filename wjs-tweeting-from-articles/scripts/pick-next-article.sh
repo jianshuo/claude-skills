@@ -21,7 +21,13 @@ today_epoch=$(date +%s)
 # Walk articles by article.md mtime (most-recently-touched first). Folder-name
 # date is the publish date, but multiple articles can share a date; mtime is
 # the true "freshness" signal.
+SORTED=$(for d in "$ARTICLES_DIR"/[0-9]*-*/; do
+  [[ -f "${d}article.md" ]] || continue
+  printf '%s\t%s\n' "$(stat -f %m "${d}article.md")" "$d"
+done | sort -rn | cut -f2)
+
 while IFS= read -r folder; do
+  [[ -n "$folder" ]] || continue
   slug=$(basename "$folder")
   date_part="${slug:0:10}"  # YYYY-MM-DD
   folder_epoch=$(date -j -f "%Y-%m-%d" "$date_part" +%s 2>/dev/null || echo 0)
@@ -40,13 +46,7 @@ while IFS= read -r folder; do
 
   echo "${folder%/}"
   exit 0
-done < <(
-  # ls -t equivalent on directories' article.md mtime
-  for d in "$ARTICLES_DIR"/[0-9]*-*/; do
-    [[ -f "${d}article.md" ]] || continue
-    printf '%s\t%s\n' "$(stat -f %m "${d}article.md")" "$d"
-  done | sort -rn | cut -f2
-)
+done <<< "$SORTED"
 
 echo "no unposted article in last $MAX_AGE_DAYS days" >&2
 exit 1
