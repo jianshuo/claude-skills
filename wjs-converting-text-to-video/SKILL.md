@@ -214,9 +214,33 @@ cd <article-folder>/video
 
 #### 背景图层（取代纯黑底，全片必须有）
 
-视频整体背景**不再是单一 `#0e0b08`**，而是文章本身 `illustration.png` 经过模糊+暗化处理。每个 scene 透露出文章主题的视觉氛围，但前景文字仍然清晰。
+视频整体背景**不再是单一 `#0e0b08`**，而是一张**专门生成的抽象水彩背景**——粗大笔触、明亮色块、无具体形象。这样每个 scene 都浮在艺术氛围之上，但前景文字仍然清晰。
 
-**⚠️ 关键：图片必须在 `video/` 目录内**（不能用 `../illustration.png` — hyperframes render 不解析跨目录相对路径，会渲染成纯黑）。`bootstrap-project.sh` 会自动把 `illustration.png` 复制到 `video/bg.png`。
+**为什么不用 article 的 `illustration.png`**：手绘示意图细节太多，blur 后变成均匀深色泥（看起来还是纯黑）。必须用专门生成的、本身就抽象的水彩。
+
+**⚠️ 关键：图片必须在 `video/` 目录内** —— 不能用 `../illustration.png`，hyperframes render 不解析跨目录相对路径会渲染成纯黑。
+
+**生成步骤**（bootstrap 之后、写 narration 之前）：
+
+```bash
+node /Users/jianshuo/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.cjs \
+  --json --provider codex images generate \
+  --prompt "Abstract watercolor painting, large bold brushstrokes, big color blocks of [theme-colors], thick paint texture, painterly canvas feel, organic flowing shapes, no figures, no text, no faces, no objects. Loose impressionist composition, vibrant joyful palette. Pure abstract gestural marks." \
+  --out <article-folder>/video/bg.png \
+  --format png --size 1920x1088 --quality high
+```
+
+**Theme-colors 选**（根据文章主题）：
+- 个人/手作/温暖 → `bright warm yellow, soft coral pink, terracotta, cream`
+- 技术/AI/数据 → `cool teal, electric blue, deep purple, mint, white`
+- 反思/沉静 → `sage green, dusty blue, lavender, pearl, cream`
+- 警示/张力 → `burnt orange, deep red, mustard, charcoal`
+- 增长/复利 → `fresh green, gold, soft yellow, sky blue`
+- 抽象/哲思 → `lavender, dusty rose, sage, soft amber`
+
+`--provider codex` 用 ChatGPT auth（无 OpenAI 额度也能跑）。3.2MB PNG / ~30-60s 生成时间。
+
+**生成失败的 fallback**：复制 `<article>/illustration.png` → `bg.png` 作降级（仍然能渲染但效果差很多）。
 
 **HTML 结构**（在 `#root` 内、所有 scene 之前）：
 
