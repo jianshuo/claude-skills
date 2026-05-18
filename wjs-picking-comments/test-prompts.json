@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "scenario": "happy path — new article ready, locate previous via RSS, append styled footer",
+    "prompt": "我新一篇公众号草稿写完了，folder 在 ~/code/wechat-publish/articles/2026-05-18-xxx/，帮我把上一篇精选留言 Top 5 加到文末。",
+    "expected": "应该:(1) 按 Workflow Step 1 跑 scripts/fetch-latest-from-rss.py 从 wewe-rss 拉最新已发布文章 (line 51-55);(2) Step 2 在 ~/code/wechat-publish/articles/*/meta.json 里按 title 匹配定位上一篇本地文件夹 (line 60-71);(3) Step 3 capture-comment-url.sh 抓 appmsgcomment URL,Step 4 fetch-comments-via-gstack.sh --both 拉 comments.md+json (line 83-97);(4) Step 5 select-elected-comments.py 出候选,LLM 按王建硕精选标准排出 picks.json (line 103-126);(5) Step 6 build-footer.py 生成 HTML <section> 块,LLM 自己写 recap (≤50 字) 和 closing (line 134-147);(6) Step 7 inject-footer.py 追加到 article.md (line 151-155);(7) Step 8 提示用户跑 upload-draft.sh (line 159-163)。绝对不要跳过 Step 3/4 直接编造留言内容。"
+  },
+  {
+    "id": 2,
+    "scenario": "王建硕 picking judgement — which comments make the cut vs which get cut",
+    "prompt": "comments.md 里有 22 条精选留言,几条样本:(A) 「建硕老师写得真好,每篇必读!」(38 赞);(B) 「您说的『时间窗口』我理解,但比特币这种没到期日的资产是不是不适用?」(2 赞);(C) 「这文章逻辑有问题,第三段就站不住脚,建议重写」(1 赞);(D) 「读完想到我爷爷做小生意也是这个思路,只是他叫『落袋为安』」(7 赞);(E) 「赞同 +1」(15 赞)。挑 Top 5,告诉我留哪些、扔哪些、为什么。",
+    "expected": "应该:(1) 留 B —— 提出新假设 (没到期日资产),命中标准 4 「能 trigger 下一篇」最高优 (line 116);(2) 留 D —— 新角度+凝练+正向 (line 113-115);(3) 扔 A 和 E —— Anti-Patterns 明确说不要选「建硕老师写得真好」类客套 (line 192) + 寒暄类点赞高不是决定项 (line 117);(4) 扔 C —— Anti-Patterns 明确「不选阴阳怪气/抬杠」(line 115, 193);(5) 显式援引「高赞是 tie-breaker,不是决定项」否决 A/E 的 38/15 赞 (line 117);(6) 不应该机械按 like_num 排序 (line 195)。"
+  },
+  {
+    "id": 3,
+    "scenario": "pipeline failure modes — wewe-rss down / session expired / NOT_FOUND on page 2+",
+    "prompt": "我跑 /wjs-picking-comments,fetch-latest-from-rss.py 返回 connection refused localhost:4000,然后我手动恢复后跑 capture-comment-url.sh 又报 NOT_FOUND,接着 fetch-comments-via-gstack.sh 报 session expired。一条一条怎么办?",
+    "expected": "应该:(1) wewe-rss connection refused → 容器没跑,Dependencies line 204 明确「容器没跑要先启动」,引导用户起容器再重跑,不要去别处编造 RSS;(2) capture-comment-url.sh NOT_FOUND → line 89-90 解释「文章可能在留言管理第 2 页之后」+ Common Pitfalls line 216 重申,要用 browse js 模拟点「下一页」后重跑,不要切换路径;(3) session expired → line 99 + line 45 指向回 Setup 重扫 QR (Step 1-3, line 30-40),强调 headless+截图而不是 browse connect (line 43, 198);(4) 三个失败都「fail loudly」,不要降级到 fabricate 留言;(5) 不能用废弃的 Cookie header dump 方案 (line 199)。"
+  },
+  {
+    "id": 4,
+    "scenario": "HTML styling commitment — it's a <section>, not a markdown list",
+    "prompt": "我自己手写得了——直接拿 picks.json 里 5 条用 markdown 无序列表写到 article.md 末尾,标题用 ## 上篇精选留言。可以吧?",
+    "expected": "应该拒绝并纠正:(1) skill 明确产物是 HTML <section> 块,不是 markdown list (line 8, line 132 Step 6 title「生成 footer HTML」, line 142 --out footer-section.html, line 183 build-footer.py 生成 <section> HTML);(2) Core Principle 规定视觉风格「淡底色、灰字、轻轻挂在文末」(line 12) —— markdown 列表无法表达这个;(3) 必须走 scripts/build-footer.py 而不是手拼,以保证幂等 (inject-footer.py line 155 「已有 section 就替换,否则追加」);(4) 还要带 recap (≤50 字一句话点回上一篇) + closing (每次换一句,line 145-147) + prev-url + total-count,markdown list 写法把这些都丢了;(5) 不要复制粘贴上一篇 footer (line 197)。"
+  },
+  {
+    "id": 5,
+    "scenario": "negative case — no previous article published / RSS first item is image-share placeholder",
+    "prompt": "我是新号,只发过一篇,就是我现在写的这篇;另外昨天 RSS 最新一条是个『分享图片』占位贴,几乎零评论。帮我加精选留言 footer。",
+    "expected": "应该:(1) 识别这违反 When NOT to use line 22「上一篇还没发布(草稿箱里的不算,要看 RSS 真有这条)」—— 如果连一篇真正发布的前作都没有,直接拒绝并解释,不要 fabricate 留言;(2) 对「分享图片占位贴」,按 line 57-58「别盲信」+「跳到下一条 (--skip 1),一般人眼判断一下」,不要把零评论占位贴当上一篇硬跑;(3) 如果 --skip 1 之后仍找不到真有留言的前作 → fail loudly,告诉用户暂时不能加 footer,不要生造内容也不要复用之前别的文章的留言 (Anti-Patterns line 197「复制粘贴上一篇的 footer」);(4) 不要为了「能跑通」而把当前这篇自己的草稿当上一篇 —— 那是逻辑闭环错误。"
+  }
+]
