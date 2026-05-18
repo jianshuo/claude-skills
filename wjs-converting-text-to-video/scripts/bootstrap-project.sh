@@ -48,6 +48,19 @@ EOF
 # Generate SFX upfront (cheap, ~1s)
 "$SCRIPT_DIR/synth-sfx.sh" "$VIDEO"
 
+# Copy illustration (or cover) into video/ as bg.png for the bg-image layer.
+# Must be inside video/ — hyperframes render does NOT resolve cross-directory paths
+# like ../illustration.png (they render as black).
+if [[ -f "$ART/illustration.png" ]]; then
+  cp "$ART/illustration.png" "$VIDEO/bg.png"
+  echo "[bootstrap] copied illustration.png → video/bg.png"
+elif [[ -f "$ART/cover.png" ]]; then
+  cp "$ART/cover.png" "$VIDEO/bg.png"
+  echo "[bootstrap] no illustration.png, using cover.png as bg"
+else
+  echo "[bootstrap] ⚠️  no illustration.png or cover.png — bg will fall back to #0e0b08"
+fi
+
 echo ""
 echo "[bootstrap] $VIDEO ready"
 echo "  next steps:"
