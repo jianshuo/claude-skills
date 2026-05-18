@@ -261,11 +261,47 @@ cd <article-folder>/video
 - **圆点 / 方块** 作 list bullet 替代品（直径 12-20px、橙色）
 - **箭头** ➜ 或自绘 SVG，连接两个元素
 
-**Scene 转场 (必须的)**：
-- Blur crossfade，0.6s，`sine.inOut`
-- 后一个 scene `opacity: 0, filter: blur(24px)` → `opacity: 1, filter: blur(0)`
-- 前一个 scene 同时 `opacity: 1` → `0`, blur 0 → 20
-- Scene 1 默认 visible (`opacity: 1`)，其他都 `opacity: 0`
+**Scene 转场（4 种 + 混用规则）**：
+
+不要全片都 blur crossfade —— 那是"软"，听起来安全但视觉单调。每 4 个转场必须包含 ≥2 种不同类型。
+
+**T1. Blur crossfade**（默认，柔和过渡用）
+
+- 0.6s，`sine.inOut`
+- 后 scene: `opacity: 0, filter: blur(24px)` → `opacity: 1, filter: blur(0)`
+- 前 scene 同时: `opacity: 1` → `0`, blur 0 → 20
+- 适合：连接两个同类型 scene
+
+**T2. White flash cut**（punch 切，最现代）
+
+- 总长 0.18s
+- 60ms 全屏白闪 → 80ms 切到新 scene → 40ms 新 scene scale 1.05 → 1
+- 适合：进入 A 类 hero、进入 D 类 stat、climax 切换
+
+```js
+// 在 root 上加一个全屏 white overlay 元素
+tl.to('.flash', { opacity: 1, duration: 0.06, ease: 'none' }, T - 0.06)
+  .set(prevScene, { opacity: 0 }, T)
+  .set(nextScene, { opacity: 1 }, T)
+  .to('.flash', { opacity: 0, duration: 0.12, ease: 'power2.out' }, T)
+  .from(nextScene, { scale: 1.05, duration: 0.25, ease: 'expo.out' }, T);
+```
+
+**T3. Scale push**（推进感）
+
+- 0.55s，前 scene 缩小淡出 + 后 scene 放大进入
+- 前 scene: `scale: 1` → `0.85`, `opacity: 1` → `0`
+- 后 scene: `scale: 1.15` → `1`, `opacity: 0` → `1`
+- 适合：从概览推到细节、从一个论点深入到具体例子
+
+**T4. Color flash cut**（橙色或亮蓝闪一下，强烈节奏）
+
+- 总长 0.22s，类似 white flash 但用 emphasis 色
+- 80ms 全屏橙色 (`#e87a3e`) → 切 → 40ms 收
+- 适合：进入 A3 color-flip scene，或文章的关键转折点
+- **全片最多 2 次**，多了腻
+
+**Scene 1 默认 visible (`opacity: 1`)，其他都 `opacity: 0`**。flash overlay 在 HTML 里加一个 `<div class="flash">` 全屏定位、默认 opacity 0、z-index 最高。
 
 **入场动画规则（每 scene 必须做）**：
 - 每个 scene 的每个元素都用 `tl.from(...)` 入场（y/opacity/scale）
