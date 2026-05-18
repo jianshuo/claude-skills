@@ -45,9 +45,9 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 ## Workflow
 
-### Step 1: 设计 7-10 个视觉时刻
+### Step 1: 设计 5-10 个视觉时刻
 
-读 `<article-folder>/article.md`，按论证结构拆成 7-10 个 scene。每个 scene 一段叙述（旁白）+ 一个清晰的视觉骨架。
+读 `<article-folder>/article.md`，按论证结构拆成 5-10 个 scene（控制在 30-90 秒总时长）。短文（核心 1-2 个要点）做 5-6 scene / 30-50s；长文 8-10 scene / 60-90s。每个 scene 一段叙述（旁白）+ 一个清晰的视觉骨架。
 
 **模板表 —— 6 类共 16 种，按需混搭**：
 
