@@ -62,7 +62,10 @@ scripts/pick-next-article.sh
 TWEET_TEXT='<picked text>'
 JSON=$(jq -nc --arg text "$TWEET_TEXT" '{text:$text}')
 resp=$(xurl -X POST -d "$JSON" /2/tweets)
-TWEET_ID=$(echo "$resp" | jq -r '.data.id // empty')
+# Don't use `jq -r '.data.id'` here — X API returns raw newlines in the echoed
+# `text` field, which strict jq rejects with "control characters must be escaped".
+# Grep the id directly instead.
+TWEET_ID=$(printf '%s' "$resp" | grep -oE '"id":"[0-9]+"' | head -1 | sed -E 's/.*"([0-9]+)".*/\1/')
 [[ -n "$TWEET_ID" ]] || { echo "POST failed: $resp"; exit 1; }
 echo "https://x.com/jianshuo/status/$TWEET_ID"
 ```
