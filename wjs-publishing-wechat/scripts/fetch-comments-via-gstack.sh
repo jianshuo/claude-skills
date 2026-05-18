@@ -68,13 +68,21 @@ fi
 B="$HOME/.claude/skills/gstack/browse/dist/browse"
 [[ -x "$B" ]] || { echo "error: gstack browse not found at $B" >&2; exit 1; }
 
-URL_PATTERN=$(head -1 "$URL_FILE" | tr -d '\r\n ')
+URL_PATTERN=$(head -1 "$URL_FILE" | tr -d '\r\n' | awk '{$1=$1; print}')
 [[ -n "$URL_PATTERN" ]] || { echo "error: $URL_FILE is empty" >&2; exit 1; }
 
+if ! "$B" status >/dev/null 2>&1; then
+  echo "error: gstack browse server is not running. Try: $B status" >&2
+  exit 3
+fi
+
 echo "→ refreshing mp.weixin.qq.com session via gstack ..." >&2
-"$B" goto "https://mp.weixin.qq.com/cgi-bin/home" >/dev/null 2>&1 || true
+"$B" goto "https://mp.weixin.qq.com/cgi-bin/home" >/dev/null || {
+  echo "warning: goto failed; falling back to current tab state" >&2
+}
 
 CURRENT_URL=$("$B" url 2>/dev/null | tr -d '\r\n')
+[[ -n "$CURRENT_URL" ]] || { echo "error: 'browse url' returned empty (server crashed?)" >&2; exit 3; }
 if [[ "$CURRENT_URL" != *"mp.weixin.qq.com"* ]] || [[ "$CURRENT_URL" == *"login"* ]] || [[ "$CURRENT_URL" != *"token="* ]]; then
   cat <<EOF >&2
 error: gstack browser is not logged into mp.weixin.qq.com.
