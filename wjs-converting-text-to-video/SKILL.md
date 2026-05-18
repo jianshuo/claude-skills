@@ -89,6 +89,45 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 **每个 scene 的旁白控制在 4-12 秒**（短 punch 4s，长 breath 10-12s，**不要全部都是 5-7s**）。所有 scene 加起来 1.5-3 分钟。**不要超过 3 分钟**。
 
+### Step 1b: Scene Mix Rule（强制）
+
+**写完 8-12 个 scene 设计后，按下面这个 checklist 自查。任何一条不满足都要回去调整。**
+
+#### 配比硬规则
+
+一段 10-12 scene 的视频必须包含：
+
+- [ ] **≥1 个 A 类**（Hero/Punch，超大字撑屏，≤4s）
+- [ ] **≥1 个 D 类**（Stat/数据，有具体数字）
+- [ ] **≥1 个 C 类**（List/结构，3+ 项并列）
+- [ ] **≥1 个 E 类**（Quote/Climax，金句落点）
+- [ ] **≤2 个 B1 模板**（双行对照 + strikethrough）—— 这是最容易被滥用的模板，强限制
+- [ ] **≥1 个 color-flip scene**（A3，亮色背景反白字）作视觉 punctuation
+- [ ] **≥4 种不同的模板类型**（A/B/C/D/E/F 至少出现 4 类）
+- [ ] **≤2 个连续 scene 用同一类**（不能 3 个 contrast scene 连排）
+
+#### 节奏硬规则
+
+- [ ] **scene 时长跨度 ≥ 6s**（最短 scene ≤ 4s，最长 scene ≥ 9s。如果所有 scene 都在 5-7s，节奏死）
+- [ ] **至少 2 次"短 → 长 → 短"或"长 → 短"节奏切换**
+- [ ] **字号跨度 ≥ 240px**（最大 hero ≥ 320px，最小信息文字 ≤ 80px。所有 scene 都用同一个字号 = 平铺直叙）
+
+#### 布局硬规则
+
+- [ ] **≥2 个 scene 是非居中布局**（贴角、对角线、左对齐、贴底等）
+- [ ] **≥1 个 scene 留白占 ≥ 60% 的屏幕**（呼吸感，反"撑满"惯性）
+- [ ] **≥1 个 scene 包含几何装饰元素**（粗线条、色块、箭头、圆点、数字编号）
+
+#### 反单调自检
+
+打开你设计好的 scene 列表，问自己：
+
+1. 如果把所有 scene 截图缩成缩略图并排，**能一眼分辨吗**？如果 8 个看起来一模一样 → 立刻回去改成不同模板
+2. 第 1、6、12 scene 的**视觉密度**是不是不一样？（应该有的密、有的极简）
+3. 有没有任何一种**"meta-rhythm"**？比如：A1 hero 开场 → 3 个 B/C 展开 → D 数字 climax → E 金句收尾。比一路线性铺更有戏剧弧
+
+如果以上任何一条不满足，**重新设计 scene 列表**。不要将就。
+
 ### Step 2: 写 narration chunks JSON
 
 把每个 scene 的旁白写成 `<article-folder>/video/narration_chunks.json`：
