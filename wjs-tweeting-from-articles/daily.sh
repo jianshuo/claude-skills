@@ -92,9 +92,10 @@ EOF
 )
 
 echo "→ asking Claude to draft + pick ..."
-claude -p --bare \
-  --allowedTools "Read,Write" \
-  "$prompt" || {
+# IMPORTANT: --allowedTools is variadic, will eat the prompt positional arg if
+# space-separated. Use `=` form OR put `--` before the prompt. Also DON'T use
+# --bare (requires ANTHROPIC_API_KEY; daily user is OAuth via keychain).
+claude -p --allowedTools=Read,Write -- "$prompt" || {
   echo "FATAL: claude drafting failed"
   echo "{\"date\":\"${today}\",\"slug\":\"${SLUG}\",\"status\":\"draft_failed\"}" >> "$HISTORY"
   exit 1
