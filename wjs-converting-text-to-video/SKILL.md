@@ -508,7 +508,7 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 
 ### Step 8: 收尾
 
-输出：`<article-folder>/video/<slug>.mp4`
+输出：`<article-folder>/<slug>.mp4`（**与 `video/` 平行**，不在 `video/` 内 —— `video/` 留给中间文件）。
 
 按需 `open` 给用户预览。**不要自动上传到视频号**（用户可能想先剪/调）。
 
@@ -518,7 +518,8 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 <article-folder>/
 ├── article.md
 ├── illustration.png            # 用户原始示意图，不直接用作 bg
-└── video/
+├── <slug>.mp4                  # ⭐ 最终视频（与 video/ 平行，不放 video/ 里）
+└── video/                      # 所有中间产物
     ├── narration_chunks.json   # 7-10 个 scene 的旁白文本
     ├── tts_narration.py        # bootstrap 复制进来
     ├── narration.mp3           # 合并的全段 TTS
@@ -530,8 +531,7 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
     ├── hyperframes.json
     ├── meta.json
     ├── package.json
-    ├── snapshots/              # 渲染前快照
-    └── <slug>.mp4              # 最终视频
+    └── snapshots/              # 渲染前快照
 ```
 
 ## Skill 自身文件
