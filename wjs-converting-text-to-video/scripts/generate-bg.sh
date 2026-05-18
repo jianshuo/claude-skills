@@ -41,7 +41,7 @@ node /Users/jianshuo/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.
   --json --provider codex images generate \
   --prompt "$PROMPT" \
   --out "$OUT" \
-  --format png --size 1920x1088 --quality high \
+  --format png --size 1088x1920 --quality high \
   > /tmp/gen-bg-$$.log 2>&1
 
 if [[ -f "$OUT" ]] && [[ $(stat -f%z "$OUT" 2>/dev/null || stat -c%s "$OUT") -gt 100000 ]]; then

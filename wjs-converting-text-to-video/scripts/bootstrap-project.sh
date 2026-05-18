@@ -38,7 +38,7 @@ cat > "$VIDEO/hyperframes.json" <<'EOF'
 EOF
 
 cat > "$VIDEO/meta.json" <<'EOF'
-{ "name": "wjs-video", "width": 1920, "height": 1080, "fps": 30 }
+{ "name": "wjs-video", "width": 1080, "height": 1920, "fps": 30 }
 EOF
 
 cat > "$VIDEO/package.json" <<'EOF'
