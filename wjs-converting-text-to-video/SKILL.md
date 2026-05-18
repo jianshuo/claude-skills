@@ -596,6 +596,7 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 | 每个 scene 都堆满 | ≥1 个 scene 留白 ≥60% |
 | 给每个 scene 都加 `background:` 色 | 盖住 bg-image，等于白生成水彩。普通 scene 不写 bg；只有 A3 color-flip 用纯色 |
 | color-flip / emphasis 永远只用橙 | 至少 2-3 种 accent |
+| 用灰色作 secondary text / strike / 装饰 | 水彩底上灰色对比度太低，会消失。改用 `#f5efe5` cream + opacity 弱化（详见 [[no-low-contrast-text]]）|
 
 ### 内容 / 工程
 
