@@ -270,8 +270,135 @@ cd <article-folder>/video
 **入场动画规则（每 scene 必须做）**：
 - 每个 scene 的每个元素都用 `tl.from(...)` 入场（y/opacity/scale）
 - 入场 stagger 0.1-0.3s；首元素从 t = scene.start + 0.3 开始
-- 至少 3 种不同的 ease（`power3.out`、`back.out(1.3)`、`sine.out`）
+- 至少 3 种不同的 ease（`power3.out`、`back.out(1.3)`、`sine.out`、`expo.out`、`elastic.out(1, 0.5)`）
 - **绝对不要用 `gsap.to({opacity: 0})` 退场**——转场已经处理了。只有最后一个 scene 可以 fade-to-black
+- **整片必须用到 ≥3 种** [Modern Motion Techniques](#modern-motion-techniques)，不能 12 个 scene 都只是 `tl.from({ y: 60, opacity: 0 })`
+
+### Modern Motion Techniques
+
+平庸视频和现代视频的差别一半在排版、一半在 motion。下面 7 种技法每片必须用到 ≥3 种（每种只在特定 scene 用，不要全片堆）。
+
+#### 1. Kinetic Typography（字符 stagger 入场）
+
+把一个词的每个字符 stagger 飞入。**适合 A 类 hero scene**。
+
+```html
+<h1 class="kinetic">维 修 工</h1>
+```
+```js
+// 拆字 (建议在 HTML 里手动拆，避免运行时 split)
+// 或者: const chars = el.textContent.split(''); el.innerHTML = chars.map(c => `<span>${c}</span>`).join('');
+tl.from('.kinetic span', {
+  y: 180, opacity: 0, rotateX: -90,
+  duration: 0.7, stagger: 0.06,
+  ease: 'back.out(1.4)',
+  transformOrigin: '50% 100%',
+}, T);
+```
+
+#### 2. Camera Punch（scene 入场推近 / 拉远）
+
+整个 scene 像被摄像机推近一下。**适合 A3 color-flip、D 类 stat scene**。
+
+```js
+tl.from(scene, {
+  scale: 1.15, opacity: 0,
+  duration: 0.5, ease: 'expo.out',
+}, sceneStart);
+```
+
+逆向（拉远）：从 `scale: 0.85` 起，配 `power3.out`，给"放下重锤"的感觉。
+
+#### 3. Mask Reveal（clip-path 揭示）
+
+用 `clip-path` 从一个方向 reveal 文字。比 opacity fade 现代得多。**适合 E 类 quote**。
+
+```css
+.reveal { clip-path: inset(0 100% 0 0); }
+```
+```js
+tl.to('.reveal', {
+  clipPath: 'inset(0 0% 0 0)',
+  duration: 0.9, ease: 'expo.inOut',
+}, T);
+```
+
+竖向 reveal：`inset(0 0 100% 0)` → `inset(0 0 0% 0)`，从下往上揭。
+
+#### 4. Number Ticker（数字滚动）
+
+D1 模板的核心动画。从 0 滚到目标数。
+
+```html
+<div class="ticker" data-end="3600">0</div>
+```
+```js
+const ticker = document.querySelector('.ticker');
+const obj = { val: 0 };
+tl.to(obj, {
+  val: parseInt(ticker.dataset.end),
+  duration: 1.8, ease: 'power2.out',
+  onUpdate: () => { ticker.textContent = Math.round(obj.val).toLocaleString(); },
+}, T);
+```
+
+千分位用 `toLocaleString()`；百分比加 `+ '%'`；倍数加 `+ '×'`。
+
+#### 5. Outline → Fill（空心字变实心）
+
+字先以 outline (`-webkit-text-stroke`) 入场，然后填色。**适合 A2 outline hero 的 climax 时刻**。
+
+```css
+.morph {
+  -webkit-text-stroke: 4px #f5efe5;
+  color: transparent;
+  transition: none;
+}
+```
+```js
+tl.to('.morph', {
+  color: '#e87a3e',
+  webkitTextStrokeColor: '#e87a3e',
+  duration: 0.5, ease: 'power2.out',
+}, T);
+// 或: 改 CSS variable 让 stroke 缩到 0
+```
+
+#### 6. Letter Highlight Sweep（关键词扫光高亮）
+
+橙色块从左扫到右，覆盖关键词然后停住。比直接换色更现代。**适合 E 类金句中的 climax 词**。
+
+```html
+<span class="sweep"><span class="sweep-bg"></span>搭档</span>
+```
+```css
+.sweep { position: relative; display: inline-block; padding: 0 8px; }
+.sweep-bg {
+  position: absolute; inset: 0;
+  background: #e87a3e;
+  transform: scaleX(0); transform-origin: left;
+  z-index: -1;
+}
+```
+```js
+tl.to('.sweep-bg', { scaleX: 1, duration: 0.5, ease: 'power3.inOut' }, T);
+tl.to('.sweep', { color: '#0e0b08', duration: 0.1 }, T + 0.25);
+```
+
+#### 7. Background Color Punch（背景闪变）
+
+整个 scene 的背景在某个时刻闪一下橙色。**全片只用 1-2 次**，给最重要的 climax。
+
+```js
+tl.to(scene, {
+  backgroundColor: '#e87a3e',
+  duration: 0.08, ease: 'none',
+}, T)
+.to(scene, {
+  backgroundColor: '#0e0b08',
+  duration: 0.4, ease: 'power2.out',
+}, T + 0.1);
+```
 
 **Strike-through 动画**：用真实 DOM `<span class="strike-line">` 而不是 `::after` 伪元素。伪元素 + CSS 变量在某些 hyperframes 渲染路径下不工作。
 
