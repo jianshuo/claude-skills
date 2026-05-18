@@ -76,34 +76,26 @@ if ! "$B" status >/dev/null 2>&1; then
   exit 3
 fi
 
-echo "→ refreshing mp.weixin.qq.com session via gstack ..." >&2
-"$B" goto "https://mp.weixin.qq.com/cgi-bin/home" >/dev/null || {
-  echo "warning: goto failed; falling back to current tab state" >&2
-}
-# mp.weixin.qq.com home page adds ?token=... via JS after initial load — must
-# wait for that redirect to settle before reading the URL.
-"$B" wait --networkidle >/dev/null 2>&1 || true
+# Strategy: don't try to "verify" login by navigating — mp.weixin.qq.com's home
+# page is fussy about referrer and will show "请重新登录" even with valid
+# cookies if you arrive cold. Just take the token currently in the URL (if any)
+# OR fall back to the token in the saved URL pattern, and let fetch-comments
+# fail with HTML-response error if cookies are actually stale.
 
-CURRENT_URL=$("$B" url 2>/dev/null | tr -d '\r\n')
-[[ -n "$CURRENT_URL" ]] || { echo "error: 'browse url' returned empty (server crashed?)" >&2; exit 3; }
-if [[ "$CURRENT_URL" != *"mp.weixin.qq.com"* ]] || [[ "$CURRENT_URL" == *"login"* ]] || [[ "$CURRENT_URL" != *"token="* ]]; then
-  cat <<EOF >&2
-error: gstack browser is not logged into mp.weixin.qq.com.
-  Current URL: $CURRENT_URL
-
-Fix:
-  $B goto https://mp.weixin.qq.com/
-  → scan the QR code with WeChat, then re-run this script.
-EOF
-  exit 2
+CURRENT_URL=$("$B" url 2>/dev/null | tr -d '\r\n' || true)
+TOKEN=""
+if [[ "$CURRENT_URL" == *"mp.weixin.qq.com"* ]] && [[ "$CURRENT_URL" == *"token="* ]]; then
+  TOKEN=$(printf '%s' "$CURRENT_URL" | grep -oE 'token=[0-9]+' | head -1 | cut -d= -f2)
+  echo "  token: $TOKEN  (from current browser URL)" >&2
 fi
-
-TOKEN=$(printf '%s' "$CURRENT_URL" | grep -oE 'token=[0-9]+' | head -1 | cut -d= -f2)
 if [[ -z "$TOKEN" ]]; then
-  echo "error: no token= in URL: $CURRENT_URL" >&2
-  exit 1
+  TOKEN=$(printf '%s' "$URL_PATTERN" | grep -oE 'token=[0-9]+' | head -1 | cut -d= -f2)
+  if [[ -z "$TOKEN" ]]; then
+    echo "error: no token= in current URL or saved URL pattern. Re-scan QR + re-capture URL." >&2
+    exit 1
+  fi
+  echo "  token: $TOKEN  (from saved comment-url.txt — may be stale)" >&2
 fi
-echo "  token: $TOKEN" >&2
 
 COOKIE=$("$B" cookies 2>/dev/null | python3 -c "
 import sys, json
