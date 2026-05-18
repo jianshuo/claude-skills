@@ -97,7 +97,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 ### Step 1b: Scene Mix Rule（强制）
 
-**写完 7-10 个 scene 设计后，按下面 checklist 自查。任何一条不满足 → 回去调整。**
+**写完 5-10 个 scene 设计后，按下面 checklist 自查。任何一条不满足 → 回去调整。**
 
 #### 配比硬规则
 - [ ] ≥1 个 A 类 / D 类 / C 类 / E 类
@@ -608,6 +608,7 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 | 用 serif 字体（Songti / 宋体 / Noto Serif） | 不够冲击 |
 | 把整段文章贴屏 | 那是 PPT。视频每屏一个视觉时刻 |
 | 超过 10 scene / 超过 90 秒 | 注意力放不下 |
+| 短文硬填到 90 秒 | 文章短就做 30-50s，硬撑长会注水变浅 |
 | 每个 scene 换字体配色风格 | 风格漂移。design system 固定，模板变化 |
 | `::after` 伪元素 + CSS 变量做 strike | hyperframes 渲染路径下失效。用真实 DOM `<span class="strike-line">` |
 | 最后 scene 之外用 `gsap.to({opacity: 0})` | 退场动画 hyperframes 禁止 — 转场才是退场 |
