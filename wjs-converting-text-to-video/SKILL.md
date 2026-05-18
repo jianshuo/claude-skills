@@ -250,7 +250,7 @@ node /Users/jianshuo/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.
 <!-- scene divs s1..sN follow -->
 ```
 
-**CSS**（**`url('bg.png')` 必须是本地路径**，新调参——水彩明显可见）：
+**CSS**（**`url('bg.png')` 必须是本地路径**，最终 tuned 参——水彩高度可见、明亮）：
 
 ```css
 #bg-image {
@@ -258,17 +258,22 @@ node /Users/jianshuo/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.
   background-image: url('bg.png');
   background-size: cover;
   background-position: center;
-  filter: blur(30px) brightness(0.65) saturate(0.85);
+  filter: blur(15px) brightness(0.85) saturate(1);
   z-index: 0;
   transform: scale(1.1);
 }
 #bg-overlay {
   position: absolute; inset: 0;
-  background: rgba(14, 11, 8, 0.28);
+  background: rgba(14, 11, 8, 0.18);
   z-index: 1;
 }
 .scene { z-index: 2; }  /* scenes 始终在 bg-image / overlay 之上 */
 ```
+
+**调参历史**（参考）：
+- 第一版 blur 60 / brightness 0.22 / overlay 0.55 → 太暗，看上去仍是纯黑
+- 第二版 blur 30 / brightness 0.65 / overlay 0.28 → 可见但还是太朦胧
+- **当前 blur 15 / brightness 0.85 / overlay 0.18** → 水彩笔触清晰可辨、明亮、文字仍读得清
 
 **⚠️ 千万别给每个 scene 都加 `background:` 色** —— 那会盖住 bg-image，等于白生成了。普通 scene 都让 bg-image 透出来；只有 **color-flip scene (A3) 才可以用纯色 bg** 作 punch 反差。
 
