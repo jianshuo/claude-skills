@@ -23,13 +23,13 @@ CSS_INJECT = """
     background-image: url('bg.png');
     background-size: cover;
     background-position: center;
-    filter: blur(30px) brightness(0.65) saturate(0.85);
+    filter: blur(15px) brightness(0.85) saturate(1);
     z-index: 0;
     transform: scale(1.1);
   }
   #bg-overlay {
     position: absolute; inset: 0;
-    background: rgba(14, 11, 8, 0.28);
+    background: rgba(14, 11, 8, 0.18);
     z-index: 1;
   }
   .scene { z-index: 2; }
