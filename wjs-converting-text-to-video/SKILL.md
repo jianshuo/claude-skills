@@ -202,23 +202,64 @@ cd <article-folder>/video
 </body></html>
 ```
 
-**Visual rules (这套样式不是装饰，是 skill 的固定形态)**：
+**Visual rules (这套样式是 skill 的固定 design system)**：
+
+#### 色彩系统
+
+| 角色 | 值 | 用法 |
+|---|---|---|
+| 默认背景 | `#0e0b08` (深暖黑) | 大多数 scene |
+| Punch 背景 (A3) | `#e87a3e` (橙) / `#6b9bc4` (蓝) / `#f5efe5` (奶白) | color-flip scene 反相 |
+| 主文字 | `#f5efe5` (暖奶白) | hero / 主要内容 |
+| Emphasis | `#e87a3e` (橙) | 重点字、下划线、分隔条、装饰线 |
+| 二级文字 | `#8a7e72` (暖灰) | 副标题、caption |
+| 暗灰 (划掉) | `#6d635a` | strikethrough 的文字本身 |
+| 数据 / AI | `#6b9bc4` (蓝) | 数字 ticker、tech 概念 |
+| Outline 描边 | `#f5efe5` 4-8px stroke + `color: transparent` | A2 空心字 |
+
+#### 字体系统
 
 | 项 | 值 |
 |---|---|
-| 背景 | `#0e0b08` (深暖黑，不是纯黑) |
-| 主文字 | `#f5efe5` (暖奶白) |
-| 二级文字 | `#8a7e72` (暖灰) |
-| 暗灰 (划掉的) | `#6d635a` |
-| 蓝色 (AI / 数据) | `#6b9bc4` |
-| 橙色 emphasis | `#e87a3e` |
-| 字体 | `Noto Sans SC` (hyperframes auto-embeds, sans-serif 黑体感) |
-| 字重 | `900` 默认（heavy black）；二级文字 600-700 |
-| 字距 | `letter-spacing: -0.02em` 到 `-0.06em`（重字号要更紧）|
-| 主文字 hero 字号 | 168-280px（短句越大；7-8 字以上的句子用 120-180px）|
-| 二级 / 副标题 | 44-88px |
-| 卡片内容 | 60-180px |
-| Padding | 40-80px（**不要超过 100px** — 留白多了就不"撑满"了）|
+| 字体 | `Noto Sans SC` (hyperframes auto-embeds) |
+| 字重 | hero 900 / 主文 800 / 二级 600-700 / caption 500 |
+| 字距 | hero `-0.04em` 到 `-0.06em` / 主文 `-0.02em` / caption `0` |
+| **字号必须跨度大**（反"全片一个字号"惯性）：|
+| - Punch hero (A1/A2) | 320-480px |
+| - 短句 hero | 200-280px |
+| - 长句 hero (7-8 字以上) | 120-180px |
+| - 卡片内容 | 60-160px |
+| - 副标题 | 44-88px |
+| - Caption / 序号 / 标签 | 20-44px |
+
+#### 布局系统（**反居中惯性**）
+
+不要每个 scene 都 `display: flex; justify-content: center; align-items: center;`。学会用：
+
+| 布局 | CSS 关键 | 适合 |
+|---|---|---|
+| 居中 | `flex; center; center;` | A 类 hero，但不要超过 50% scene |
+| 左对齐贴顶 | `padding: 80px 80px 0 80px;` | E 类金句、长 quote |
+| 右下角锚定 | `position: absolute; right: 80px; bottom: 80px;` | 落款、climax 词 |
+| 对角线 | 两元素分别 top-left / bottom-right | B3 对角对照 |
+| 网格 | `display: grid; grid-template-columns: repeat(3, 1fr);` | C3 真网格 |
+| 阶梯 | 每项 `margin-left: calc(60px * var(--i));` | C4 错位列表 |
+| 贴底 + 上方留白 | `position: absolute; bottom: 60px;` 大量上方空白 | 呼吸 scene |
+| 边角小元素 | 文字小、贴在屏幕一角，其他全空 | 极简 / 留白 punch |
+
+**Padding 规则**：撑满型 scene 40-80px，呼吸型 scene 可以 120-200px。**不要所有 scene 都用同一个 padding 值**。
+
+#### 几何元素（让 scene 不只是"飘文字"）
+
+每隔几个 scene 就用一个：
+
+- **粗短线** (8-16px 高 × 40-200px 宽) 作 emphasis bar，颜色 `#e87a3e`
+- **左侧 emphasis bar** (6px × 100% 高) 配长 quote
+- **大数字编号** 01-08，作 list 项的序号（淡灰、巨大、装饰性）
+- **大引号字符** `"` 作背景装饰（半透明、超大、置于左上角）
+- **横向分隔线** (2-4px、奶白 30% 透明) 作章节分割
+- **圆点 / 方块** 作 list bullet 替代品（直径 12-20px、橙色）
+- **箭头** ➜ 或自绘 SVG，连接两个元素
 
 **Scene 转场 (必须的)**：
 - Blur crossfade，0.6s，`sine.inOut`
