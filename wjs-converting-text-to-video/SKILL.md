@@ -13,7 +13,11 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 每个 scene 是一个独立的视觉时刻——一个对比、一个排比、一个数字、一个比喻。文字撑满屏幕，黑体加粗，重点字橙色高亮。背景深暖黑（不是纯黑），整体调子稳重、克制、有冲击力。
 
-不要：把整段段落贴到屏幕上让人读（那是 PPT，不是视频）；用 serif 字体（不够冲击）；动画花哨；超过 12 scene（注意力放不下）。
+**节奏 > 模板**。一段 12-scene 的视频，如果从头到尾都是"两行对照"的同一种排版，就不是视频，是 slideshow。**现代感来自对比**——极端字号差、不对称布局、短 scene 与长 scene 交替、纯文字 scene 与几何元素 scene 交替、暖黑底 scene 与亮色 punch scene 交替。
+
+**默认是平庸的**。如果你只是从 [Step 1 模板表](#step-1-读文章挑-8-12-个视觉时刻) 顶端挑几种最容易的，结果一定是"平铺直叙的两行格式"。强制走 [Scene Mix Rule](#step-1b-scene-mix-rule-强制) 配比。
+
+不要：把整段段落贴到屏幕上让人读（那是 PPT，不是视频）；用 serif 字体（不够冲击）；超过 12 scene（注意力放不下）；让 12 个 scene 都用同一个模板（最大的反现代）；所有 scene 都居中（无聊）；所有 scene 时长都在 5-7s（节奏死）。
 
 ## When This Skill Fires
 
