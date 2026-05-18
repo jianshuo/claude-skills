@@ -98,7 +98,7 @@ if [[ -z "$TOKEN" ]]; then
 fi
 
 COOKIE=$("$B" cookies 2>/dev/null | python3 -c "
-import sys, json
+import sys, json, urllib.parse
 try:
     data = json.load(sys.stdin)
 except json.JSONDecodeError:
@@ -112,6 +112,10 @@ for c in data:
     if 'weixin.qq.com' not in domain and 'mp.weixin' not in domain: continue
     name = c.get('name'); val = c.get('value')
     if not name: continue
+    # Cookie header must be latin-1-safe; percent-encode any value with high
+    # bytes (WeChat's slave_sid sometimes contains an em-dash).
+    if any(ord(ch) > 127 for ch in val):
+        val = urllib.parse.quote(val, safe='=/:')
     parts.append(f'{name}={val}')
 print('; '.join(parts))
 ")
