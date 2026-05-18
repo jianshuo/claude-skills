@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Logs (e.g. cos_delete_*.log from one-off cleanup runs)
+*.log
+
+# Claude Code local settings (per-machine, never shared)
+.claude/settings.local.json*
+
+# gstack runtime state
+.claude/worktrees/
+.gstack/
