@@ -552,6 +552,25 @@ npx hyperframes render --quality standard --fps 30 --output <slug>.mp4
 
 ## Anti-Patterns
 
+### 反单调（最重要——这是用户反复抱怨"平铺直叙"的根源）
+
+| 不要 | 原因 |
+|------|------|
+| **12 个 scene 都用"双行对照 + strikethrough" (B1)** | 这是 skill 历史上最大的失败模式。B1 整片最多 2 次。强制走 [Scene Mix Rule](#step-1b-scene-mix-rule-强制) |
+| **所有 scene 居中布局** | 死气沉沉。≥2 个 scene 必须非居中（贴角、对角、左对齐、阶梯） |
+| **所有 scene 字号差不多** | 字号必须跨度 ≥240px。没有大小起伏 = 没有节奏 |
+| **所有 scene 时长 5-7s** | 时长必须跨度 ≥6s。要有短 punch (≤4s) 和长 breath (≥9s) 交替 |
+| **整片只用 blur crossfade 一种转场** | 每 4 个转场必须 ≥2 种类型。加白闪 / scale push / color flash |
+| **整片没有任何亮色 punch scene** | ≥1 个 color-flip scene 是硬要求。永远深暖黑 → 视觉昏睡 |
+| **整片没有任何几何元素** | 至少 ≥1 个 scene 加粗线条、大数字编号、引号装饰、箭头等 |
+| **整片只用 `tl.from({y, opacity})` 一种入场** | 必须 ≥3 种 [Modern Motion Techniques](#modern-motion-techniques) |
+| **每个 scene 都堆满（90% 屏幕都是文字/卡片）** | ≥1 个 scene 留白 ≥60%，呼吸感和节奏来自空 |
+| **每个 scene 都是中等密度 / 中等字号** | 应有的极简（5 字撑屏）有的密集（网格 + 标签） |
+
+**反单调自检**：12 个 scene 截图缩成缩略图并排，能不能一眼分辨？如果 8 个看起来一样 → 重做。
+
+### 内容 / 工程
+
 | 不要 | 原因 |
 |------|------|
 | 用 Kokoro (hyperframes 自带 tts) 做中文 | 中文质量差，用户明确不接受 |
@@ -560,7 +579,7 @@ npx hyperframes render --quality standard --fps 30 --output <slug>.mp4
 | 把整段文章贴到屏幕上 | 那是 PPT。视频每屏只一个视觉时刻 |
 | 超过 12 个 scene | 注意力放不下，节奏散 |
 | 视频超过 3 分钟 | 王建硕的文章本就短，视频更应该短 |
-| 每个 scene 用不同字体 / 配色 | 风格漂移，看起来不像同一段视频 |
+| 每个 scene 换一种字体配色风格 | 风格漂移，看起来不像同一段视频。design system 是固定的，模板是变化的 |
 | 用 `::after` 伪元素 + CSS 变量做 strike 动画 | hyperframes 渲染路径下有时失效。用真实 DOM `<span class="strike-line">` |
 | 在最后一个 scene 之外用 `gsap.to({opacity: 0})` | 退场动画 hyperframes 禁止 — 转场才是退场 |
 | 给每段 chunk 都加 chime SFX | 太吵。chime 只在视觉上需要"叮"一下的关键时刻 |
