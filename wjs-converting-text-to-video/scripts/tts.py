@@ -21,7 +21,7 @@ try:
 except ImportError:
     sys.exit("install requests:  uvx --with requests python tts.py  (or  pip install requests)")
 
-DEFAULT_VOICE = "zh_male_silang_mars_bigtts"  # 思朗 — steady thoughtful male
+DEFAULT_VOICE = "zh_male_ahu_conversation_wvae_bigtts"  # 阿虎对话 — natural conversational male
 DEFAULT_GAP = 0.35  # seconds of silence between chunks
 DEFAULT_SR = 24000
 
