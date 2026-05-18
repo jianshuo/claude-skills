@@ -250,10 +250,13 @@ bg-image 是视觉主基调（柔化的抽象水彩）。**不要用 article 的
 | 角色 | 值 | 用法 |
 |---|---|---|
 | 主文字 | `#f5efe5` 暖奶白 | hero / 主要内容 |
-| 二级文字 | `#8a7e72` 暖灰 | 副标题、caption |
-| 划掉文字 | `#6d635a` 暗灰 | strikethrough 文字本身 |
+| 二级文字（副标题、caption）| `#f5efe5` + `opacity: 0.7` + 小字号 | **不要用灰色**（`#8a7e72` 在水彩底上看不清）。用 opacity + 缩字号做 hierarchy |
+| 划掉文字本身 | `#f5efe5` + `opacity: 0.5` + strikethrough line | **不要用 `#6d635a` 暗灰** — 在水彩底上看不清。改用 opacity 弱化 + 橙色 strike line |
+| 装饰大编号（01-08）| `#f5efe5` + `opacity: 0.18` 或 `#e87a3e` + `opacity: 0.35` | **不要用 `#2b2620` 等深灰**（水彩底上完全消失）|
 | Outline 描边 | `#f5efe5` 4-8px stroke + `color: transparent` | A2 空心字 |
 | 默认 fallback bg | `#0e0b08` 深暖黑 | 被 bg-image + overlay 覆盖；color-flip 不用 |
+
+**核心原则：所有文字用 `#f5efe5` cream 或 `#e87a3e` 橙系（accent palette），用 opacity + size 做 hierarchy，不用色相变化。灰色是黑底时代的遗物，水彩底上一律不用。** 详见 [[no-low-contrast-text]]
 
 **Color-flip 背景 palette（A3，不只是橙/蓝/白）**：
 
