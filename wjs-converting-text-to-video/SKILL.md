@@ -506,11 +506,36 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 - `--quality standard` ~1.5min — 默认，发布够用
 - `--quality high` ~3min — 投大屏 / 商务
 
-### Step 8: 收尾
+### Step 8: 预览
 
 输出：`<article-folder>/<slug>.mp4`（**与 `video/` 平行**，不在 `video/` 内 —— `video/` 留给中间文件）。
 
-按需 `open` 给用户预览。**不要自动上传到视频号**（用户可能想先剪/调）。
+`open <article-folder>/<slug>.mp4` 给用户预览。**不要自动上传到视频号**（用户可能想先剪/调）。
+
+### Step 9: 发布到 YouTube（自动，必须做）
+
+每个新视频 render 完成后**自动发布到 YouTube**：
+
+```bash
+~/.claude/skills/wjs-converting-text-to-video/scripts/publish-to-youtube.py <article-folder>
+```
+
+脚本自动：
+1. 检测 MP4 是 portrait (1080×1920) 还是 landscape (1920×1080)
+2. Portrait → **YouTube Shorts**（title 自动加 `#shorts` 标签）；Landscape → 普通 video
+3. 从 `article.md` 提取 H1 作 title，前几段作 description
+4. 检查 `<article-folder>/.youtube.json`：
+   - 如果存在（之前已上传过）→ **删除老视频**，上传新的（不累积重复）
+   - 如果不存在 → 直接上传
+5. 上传成功后写 `.youtube.json` 记录 `{video_id, url, kind, uploaded_at}`
+
+**Privacy 默认 public**（王建硕频道是公开的）。如果要私密预览：`--privacy unlisted` 或 `--privacy private`。
+
+**删除老视频需要 broader OAuth scope** (`youtube.force-ssl`)。如果当前 token 只有 `youtube.upload` scope，删除会被跳过（log warning），新视频照上传 —— 老视频留着用户手动删，或重新 OAuth 授权更广 scope。
+
+**Dry-run 测试**：`publish-to-youtube.py <article-folder> --dry-run`
+
+详见 memory: [[auto-publish-youtube]]
 
 ## 目录结构
 
