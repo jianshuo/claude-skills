@@ -77,14 +77,26 @@ for p in glob.glob('$HOME/code/wechat-publish/articles/*/meta.json'):
 
 ### Step 3: 拉取上一篇的留言
 
-**默认假设没有本地 comments**，需要 cookie-based 抓包（个人主体公众号只能走这条）。详见 [wjs-publishing-wechat](../wjs-publishing-wechat/SKILL.md) 的 Step 8。
+**默认走 gstack 持久浏览器路径**（cookie 自动从浏览器 profile 拿，零手工抓包）。详见 [wjs-publishing-wechat](../wjs-publishing-wechat/SKILL.md) 的 Step 8 路径 A。
+
+```bash
+# 一次性 setup（per machine + per article）：
+#   ~/.claude/skills/gstack/browse/dist/browse goto https://mp.weixin.qq.com/   # 扫码登录
+#   echo '<appmsgcomment URL>' > <prev-article-folder>/comment-url.txt          # per article 一次
+
+# 之后每次（零手工）：
+~/.claude/skills/wjs-publishing-wechat/scripts/fetch-comments-via-gstack.sh \
+  <prev-article-folder> --both
+```
+
+如果 gstack 没装、或脚本报「未登录 mp.weixin.qq.com」需要重新扫码，可以临时 fallback 到手抓 cookie 路径：
 
 ```bash
 ~/.claude/skills/wjs-publishing-wechat/scripts/fetch-comments-by-cookie.sh \
   <prev-article-folder> \
   --url '<抓包 URL，含 begin=0...>' \
   --cookie '<整段 Cookie>' \
-  --both   # 写 comments.md 和 comments-raw.json
+  --both
 ```
 
 **Cookie 缓存**：cookie 每隔几小时过期。本 skill 第一次拉的时候把 cookie+URL pattern 存到 `~/.config/wjs-picking-comments/cookie.json`，下次先试缓存的，失效再问用户重抓。
