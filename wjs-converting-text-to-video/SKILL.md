@@ -465,7 +465,20 @@ tl.to('.flash', { opacity: 1, duration: 0.06, ease: 'none' }, T - 0.06)
 - 入场 stagger 0.1-0.3s；首元素从 t = scene.start + 0.3 开始
 - 至少 3 种不同的 ease（`power3.out`、`back.out(1.3)`、`sine.out`、`expo.out`、`elastic.out(1, 0.5)`）
 - **绝对不要用 `gsap.to({opacity: 0})` 退场**——转场已经处理了。只有最后一个 scene 可以 fade-to-black
-- **整片必须用到 ≥3 种** [Modern Motion Techniques](#modern-motion-techniques)，不能 12 个 scene 都只是 `tl.from({ y: 60, opacity: 0 })`
+- **整片必须用到 ≥3 种** [Modern Motion Techniques](#modern-motion-techniques)，不能所有 scene 都只是 `tl.from({ y: 60, opacity: 0 })`
+
+**🎬 第一帧规则（硬性 — 不能违反）**：
+
+视频的 **t=0 (第一帧)** 必须同时包含：
+1. **bg-image 完全可见**（永远 opacity 1，从不 fade-in。CSS 默认值就是可见，别在 GSAP 里 `tl.from('#bg-image', { opacity: 0 })`）
+2. **标题元素可见**（不要让 s1 的所有元素都从 opacity 0 开始 fade-in。至少有一个标题/主元素在 t=0 时已经显示出来）
+3. **s1 不应该是 color-flip A3**（否则盖住 bg-image，第一帧就看不到水彩）
+
+**做法**：
+- s1 的主要文字元素：CSS `opacity: 1` 默认，不要 `tl.from({ opacity: 0 })`。可以做 `tl.from({ y: 30, scale: 0.95 })` 类位移/缩放动画，但 opacity 保持 1
+- 或者：s1 主要元素 t=0 已显示，其他装饰从 t=0.2 起入场
+- bg-image 在 CSS 已经 opacity 1，永远别动它的 opacity
+- 如果想要 A3 color-flip 作开场，先放在 s2 或之后，s1 留给"标题 + bg-image 透出"的开场镜头
 
 ### Modern Motion Techniques
 
