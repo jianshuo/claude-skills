@@ -140,13 +140,17 @@ def upload(mp4: Path, title: str, description: str, tags: list[str], privacy: st
     sys.stderr.write(result.stderr)
     if result.returncode != 0:
         sys.exit(f"upload failed (rc={result.returncode})")
-    # Parse video_id from stdout: look for "https://youtu.be/<id>" or results file
-    m = re.search(r"https://youtu\.be/([A-Za-z0-9_\-]{11})", result.stdout)
-    if m:
-        return m.group(1)
-    m = re.search(r"\"id\":\s*\"([A-Za-z0-9_\-]{11})\"", result.stdout)
-    if m:
-        return m.group(1)
+    # Parse video_id from stdout (multiple possible formats)
+    patterns = [
+        r"https://www\.youtube\.com/watch\?v=([A-Za-z0-9_\-]{11})",
+        r"https://youtu\.be/([A-Za-z0-9_\-]{11})",
+        r"✅\s+([A-Za-z0-9_\-]{11})\s",
+        r"\"id\":\s*\"([A-Za-z0-9_\-]{11})\"",
+    ]
+    for pat in patterns:
+        m = re.search(pat, result.stdout)
+        if m:
+            return m.group(1)
     print("[warn] couldn't parse video_id from upload output")
     return None
 
