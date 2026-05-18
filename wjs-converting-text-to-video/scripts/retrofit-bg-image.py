@@ -17,19 +17,19 @@ import sys, re, shutil
 from pathlib import Path
 
 CSS_INJECT = """
-  /* ============ bg-image layer (取代纯黑底) ============ */
+  /* ============ bg-image layer (abstract watercolor bg) ============ */
   #bg-image {
     position: absolute; inset: 0;
     background-image: url('bg.png');
     background-size: cover;
     background-position: center;
-    filter: blur(50px) brightness(0.38) saturate(0.6);
+    filter: blur(30px) brightness(0.65) saturate(0.85);
     z-index: 0;
     transform: scale(1.1);
   }
   #bg-overlay {
     position: absolute; inset: 0;
-    background: rgba(14, 11, 8, 0.45);
+    background: rgba(14, 11, 8, 0.28);
     z-index: 1;
   }
   .scene { z-index: 2; }
