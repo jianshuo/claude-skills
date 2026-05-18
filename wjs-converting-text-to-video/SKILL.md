@@ -118,6 +118,12 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 - [ ] **≥1 个 scene 留白占 ≥ 60% 的屏幕**（呼吸感，反"撑满"惯性）
 - [ ] **≥1 个 scene 包含几何装饰元素**（粗线条、色块、箭头、圆点、数字编号）
 
+#### 配色硬规则（反"全片一个色"惯性）
+
+- [ ] **≥4 种不同的 scene 背景色**（不能 12 个 scene 都是 `#0e0b08`。每个 scene 根据内容主题挑 [Scene 背景 palette](#scene-背景-palette每片用-4-6-种)：个人/技术/反思/警示 各有自己 tint）
+- [ ] **color-flip scene 颜色不只是橙/蓝/白**（深红 / 深金 / 翠绿 / 青松 / 暗紫 / 暗粉 都可以用，根据 scene 主题选）
+- [ ] **emphasis 至少用 2-3 种颜色**（不能 12 个 scene 都只有橙色 sweep。技术词用蓝，价值词用金，增长词用绿，警告词用红…）
+
 #### 反单调自检
 
 打开你设计好的 scene 列表，问自己：
