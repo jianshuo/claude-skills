@@ -31,6 +31,14 @@ def main():
     entries = root.findall("atom:entry", NS)
     if not entries:
         sys.exit("error: no entries in feed")
+
+    # Sort by published-or-updated descending — wewe-rss XML ordering is not
+    # reliably most-recent-first; some entries have only <updated>, no <published>.
+    def ts(e):
+        return (e.findtext("atom:published", "", NS) or
+                e.findtext("atom:updated", "", NS) or "").strip()
+    entries = sorted(entries, key=ts, reverse=True)
+
     if args.skip >= len(entries):
         sys.exit(f"error: --skip {args.skip} but only {len(entries)} entries")
 
@@ -38,7 +46,7 @@ def main():
     title = (e.findtext("atom:title", "", NS) or "").strip()
     link_el = e.find("atom:link", NS)
     url = link_el.get("href") if link_el is not None else ""
-    published_at = (e.findtext("atom:published", "", NS) or e.findtext("atom:updated", "", NS) or "").strip()
+    published_at = ts(e)
     summary = (e.findtext("atom:summary", "", NS) or "").strip()
     # Strip HTML tags out of summary if any
     import re as _re
