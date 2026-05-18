@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-18]
+
+### Added
+
+- **`wjs-converting-text-to-video`** — new skill: turns a 王建硕-style WeChat `article.md` into a narrated portrait video (1080×1920, 30–90 s). Full 9-step pipeline: (1) split article into 5–10 visual scenes using a 16-template mix (Hero / Contrast / List / Stat / Quote / Geometric); (2) enforce Scene Mix Rule (≥4 template types, ≥1 color-flip, font-size span ≥240 px, ≥2 rhythm switches); (3) write narration chunks; (4) TTS via Volcano 火山引擎 (default: 阿虎对话 `zh_male_ahu_conversation_wvae_bigtts`, with documented backup voices); (5) generate abstract watercolor background with GPT Image 2 (6 themes: tech / personal / reflection / warning / growth / abstract); (6) author HyperFrames CSS/GSAP `index.html` with ≥3 Modern Motion Techniques (kinetic typography, mask reveal, number ticker, etc.); (7) add SFX (tick/chime/bell); (8) lint → inspect → render via HyperFrames CLI; (9) daily-cron upload to YouTube (portrait → Shorts). Triggers: "把这篇文章做成视频" / "做一个解说视频" / "讲解视频" / `/wjs-converting-text-to-video`.
+- **README** — added `wjs-converting-text-to-video` to skills table and as new section 2 "文章转视频 / Article to Video"; renumbered subsequent sections 2–7 → 3–8; added article-to-video entry in the 典型工作流串接 pipeline diagrams.
+
 ## [2026-05-17]
 
 ### Changed

@@ -83,6 +83,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | Skill | 一句话作用 | 输入 → 输出 |
 |---|---|---|
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
+| [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
 | [`wjs-dubbing-video`](./wjs-dubbing-video/) | 文本时间对齐 TTS 配音 | 视频 + 目标语 SRT → 配好音的视频 |
@@ -116,7 +117,24 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 2. 视频本地化 — 字幕 + 翻译 + 配音
+## 2. 文章转视频 / Article to Video
+
+### [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/)
+
+把一篇公众号 `article.md` 做成 **1080×1920 竖屏、30–90 秒** 的中文解说短视频，直接发视频号 / 抖音 / 小红书 / YouTube Shorts。
+
+- **TTS 旁白**：默认阿虎对话（Volcano 火山引擎 `zh_male_ahu_conversation_wvae_bigtts`），5–10 个 narration chunk，每段 3–12 秒
+- **HyperFrames CSS/GSAP 动画**：按文章论证结构拆成 5–10 个视觉 scene，16 种模板（Hero / Contrast / List / Stat / Quote / 几何装饰）按强制配比混搭
+- **抽象水彩背景**：GPT Image 2 生成 `bg.png`（6 种 theme 可选：tech / personal / reflection / growth…），blur 30 柔化后作全片基底
+- **Scene Mix Rule**（强制）：≥4 种模板类型、≥1 个 color-flip、字号跨度 ≥240px、≥2 次节奏切换——防止"平铺直叙 slideshow"
+- **转场 SFX**：tick（切场）/ chime（列表亮项）/ bell（climax 词，全片最多 1 次）
+- **YouTube 日推**：cron 每天 10:00 自动上传最多 5 个 MP4；portrait 自动标 `#Shorts`
+
+> 触发词：`把这篇文章做成视频` / `做一个解说视频` / `讲解视频` / `/wjs-converting-text-to-video`
+
+---
+
+## 3. 视频本地化 — 字幕 + 翻译 + 配音
 
 一条 **「转写 → 翻译 → 配音 → 烧字幕」** 的四步流水线。每一步都是独立 skill，可以单独跑，也可以让 [`wjs-localizing-video`](./wjs-localizing-video/) 这个 orchestrator 串起来跑完整流程。
 
@@ -144,7 +162,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 3. 多机位拍摄 → 自动剪辑
+## 4. 多机位拍摄 → 自动剪辑
 
 ### [`wjs-syncing-multicam`](./wjs-syncing-multicam/)
 
@@ -164,7 +182,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 4. 长视频拆条 + 后期 + 横竖屏
+## 5. 长视频拆条 + 后期 + 横竖屏
 
 ### [`wjs-segmenting-video`](./wjs-segmenting-video/)
 
@@ -203,7 +221,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 5. 分发 / 上传 / 推广
+## 6. 分发 / 上传 / 推广
 
 ### [`wjs-uploading-video`](./wjs-uploading-video/)
 
@@ -226,7 +244,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 6. 项目体检 / 反思 / 自我维护
+## 7. 项目体检 / 反思 / 自我维护
 
 ### [`wjs-auditing-project`](./wjs-auditing-project/)
 
@@ -249,7 +267,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 7. 思维框架 / Perspective
+## 8. 思维框架 / Perspective
 
 ### [`wangjianshuo-perspective`](./wangjianshuo-perspective/)
 
@@ -292,10 +310,12 @@ cp -r wjs-transcribing-audio ./.claude/skills/
           └─ wjs-reframing-video  → 9:16 竖屏版本 → 视频号 / 抖音
 ```
 
-**写公众号文章：**
+**写公众号文章并做成视频：**
 
 ```
 草稿 → wjs-publishing-wechat → 题图 + 解释图 + HTML + 上传草稿 → mp.weixin.qq.com 后台微调发布
+          └─ wjs-converting-text-to-video → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画）
+                └─ 日推 cron → YouTube Shorts
 ```
 
 ---
