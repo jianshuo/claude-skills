@@ -205,11 +205,69 @@ cd <article-folder>/video
 
 **Visual rules (这套样式是 skill 的固定 design system)**：
 
+#### 背景图层（取代纯黑底，全片必须有）
+
+视频整体背景**不再是单一 `#0e0b08`**，而是文章本身的 `illustration.png`（或 `cover.png`）经过模糊+暗化处理。这样每个 scene 都透露出文章主题的视觉氛围，但前景文字仍然清晰。
+
+**HTML 结构**（在 `#root` 内、所有 scene 之前）：
+
+```html
+<div id="bg-image"></div>
+<div id="bg-overlay"></div>
+<!-- scene divs s1..sN follow -->
+```
+
+**CSS**：
+
+```css
+#bg-image {
+  position: absolute; inset: 0;
+  background-image: url('../illustration.png');  /* 或 ../cover.png */
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) brightness(0.22) saturate(0.55);
+  z-index: 0;
+  /* 可选：极慢平移 */
+  transform: scale(1.1);
+}
+#bg-overlay {
+  position: absolute; inset: 0;
+  background: rgba(14, 11, 8, 0.55);  /* 暖黑半透明 overlay */
+  z-index: 1;
+}
+.scene { z-index: 2; }  /* scenes 始终在 bg-image / overlay 之上 */
+```
+
+**Color-flip scene (A3)** 用 `background: #e87a3e` 等纯色，会盖住背景图 — 这是设计意图，保持 color-flip 反差冲击力。
+
+**图源优先级**：
+1. `../illustration.png`（article 的解释图，最抽象，**首选**）
+2. `../cover.png`（封面，但可能有标题文字 baked in，退而求其次）
+3. 都没有就退回纯 `#0e0b08`（旧行为）
+
+**调参原则**：
+- `blur` 30-80px：越大越虚化，避免可识别细节干扰文字
+- `brightness(0.15-0.30)`：暗到能看见纹理但不抢眼
+- `saturate(0.4-0.7)`：略降饱和，避免色彩过活
+- overlay alpha 0.4-0.65：图越亮 alpha 越高
+- 整体目标：bg 看上去像"有色相的深色雾"，不是"清晰的图片"
+
+**可选：缓慢 Ken Burns 平移**（贯穿全片，增强氛围感）
+
+```js
+tl.fromTo('#bg-image',
+  { scale: 1.10, x: 0, y: 0 },
+  { scale: 1.15, x: -60, y: -40, duration: totalDuration, ease: 'none' },
+  0);
+```
+
+**验证**：用 `npx hyperframes snapshot` 在最密集的文字 scene（C3 网格 / E1 quote）截图，确认文字清晰可读。如果看着糊或纠缠 → 加深 overlay alpha、加大 blur、降 brightness。
+
 #### 色彩系统
 
 | 角色 | 值 | 用法 |
 |---|---|---|
-| 默认背景 | `#0e0b08` (深暖黑) | 大多数 scene |
+| 默认背景 | `#0e0b08` (深暖黑) | **底层 fallback**，被 #bg-image+overlay 覆盖；scenes 透明时显示 overlay 之上的氛围 |
 | Punch 背景 (A3) | `#e87a3e` (橙) / `#6b9bc4` (蓝) / `#f5efe5` (奶白) | color-flip scene 反相 |
 | 主文字 | `#f5efe5` (暖奶白) | hero / 主要内容 |
 | Emphasis | `#e87a3e` (橙) | 重点字、下划线、分隔条、装饰线 |
