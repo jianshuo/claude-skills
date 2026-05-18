@@ -99,7 +99,7 @@ for p in glob.glob('$HOME/code/wechat-publish/articles/*/meta.json'):
   --both
 ```
 
-**Cookie 缓存**：cookie 每隔几小时过期。本 skill 第一次拉的时候把 cookie+URL pattern 存到 `~/.config/wjs-picking-comments/cookie.json`，下次先试缓存的，失效再问用户重抓。
+**Cookie 哪来的**：走 gstack 持久 Chromium profile（`~/.gstack/chromium-profile/`），扫码一次能撑几周。`fetch-comments-via-gstack.sh` 每次跑都从浏览器拿当下的 cookie + token，URL 模板存在 `<article-folder>/comment-url.txt`（per-article，一次性配置）。
 
 如果上一篇还没有本地文件夹，先在 `/tmp/picking-comments-cache/<slug-from-title>/` 建一个临时的，放 `comments-raw.json` 进去。
 
