@@ -408,7 +408,11 @@ fetch-comments.sh <folder>                      # comments.md 出炉
 
 #### 路径 A（推荐）：复用 gstack 持久浏览器 — `fetch-comments-via-gstack.sh`
 
-原始 cookie 几小时就过期；但 gstack 维护的 Chromium profile（`~/.gstack/chromium-profile/`）里的登录态可以撑**几周**——只要偶尔有访问保持热度。这条路径把所有手工抓包步骤都消掉了。
+原始 cookie 几小时就过期；但 gstack 维护的 Chromium profile（`~/.gstack/chromium-profile/`）里的登录态实际能撑 **3-14 天**（社区经验值，按 7 天规划比较稳）——只要偶尔有访问保持热度。这条路径把所有手工抓包步骤都消掉了。
+
+**两条死规矩**：
+1. **gstack profile 要独占** mp.weixin.qq.com 这个域。**不要**在系统 Chrome / Safari / 其他浏览器同时登录同一个公众号——并发登录会让 gstack 这边的 session 失效，又得重扫码。
+2. **失败模式**：当 session 真的死了，请求会返回 HTML 登录页（不是 JSON），脚本会报「non-JSON response → cookie expired, re-grab」。这时跑 `browse goto https://mp.weixin.qq.com/` + 扫码即可。
 
 ```bash
 # 一次性 setup（per machine）：扫码登录 mp.weixin.qq.com 到 gstack profile

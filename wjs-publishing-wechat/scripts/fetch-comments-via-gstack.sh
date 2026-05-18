@@ -124,7 +124,7 @@ if [[ -z "$COOKIE" ]]; then
   echo "error: no weixin.qq.com cookies in browser (was login successful?)" >&2
   exit 1
 fi
-COOKIE_COUNT=$(printf '%s' "$COOKIE" | tr ';' '\n' | wc -l | tr -d ' ')
+COOKIE_COUNT=$(printf '%s\n' "$COOKIE" | tr ';' '\n' | wc -l | tr -d ' ')
 echo "  cookies: $COOKIE_COUNT items" >&2
 
 URL_LIVE=$(printf '%s' "$URL_PATTERN" | sed -E "s/token=[0-9]+/token=$TOKEN/")
