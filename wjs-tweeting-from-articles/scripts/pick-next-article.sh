@@ -18,8 +18,10 @@ MAX_AGE_DAYS=14
 
 today_epoch=$(date +%s)
 
-# Walk articles newest-first
-for folder in $(ls -1d "$ARTICLES_DIR"/[0-9]*-*/ 2>/dev/null | sort -r); do
+# Walk articles by article.md mtime (most-recently-touched first). Folder-name
+# date is the publish date, but multiple articles can share a date; mtime is
+# the true "freshness" signal.
+while IFS= read -r folder; do
   slug=$(basename "$folder")
   date_part="${slug:0:10}"  # YYYY-MM-DD
   folder_epoch=$(date -j -f "%Y-%m-%d" "$date_part" +%s 2>/dev/null || echo 0)
