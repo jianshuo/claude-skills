@@ -183,13 +183,13 @@ cd <article-folder>/video
 
 ### Step 4: 写 HyperFrames composition (`index.html`)
 
-读 `timing.json`，按每个 chunk 的 start/end 设计 scene。一个标准的 1920×1080 composition 结构：
+读 `timing.json`，按每个 chunk 的 start/end 设计 scene。一个标准的 **1080×1920 竖屏** composition 结构：
 
 ```html
 <html><head><script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
 <style>
   html, body {
-    width: 1920px; height: 1080px; margin: 0; overflow: hidden;
+    width: 1080px; height: 1920px; margin: 0; overflow: hidden;
     background: #0e0b08;
     font-family: 'Noto Sans SC', 'PingFang SC', 'Heiti SC', sans-serif;
     font-weight: 900;
@@ -202,7 +202,7 @@ cd <article-folder>/video
   /* ... scene-specific styles ... */
 </style></head>
 <body>
-  <div id="root" data-composition-id="main" data-start="0" data-duration="<total+2>" data-width="1920" data-height="1080">
+  <div id="root" data-composition-id="main" data-start="0" data-duration="<total+2>" data-width="1080" data-height="1920">
     <!-- scene divs s1..sN, each .scene -->
     <!-- audio: narration + tick × N + chime × M + bell -->
   </div>
@@ -211,6 +211,12 @@ cd <article-folder>/video
   </script>
 </body></html>
 ```
+
+**⚠️ 竖屏布局调整要点**：
+- 宽度只有 1080px（横屏的 56%），单行文字字数明显减少。3-4 字 hero 用 320-400px；5-7 字用 180-240px；8+ 字用 100-140px
+- 高度 1920px（横屏的 178%），垂直方向更宽松。垂直堆叠 list、长 quote 可以放更多行
+- 居中布局 / 网格布局可能要重新排（4 列横排 → 改 2×2 网格 或 4 行垂直堆叠）
+- 对角线布局：左上 / 右下 仍可，但距离更短
 
 **Visual rules (这套样式是 skill 的固定 design system)**：
 
