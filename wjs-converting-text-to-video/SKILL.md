@@ -12,8 +12,8 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 | 维度 | 默认 |
 |---|---|
 | 尺寸 | 1080×1920 竖屏 (9:16) |
-| 时长 | 60-90 秒 |
-| Scene 数 | 7-10 |
+| 时长 | 30-90 秒 |
+| Scene 数 | 5-10 |
 | 旁白 | 火山引擎 Volcano TTS，默认阿虎对话男声 |
 | 背景 | GPT Image 2 生成的抽象水彩 (`bg.png`) + blur 30 + 暖黑半透明 overlay |
 | 字体 | Noto Sans SC，hero 900，主文字暖奶白 |
