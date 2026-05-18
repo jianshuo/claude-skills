@@ -90,13 +90,13 @@ def retrofit(video_dir: Path) -> bool:
         )
         html = re.sub(
             r"filter:\s*blur\([^)]+\)\s*brightness\([^)]+\)\s*saturate\([^)]+\);",
-            "filter: blur(50px) brightness(0.38) saturate(0.6);",
+            "filter: blur(30px) brightness(0.65) saturate(0.85);",
             html,
             count=1,
         )
         html = re.sub(
             r"background:\s*rgba\(14,\s*11,\s*8,\s*[\d.]+\);",
-            "background: rgba(14, 11, 8, 0.45);",
+            "background: rgba(14, 11, 8, 0.28);",
             html,
             count=1,
         )
