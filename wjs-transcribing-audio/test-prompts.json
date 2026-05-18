@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "scenario": "routing — Chinese audio must default to Volcano, NOT Whisper",
+    "prompt": "帮我转写一下这个一小时的中文播客,文件在 ~/Downloads/podcast.mp4,出 SRT。",
+    "expected": "应该:(1) 识别 source language = zh → 路由到 Volcano (豆包) ASR 作为默认,不要走 Whisper(line 26/30, user's standing preference);(2) 仅在 Volcano 不可用时 fallback 到 Whisper API + pin language=zh + 用 word-level 自己拼 cue;(3) 不能因为「文件大就用 Whisper」之类的理由偷偷换 engine — 这是 deliberate routing decision;(4) 长文件优先走 scripts/ 下的 Volcano 长音频脚本或 /lark-minutes 飞书妙记 fallback (line 152);(5) 输出文件名 podcast.srt(不加 .zh 后缀, line 172)。"
+  },
+  {
+    "id": 2,
+    "scenario": "anti-pattern — must NOT request response_format=srt on long content",
+    "prompt": "这是一段 45 分钟的西班牙语采访,跑 Whisper 出字幕。",
+    "expected": "应该:(1) 路由到 OpenAI Whisper API(非中文);(2) 必须请求 response_format=verbose_json + timestamp_granularities[]=word(line 62-63),严禁 response_format=srt — 否则长 monologue 会出 30 秒 blob cue 或 loop hallucination(line 36-42);(3) 必须 pin language=es,不要让 Whisper auto-detect(line 145, 196 — 头 30 秒经常把 Spanish 误判成 Portuguese);(4) temperature=0.2 不是 0(line 64, 144 anti-loop fallback chain);(5) 10 分钟切块 64kbps mono MP3,不是一把丢整个 45 分钟文件进去(line 49-50, 194)。"
+  },
+  {
+    "id": 3,
+    "scenario": "skip — user already has source SRT, should NOT re-transcribe",
+    "prompt": "我有这段视频的西班牙语原文 SRT 了,你帮我做成中文字幕。",
+    "expected": "应该:(1) 识别到源语言 SRT 已存在 → 不要触发本 skill 重新转写一遍(line 18-19, when NOT to use);(2) 直接路由到 /wjs-translating-subtitles 处理翻译;(3) 不要因为「我再转一遍质量可能更高」之类的好心去重跑 Whisper 浪费 token + API quota;(4) 如果用户其实想要的是配音或烧字幕,也是先看 SRT 在不在,再决定路由(line 20-21)。"
+  },
+  {
+    "id": 4,
+    "scenario": "cue assembly — word-level timestamps + own assembler, not segments[]",
+    "prompt": "Whisper 跑完了但字幕一坨,有的 cue 30 秒一段,有的全是 '你如果不把拥抱浪费写在这上面' 重复 50 遍。怎么修?",
+    "expected": "应该:(1) 诊断:30 秒 blob = response_format=srt 的 condition_on_previous_text 窗口问题(line 38-40);(2) 50 遍重复 = greedy decoding 在低能量音频上的 loop hallucination(line 41-42);(3) 修复方案:重跑 Whisper 时切到 word-level + 自己 assemble cue,不要试图「再调一次 API 修坏的 cue」(line 143 anti-pattern);(4) 用 TARGET_DUR=3s / MAX_CUE_DUR=5s / MAX_CHARS=18 标点优先切(line 91-127);(5) assemble 后跑一遍 loop guard:任何 8-40 字短语重复 3+ 次直接丢掉整条 cue(line 138);(6) 不要因为「只有几条 cue 坏了」就只重转那几段 sub-range — 整段重跑一次,word-level 一次性解决(line 143)。"
+  },
+  {
+    "id": 5,
+    "scenario": "auth + SOCKS proxy quirk on this machine",
+    "prompt": "我跑你的 Whisper python 代码报 ImportError: Using SOCKS proxy, but the 'socksio' package is not installed。",
+    "expected": "应该:(1) 识别这是这台机器的 SOCKS proxy + httpx 的已知问题(line 134);(2) 修复方式:用 uvx --with httpx --with socksio python ... 跑,不要建议「unset HTTP_PROXY」绕过(会导致 OpenAI 调用被墙);(3) 顺手提醒:credentials 在 ~/code/.env,用 set -a; source ~/code/.env; set +a 加载(line 133);(4) 不要建议 pip install socksio 装到 system Python — 用 uvx 隔离是这台机器的标准做法。"
+  }
+]
