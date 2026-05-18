@@ -202,7 +202,13 @@ for block in re.split(r'\n\s*\n', text):
         tag = 'ol' if ordered else 'ul'
         blocks.append(f'<{tag}>{lis}</{tag}>')
     else:
-        blocks.append(f'<p>{inline(block)}</p>')
+        # Preserve intentional in-block line breaks (排比 / 并列短句 / 多行短句)
+        # by converting \n → <br> BEFORE inline. This keeps the lines visually
+        # separated while staying inside one <p> (one paragraph, multiple
+        # visible lines). Also makes **...** spans work across those breaks,
+        # since the inline regex `.+?` matches across `<br>` (no newline char).
+        flattened = block.replace('\n', '<br>')
+        blocks.append(f'<p>{inline(flattened)}</p>')
 
 content_html = '\n<p><br></p>\n'.join(blocks)
 open('content.html', 'w').write(content_html)
