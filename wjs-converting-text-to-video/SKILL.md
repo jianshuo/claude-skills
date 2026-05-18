@@ -146,6 +146,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 - 不写括号注释、不写省略号 "..."、不写破折号 "——"（TTS 会读成"破折号"）
 - 删掉 article.md 里的 **加粗 markdown 语法**，只留纯文字
 - 如果 article.md 里某段是排比/列表，旁白也保持那种节奏感
+- **去掉百姓网相关 facts**：article.md 里如果出现「百姓网」「百姓网现在 X 人」「百姓网员工」等都要 strip 或泛化（"百姓网现在 158 个人" → "公司里没几个真人" / "现实里没几个人"）。这是过时信息，不要进视频。同理 visuals 里也不要出现 "百姓网" label 或 "158 人" stat。详见 [[no-baixing-facts]]
 
 ### Step 3: 生成 TTS narration
 
