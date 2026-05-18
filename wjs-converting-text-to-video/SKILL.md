@@ -208,7 +208,9 @@ cd <article-folder>/video
 
 #### 背景图层（取代纯黑底，全片必须有）
 
-视频整体背景**不再是单一 `#0e0b08`**，而是文章本身的 `illustration.png`（或 `cover.png`）经过模糊+暗化处理。这样每个 scene 都透露出文章主题的视觉氛围，但前景文字仍然清晰。
+视频整体背景**不再是单一 `#0e0b08`**，而是文章本身 `illustration.png` 经过模糊+暗化处理。每个 scene 透露出文章主题的视觉氛围，但前景文字仍然清晰。
+
+**⚠️ 关键：图片必须在 `video/` 目录内**（不能用 `../illustration.png` — hyperframes render 不解析跨目录相对路径，会渲染成纯黑）。`bootstrap-project.sh` 会自动把 `illustration.png` 复制到 `video/bg.png`。
 
 **HTML 结构**（在 `#root` 内、所有 scene 之前）：
 
@@ -218,22 +220,21 @@ cd <article-folder>/video
 <!-- scene divs s1..sN follow -->
 ```
 
-**CSS**：
+**CSS**（**`url('bg.png')` 必须是本地路径，不能写 `../illustration.png`**）：
 
 ```css
 #bg-image {
   position: absolute; inset: 0;
-  background-image: url('../illustration.png');  /* 或 ../cover.png */
+  background-image: url('bg.png');
   background-size: cover;
   background-position: center;
-  filter: blur(60px) brightness(0.22) saturate(0.55);
+  filter: blur(50px) brightness(0.38) saturate(0.6);
   z-index: 0;
-  /* 可选：极慢平移 */
   transform: scale(1.1);
 }
 #bg-overlay {
   position: absolute; inset: 0;
-  background: rgba(14, 11, 8, 0.55);  /* 暖黑半透明 overlay */
+  background: rgba(14, 11, 8, 0.45);
   z-index: 1;
 }
 .scene { z-index: 2; }  /* scenes 始终在 bg-image / overlay 之上 */
@@ -241,17 +242,16 @@ cd <article-folder>/video
 
 **Color-flip scene (A3)** 用 `background: #e87a3e` 等纯色，会盖住背景图 — 这是设计意图，保持 color-flip 反差冲击力。
 
-**图源优先级**：
-1. `../illustration.png`（article 的解释图，最抽象，**首选**）
-2. `../cover.png`（封面，但可能有标题文字 baked in，退而求其次）
-3. 都没有就退回纯 `#0e0b08`（旧行为）
+**图源**：bootstrap 自动从 `<article-folder>/illustration.png` 复制到 `video/bg.png`。备选 `cover.png`。都没有就退回纯 `#0e0b08`（旧行为，不推荐）。
 
-**调参原则**：
-- `blur` 30-80px：越大越虚化，避免可识别细节干扰文字
-- `brightness(0.15-0.30)`：暗到能看见纹理但不抢眼
-- `saturate(0.4-0.7)`：略降饱和，避免色彩过活
-- overlay alpha 0.4-0.65：图越亮 alpha 越高
-- 整体目标：bg 看上去像"有色相的深色雾"，不是"清晰的图片"
+**调参原则**（已 tuned 出 sweet spot）：
+- `blur(50px)` — 模糊到看不清细节、保留色调
+- `brightness(0.38)` — 暗到不抢眼、仍能看见纹理
+- `saturate(0.6)` — 略降饱和
+- overlay `rgba(14,11,8, 0.45)` — 与字色对比度足够
+- 如果文章 illustration 整体很亮（cream/white底），加 overlay alpha 到 0.55；很暗（深色场景），降到 0.30
+
+**警告**：原本设计为"装饰性深色 label"（如 `color: #2b2620` 的 01/02/03 编号）在 bg-image 下会更难看清。可以换 `#4a3f35` 或更亮的灰。
 
 **可选：缓慢 Ken Burns 平移**（贯穿全片，增强氛围感）
 
@@ -262,7 +262,7 @@ tl.fromTo('#bg-image',
   0);
 ```
 
-**验证**：用 `npx hyperframes snapshot` 在最密集的文字 scene（C3 网格 / E1 quote）截图，确认文字清晰可读。如果看着糊或纠缠 → 加深 overlay alpha、加大 blur、降 brightness。
+**验证**：用 `npx hyperframes snapshot` 在最密集文字 scene + color-flip scene 各截一张，确认 (a) 普通 scene bg 是"暖深色雾"不是纯黑 (b) color-flip scene 仍是纯色不透 (c) 文字清晰。
 
 #### 色彩系统
 
