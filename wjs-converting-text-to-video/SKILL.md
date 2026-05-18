@@ -550,7 +550,7 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 ├── illustration.png            # 用户原始示意图，不直接用作 bg
 ├── <slug>.mp4                  # ⭐ 最终视频（与 video/ 平行，不放 video/ 里）
 └── video/                      # 所有中间产物
-    ├── narration_chunks.json   # 7-10 个 scene 的旁白文本
+    ├── narration_chunks.json   # 5-10 个 scene 的旁白文本
     ├── tts_narration.py        # bootstrap 复制进来
     ├── narration.mp3           # 合并的全段 TTS
     ├── narration/              # 单段 mp3 (s01..sN)
