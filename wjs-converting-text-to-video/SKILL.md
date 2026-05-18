@@ -689,6 +689,9 @@ npx hyperframes render --quality standard --fps 30 --output <slug>.mp4
 | **每个 scene 都堆满（90% 屏幕都是文字/卡片）** | ≥1 个 scene 留白 ≥60%，呼吸感和节奏来自空 |
 | **每个 scene 都是中等密度 / 中等字号** | 应有的极简（5 字撑屏）有的密集（网格 + 标签） |
 | **背景永远是纯 `#0e0b08`** | 必须铺一层 `illustration.png` blur+darken 作 bg-image，让视频带上文章主题氛围。详见 [背景图层](#背景图层取代纯黑底全片必须有) |
+| **12 个 scene 全用同一个 bg 色** | ≥4 种不同的 scene 背景色，根据 scene 内容主题挑（个人=暖棕、技术=海军蓝、反思=墨绿、警示=焦红等）。详见 [Scene 背景 palette](#scene-背景-palette每片用-4-6-种) |
+| **color-flip 永远只用橙色** | 整片就一种 punch 色 = 单调。深红、深金、翠绿、青松等都可以根据 scene 主题选 |
+| **emphasis 永远只用橙色** | 至少 2-3 种 accent。技术词用蓝、价值词用金、增长词用绿、警告词用红 |
 
 **反单调自检**：12 个 scene 截图缩成缩略图并排，能不能一眼分辨？如果 8 个看起来一样 → 重做。
 
