@@ -80,6 +80,9 @@ echo "→ refreshing mp.weixin.qq.com session via gstack ..." >&2
 "$B" goto "https://mp.weixin.qq.com/cgi-bin/home" >/dev/null || {
   echo "warning: goto failed; falling back to current tab state" >&2
 }
+# mp.weixin.qq.com home page adds ?token=... via JS after initial load — must
+# wait for that redirect to settle before reading the URL.
+"$B" wait --networkidle >/dev/null 2>&1 || true
 
 CURRENT_URL=$("$B" url 2>/dev/null | tr -d '\r\n')
 [[ -n "$CURRENT_URL" ]] || { echo "error: 'browse url' returned empty (server crashed?)" >&2; exit 3; }
