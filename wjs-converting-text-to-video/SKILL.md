@@ -625,6 +625,7 @@ npx hyperframes render --quality standard --fps 30 --output <slug>.mp4
 | **整片只用 `tl.from({y, opacity})` 一种入场** | 必须 ≥3 种 [Modern Motion Techniques](#modern-motion-techniques) |
 | **每个 scene 都堆满（90% 屏幕都是文字/卡片）** | ≥1 个 scene 留白 ≥60%，呼吸感和节奏来自空 |
 | **每个 scene 都是中等密度 / 中等字号** | 应有的极简（5 字撑屏）有的密集（网格 + 标签） |
+| **背景永远是纯 `#0e0b08`** | 必须铺一层 `illustration.png` blur+darken 作 bg-image，让视频带上文章主题氛围。详见 [背景图层](#背景图层取代纯黑底全片必须有) |
 
 **反单调自检**：12 个 scene 截图缩成缩略图并排，能不能一眼分辨？如果 8 个看起来一样 → 重做。
 
