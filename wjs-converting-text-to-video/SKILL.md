@@ -570,7 +570,8 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
     ├── tts.py                      # Volcano TTS narration 生成
     ├── synth-sfx.sh                # tick/chime/bell 合成 (ffmpeg)
     ├── retrofit-bg-image.py        # 给已有视频补 bg-image 层
-    └── strip-dark-scene-bgs.py     # 剥离 scene-level 暗色 bg，让 bg-image 透出
+    ├── strip-dark-scene-bgs.py     # 剥离 scene-level 暗色 bg，让 bg-image 透出
+    └── publish-to-youtube.py       # 自动上传 MP4 到 YouTube（portrait→Shorts），可替换已有上传
 ```
 
 ## Anti-Patterns
