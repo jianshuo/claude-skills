@@ -40,7 +40,13 @@ while IFS= read -r folder; do
 
   echo "${folder%/}"
   exit 0
-done
+done < <(
+  # ls -t equivalent on directories' article.md mtime
+  for d in "$ARTICLES_DIR"/[0-9]*-*/; do
+    [[ -f "${d}article.md" ]] || continue
+    printf '%s\t%s\n' "$(stat -f %m "${d}article.md")" "$d"
+  done | sort -rn | cut -f2
+)
 
 echo "no unposted article in last $MAX_AGE_DAYS days" >&2
 exit 1
