@@ -625,4 +625,5 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 - **HyperFrames CLI** (`npx hyperframes`) — composition lint / inspect / snapshot / render
 - **GPT Image 2** (`~/.claude/skills/gpt-image-2-skill/`) — 生成 bg.png；`--provider codex` 用 ChatGPT auth
 - **Volcano TTS** — `VOLC_TTS_APPID` / `VOLC_TTS_ACCESS_TOKEN` 在 `~/code/.env`
-- **ffmpeg** — SFX 合成、audio concat
+- **ffmpeg** — SFX 合成、audio concat、aspect-ratio 检测
+- **YouTube uploader** (`~/.claude/skills/wjs-uploading-video/`) + OAuth token at `~/.config/youtube/token.json` —— Step 9 自动发布
