@@ -209,6 +209,46 @@ pandoc article.md -f markdown -t html -o article.html
 # 用 Python 的 markdown 包 / Node 的 marked / 或手写最简实现
 ```
 
+### Step 5.5: 末尾附上一篇的「精选留言」
+
+**默认对每篇都做**——发布前在 `article.md` 末尾加一个 `<section>...上篇精选留言...</section>` 块，把上一篇公众号的精选留言挑 5 条端出来。读者从上一篇追到这一篇，能直接看到自己（或同侪）的留言被回应——这是「写一个能跟读者来回的公众号」的核心动作之一。
+
+**何时跳过**：
+- 工作目录里没有更早的文章（这是第一篇）
+- 上一篇 `comments.md` 还没拉（用 `fetch-comments-by-cookie.sh` 先把留言拉下来再回到这一步）
+- 上一篇没有任何 **[精选]** 标记的留言（罕见——通常上线半天后就会有）
+
+**怎么做**：
+
+```bash
+~/.claude/skills/wjs-publishing-wechat/scripts/discover-prev-elected.sh \
+  <workspace>/articles/YYYY-MM-DD-{slug}
+```
+
+输出一段 JSON：上一篇的文件夹路径、标题、`mp.weixin.qq.com` URL（从 wewe-rss feed 自动匹配，env `WJS_WECHAT_RSS_URL` 可覆盖默认 `http://localhost:4000/feeds/MP_WXS_2397242840.atom`）、总留言数、精选数、以及按 👍 排序后的精选条目（含 nick / region / likes / content / 公开回复）。
+
+**`prev_url` 为空怎么办**：脚本兜底找不到时（上一篇还没出现在 RSS、或 meta.json 标题和 RSS 不一致），问用户一句「上一篇公众号链接是？」拿到 URL 再继续。**不要**留空发布——`<section>` 块里那个标题超链没了就只剩干巴巴文字。
+
+**挑哪 5 条**：默认取 likes 最高的前 5。但**留余地按内容判断**——如果第 6 条特别有意思（独到视角 / 完整对话 / 触到文章未触的角落），可以替换掉第 5 条。挑的标准是「读者读完会觉得自己来过现场」，不是「点赞数排序」。
+
+**写到哪里**：`article.md` 的**最末尾**。如果有 `## 安装方法`，section 块跟在它后面。如果有 `## 后注`，section 块跟在后注后面（极少见，因为默认不写后注）。
+
+**严格的格式（直接套用，把占位符替换）**：
+
+```html
+<section style="background:#f7f5f0;padding:20px 22px;border-radius:8px;margin-top:32px;"><p style="color:#888;font-size:14px;line-height:1.75;margin:0 0 14px;"><strong style="color:#777;">上篇精选留言 ·《<a href="<PREV_URL>" style="color:#888;text-decoration:underline;"><PREV_TITLE></a>》</strong></p><p style="color:#999;font-size:13px;line-height:1.7;margin:0 0 14px;font-style:italic;"><PREV_RECAP_ONE_LINE></p><p style="color:#888;font-size:14px;line-height:1.75;margin:0 0 14px;"><TOTAL> 条留言里，最值得分享的 <N> 条——</p><p style="color:#888;font-size:14px;line-height:1.75;margin:0 0 4px;"><strong style="color:#777;"><NICK>（<REGION> · 👍 <LIKES>）</strong></p><p style="color:#888;font-size:14px;line-height:1.75;margin:0 0 14px;"><CONTENT></p><!-- 重复上面两个 <p> 把剩下 N-1 条放进来 --><p style="color:#888;font-size:14px;line-height:1.75;margin:0;"><CLOSING_LINE></p></section>
+```
+
+**几条死规矩**：
+
+1. **整段必须是 markdown 里的一个块**——内部不要换行（保留为一长行），中间也不能有空行。否则 upload-draft.sh 的 HTML 转换会把它切碎，参见 Step 6 的「Raw HTML 块透传」一节
+2. **不要把 likes 写成 `· 👍` 时把 `👍` 后的数字漏掉**——脚本 JSON 里已经是整数，直接套
+3. **`<PREV_RECAP_ONE_LINE>`** 是你写的一句话回顾，不是从上一篇正文复制——把上一篇抛出的核心问题或主张用一句话点回来，让没看上一篇的读者也能瞬间 catch 到 context。例如「当智能像自来水一样廉价、人人都用得起，最大的机会会出现在哪里？这是上一篇抛给大家的问题。」
+4. **`<CLOSING_LINE>`** 是收束语，**不要每次都用同一句**——根据本篇与上篇的关系微调。默认句式参考：「谢谢每一位留言的朋友——下一篇我接着从你们的留言里找钥匙。」
+5. **内容里出现的引号**保留原作者风格（中文「」/ 直引号 "" 都可以，跟着留言原文走），不要统一化
+6. **留言内容里如果有 `<br>` / 换行**——上 HTML 时换成空格或截短，因为本段全部走一行
+7. **幂等**：如果 `article.md` 已经有 `上篇精选留言 ·` 字样，**替换**那段而不是再追加一段。最简单的做法是 grep 一下，有就先删了再加
+
 ### Step 6: 发布（用 `upload-draft.sh` 走 md2wechat 底层）
 
 文章包准备好后，跑一行就能把文章作为草稿推到公众号后台：
