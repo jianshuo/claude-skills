@@ -250,7 +250,7 @@ node /Users/jianshuo/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.
 <!-- scene divs s1..sN follow -->
 ```
 
-**CSS**（**`url('bg.png')` 必须是本地路径，不能写 `../illustration.png`**）：
+**CSS**（**`url('bg.png')` 必须是本地路径**，新调参——水彩明显可见）：
 
 ```css
 #bg-image {
@@ -258,17 +258,19 @@ node /Users/jianshuo/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.
   background-image: url('bg.png');
   background-size: cover;
   background-position: center;
-  filter: blur(50px) brightness(0.38) saturate(0.6);
+  filter: blur(30px) brightness(0.65) saturate(0.85);
   z-index: 0;
   transform: scale(1.1);
 }
 #bg-overlay {
   position: absolute; inset: 0;
-  background: rgba(14, 11, 8, 0.45);
+  background: rgba(14, 11, 8, 0.28);
   z-index: 1;
 }
 .scene { z-index: 2; }  /* scenes 始终在 bg-image / overlay 之上 */
 ```
+
+**⚠️ 千万别给每个 scene 都加 `background:` 色** —— 那会盖住 bg-image，等于白生成了。普通 scene 都让 bg-image 透出来；只有 **color-flip scene (A3) 才可以用纯色 bg** 作 punch 反差。
 
 **Color-flip scene (A3)** 用 `background: #e87a3e` 等纯色，会盖住背景图 — 这是设计意图，保持 color-flip 反差冲击力。
 
