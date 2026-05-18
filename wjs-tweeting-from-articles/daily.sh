@@ -32,11 +32,14 @@ HISTORY="${STATE_DIR}/history.jsonl"
 mkdir -p "$STATE_DIR"
 touch "$HISTORY"
 
-# Idempotency: skip if already posted today (any slug, status=posted)
-if grep -F "\"date\":\"${today}\"" "$HISTORY" 2>/dev/null \
-     | grep -qF "\"status\":\"posted\""; then
-  echo "Already posted today. Skipping."
-  exit 0
+# Idempotency: skip if already posted today (any slug, status=posted).
+# DRY_RUN bypasses this — it's safe to repeatedly preview without re-posting.
+if [[ "${DRY_RUN:-0}" != "1" ]]; then
+  if grep -F "\"date\":\"${today}\"" "$HISTORY" 2>/dev/null \
+       | grep -qF "\"status\":\"posted\""; then
+    echo "Already posted today. Skipping."
+    exit 0
+  fi
 fi
 
 # --- Step 1: pick article ---
