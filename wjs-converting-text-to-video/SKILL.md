@@ -5,7 +5,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 # wjs-converting-text-to-video
 
-把一篇王建硕风格的微信公众号 `article.md` 做成 **1080×1920 竖屏、60-90 秒** 的中文解说短视频：TTS 旁白 + HyperFrames CSS/GSAP 动画 + 抽象水彩背景 + 转场 SFX。输出 MP4 给视频号 / 抖音 / 小红书 / Reels。
+把一篇王建硕风格的微信公众号 `article.md` 做成 **1080×1920 竖屏、30-90 秒** 的中文解说短视频：TTS 旁白 + HyperFrames CSS/GSAP 动画 + 抽象水彩背景 + 转场 SFX。输出 MP4 给视频号 / 抖音 / 小红书 / Reels。
 
 ## What this skill produces
 
