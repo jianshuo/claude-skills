@@ -527,7 +527,8 @@ article.md 是源文件，下次改用这个。
 5. 用 AskUserQuestion 问标题候选
 6. 自动跑 gen-cover-ai.sh 生成题图 + gen-illustration.sh 生成解释图（不问用户）
 7. 生成 `article.html`、`meta.json`
-8. 输出发布指引
+8. **跑 discover-prev-elected.sh → 编排 `<section>...上篇精选留言...</section>` 块追加到 `article.md` 末尾**（Step 5.5；上一篇无 comments.md 则跳过；prev_url 拿不到就问用户一句）
+9. 输出发布指引
 
 ## Done When
 
