@@ -17,7 +17,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 | 旁白 | 火山引擎 Volcano TTS，默认阿虎对话男声 |
 | 背景 | GPT Image 2 生成的抽象水彩 (`bg.png`) + blur 30 + 暖黑半透明 overlay |
 | 字体 | Noto Sans SC，hero 900，主文字暖奶白 |
-| 输出 | `<article-folder>/video/<slug>.mp4` |
+| 输出 | `<article-folder>/<slug>.mp4`（与 `video/` 平行，不放 `video/` 里）|
 
 ## When this skill fires
 
