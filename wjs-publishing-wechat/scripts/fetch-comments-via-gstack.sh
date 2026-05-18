@@ -97,36 +97,28 @@ def page_url(begin):
     return f"{parsed.path}?{urllib.parse.urlencode(q)}"
 
 def browse_fetch(rel_path):
-    """Use browse js to do an in-browser fetch — same-origin, cookies auto."""
+    """In-browser fetch via browse js — same-origin, cookies auto.
+    NOTE: browse js awaits Promises chained with .then() but does NOT await
+    promises returned from IIFE async functions. Use .then() chain explicitly."""
     js = (
-        "(async()=>{const r=await fetch(" + json.dumps(rel_path)
-        + ",{credentials:'include',headers:{'Accept':'application/json'}});"
-        + "return await r.text();})()"
+        "fetch(" + json.dumps(rel_path)
+        + ",{credentials:'include',headers:{'Accept':'application/json'}})"
+        + ".then(r=>r.text())"
     )
     res = subprocess.run([BROWSE, "js", js], capture_output=True, text=True, timeout=45)
     if res.returncode != 0:
         sys.exit(f"error: browse js failed: {res.stderr[:500]}")
-    # browse js wraps result in "--- BEGIN UNTRUSTED EXTERNAL CONTENT ..." sometimes;
-    # strip envelope and find the JSON-looking content.
-    raw = res.stdout
-    # Drop common envelope markers
-    raw = re.sub(r"^--- BEGIN.*?---\n", "", raw, flags=re.S)
+    raw = res.stdout.strip()
+    # browse js prints the resolved string directly (raw JSON); occasionally
+    # wraps in "--- BEGIN UNTRUSTED ... ---" envelope.
+    raw = re.sub(r"^--- BEGIN.*?---\s*\n", "", raw, flags=re.S)
     raw = re.sub(r"\n--- END.*?---\s*$", "", raw, flags=re.S)
     raw = raw.strip()
-    # The result may be JSON-wrapped string or raw object — try both
     try:
-        # If browse js returned the JS expression's result as JSON-encoded string,
-        # the outer wrapper is the JSON-quoted return value.
-        # Common shape: just the raw fetch().text() result, no extra wrap.
         return json.loads(raw)
     except json.JSONDecodeError:
-        # Maybe browse js returned a JSON-escaped string of JSON (double encoding)
-        try:
-            inner = json.loads(raw) if raw.startswith('"') else raw
-            return json.loads(inner) if isinstance(inner, str) else inner
-        except Exception:
-            sys.stderr.write(f"⚠ couldn't parse browse-js response (first 400 chars):\n{raw[:400]}\n")
-            sys.exit(1)
+        sys.stderr.write(f"⚠ couldn't parse browse-js response (first 400 chars):\n{raw[:400]}\n")
+        sys.exit(1)
 
 def unwrap(o):
     """WeChat's list_comment returns comment_list as JSON-encoded string."""
