@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "scenario": "happy path — auto-pick newest unweeted article, 3 candidates, post via xurl",
+    "prompt": "今天的 tweet",
+    "expected": "应该:(1) 跑 scripts/pick-next-article.sh 拿到最新一篇未推的 article folder (line 34);(2) 读 <folder>/article.md 草拟 3 条候选，分别对应 A·金句 / B·比喻 / C·反差 三个角度 (lines 43-49);(3) 用 AskUserQuestion 让用户在 A/B/C/其他 之间挑一条 (line 57);(4) 用户选定后立刻 xurl -X POST -d \"$JSON\" /2/tweets 真发，不暂存 (lines 16-17, 62-64);(5) 解析返回的 tweet_id 用 grep 而不是 jq -r（X 返回里有未转义的 newline）(lines 65-68);(6) 把 date/slug/angle/tweet_id/text/status=posted 一行 JSON append 到 state/history.jsonl (lines 76-84);(7) 收尾告诉用户 tweet URL + slug + angle + 已写 history (lines 89-94)。"
+  },
+  {
+    "id": 2,
+    "scenario": "voice fidelity — 必须从原文抠，不能自己重写或营销腔",
+    "prompt": "从文章里发推，今天的",
+    "expected": "应该:(1) 三条候选**必须**是从 article.md 里直接抠出来的 quotable 句子 / 核心比喻 / 认知反差，而不是 LLM 自己重新概括 (lines 11-12, 134);(2) 保留王建硕语气：平实、家常比喻、不写营销腔 (line 53);(3) **绝不**加 hashtags、@、emoji（除非原文已有）(line 53, 130);(4) **绝不**自己\"提炼\"改写原文风格——文章已经够紧，直接抠 > 重写 (line 135);(5) 默认**不**塞 mp.weixin 链接；如果用户问可以提示放 reply 里 (lines 53, 132)。"
+  },
+  {
+    "id": 3,
+    "scenario": "single tweet only — 一天一条、一篇一推、不串 thread",
+    "prompt": "把今天这篇文章的几个点都发成一串 thread 吧",
+    "expected": "应该:(1) 拒绝串 thread / 拒绝把 3 条候选都发出去——用户只挑 1 条，不挑就跳过今天 (line 133);(2) 强调「一天最多一条，一篇文章只推一次」，state/history.jsonl 会去重 (line 14);(3) 如果文章特别长 / 多核心想拆多条，正确做法是下次跑时把这篇从 history 删一行重推，而不是当场串 thread (line 131);(4) 仍然按标准 workflow 出 A/B/C 三候选让用户挑一条单发 (lines 43-57)。"
+  },
+  {
+    "id": 4,
+    "scenario": "char budget — 中文 ≤140 字，留 buffer 到 120 以内",
+    "prompt": "/wjs-tweeting-from-articles ~/code/wechat-publish/articles/2026-05-17-some-long-piece",
+    "expected": "应该:(1) 显式指定 folder 时跳过 pick-next-article.sh，直接用该 folder (line 40);(2) 3 条候选每条都遵守硬约束 tweet ≤ 280 字符 / 中文每字算 2 / 实际 ≤ 140 中文字 (line 51);(3) 主动留 buffer 到 **120 中文字以内**更稳，超了就再裁 (line 51);(4) 仍然出 A/B/C 三角度，让用户挑 (lines 43-49, 57);(5) 选定后正常走 xurl POST + history 记录流程 (lines 62-84)。"
+  },
+  {
+    "id": 5,
+    "scenario": "negative — 最近 7 天没有未推的文章，拒绝硬凑",
+    "prompt": "今天的 tweet 来一条",
+    "expected": "应该:(1) 跑 scripts/pick-next-article.sh，发现退出 0 + 空输出（最近一周文章都已推过）(line 37);(2) **不**自己凭空生造一条不在任何 article.md 里的 tweet——这违反「灵感必须从 article.md 抠」原则 (line 134);(3) **不**回退到 `/publish-skill` 或产品推广套路 (lines 26-27);(4) 直接告诉用户「最近 7 天的文章都推过了，今天 rest day」并退出，不发任何东西 (line 37);(5) 不写 history（没发就没记录）。"
+  }
+]
