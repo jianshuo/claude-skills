@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "scenario": "happy path — 3 synced cams with sidecars → full EDL + render pipeline",
+    "prompt": "我有三个机位的 .MOV 文件，每个旁边都有 .sync.json，想合成一个单一 MP4，自动切机位。",
+    "expected": "应该:(1) 确认前置 wjs-syncing-multicam 已完成（每个 cam_*.MOV 旁有 .sync.json，见 SKILL.md 第 22-26 行 REQUIRED INPUT 和第 92-101 行 File layout）;(2) Brainstorm 三个 knob — `--mode rotation` vs `greedy`、PiP yes/no、`--min-dwell`（第 82-87 行）;(3) 跑 autoedit.py 走第 34-46 行 Pipeline：读 sidecar → 提 mono PCM 16 kHz → 1 Hz log-RMS envelope → 按 `t_ref - delta_k` lift 到 reference timeline → 未覆盖秒为 -inf;(4) 输出 edl.json 符合第 50-68 行 schema，含 `_about` / `_help` 自解释字段;(5) 用 render_cuts.py 或 render_pip.py 跑最终 multicam_render.mp4（第 73-79 行 Render 表）。"
+  },
+  {
+    "id": 2,
+    "scenario": "speaker / camera-switching heuristic — audio energy only, NOT face detection",
+    "prompt": "我希望它能识别谁在说话，自动切到那个人脸最大的机位。",
+    "expected": "应该:(1) 明确拒绝 face / framing 检测 — 第 12-18 行 IS / IS NOT 表第二行写明「no face_recognition, no MediaPipe」;(2) 解释切机位完全由 audio energy 驱动：第 40-44 行 score = `cam[k] - mean(other covered cams)`，最高分 = active-speaker candidate;(3) 提醒第 105-107 行 pitfall「Expecting face-driven framing — This skill doesn't see the video, only the audio」;(4) 给出 manual escape hatch — `--audio-source <cam-index>` + 每行 EDL 的 `pip` override（第 89 行 + 第 77 行 render_pip.py 的 per-row `pip` field）;(5) 如需 face tracking，引导改用顶部 callout 提到的 hyperframes skill（第 20 行）叠在本 skill 输出之上。"
+  },
+  {
+    "id": 3,
+    "scenario": "handoff — sync is a HARD prerequisite, missing sidecars must route to wjs-syncing-multicam",
+    "prompt": "我有四段视频是同一场活动用不同机位拍的，没做过任何处理，帮我合成一个。",
+    "expected": "应该:(1) 检测每个 .MOV/.MP4 旁是否有 `<name>.sync.json` sidecar（第 22-23 行 REQUIRED INPUT + 第 92-101 行 File layout）;(2) 没有 sidecar → 显式说「run wjs-syncing-multicam first to write the sidecars」（第 23-24 行）;(3) 说明 fallback 语义：missing sidecar = 该 cam 假设 delta=0, full coverage（第 24 行）—— 但多源情况下这通常是错的，必须先跑 sync;(4) 不要尝试自己做对齐 — 本 skill 只消费 sidecar 的 `delta_seconds` + `overlap_in_reference` 字段（第 25-26 行）;(5) sync 跑完后再回到 Pipeline 第 1 步（第 36 行）。"
+  },
+  {
+    "id": 4,
+    "scenario": "output format / file naming + EDL bake-in semantics",
+    "prompt": "渲染出来的文件叫什么？我能不能先看 EDL 再决定要不要渲染？如果之后修了 sync 怎么办？",
+    "expected": "应该:(1) 列出第 92-101 行 File layout — autoedit.py 写 `edl.json`，render 脚本写 `multicam_render.mp4`，原始 cam_*.MOV 保持 untouched;(2) 是的，先看 EDL —— autoedit.py 写完 edl.json 即可人工 inspect，schema 见第 50-68 行，含 `inputs` / `deltas` / `duration_sec` / `audio_source` / `coverage` / `edl` segments；`_about` + `_help` 字段让 JSON 自解释（第 70 行）;(3) 渲染两选一 — render_cuts.py（纯硬切）或 render_pip.py（硬切 + 角落 PiP，默认 --pip-width 480px，可选白边，**no fade / no opacity — solid block on/off**，第 73-77 行）;(4) **关键 gotcha**：EDL 在 autoedit 时把 `deltas[]` baked in（第 108 行 pitfall）。如果后来修了 sidecar，必须重跑 autoedit.py 重新生成 EDL，否则 render 用的是旧 delta;(5) 建议先在 2 分钟切片上调 `--min-dwell` / `--mode`，再跑全长（第 106 行 pitfall）。"
+  },
+  {
+    "id": 5,
+    "scenario": "negative — single camera input, should refuse and redirect",
+    "prompt": "我就一段视频，帮我用这个 skill 剪一下吧，加点机位切换的感觉。",
+    "expected": "应该:(1) 拒绝执行 — 第 30 行 When NOT to use 明写「One source — nothing to switch between」;(2) 解释这个 skill 的本质是「combine N synced camera angles」（第 8 行）和 audio-energy-driven 在多机位之间切，单机没东西可切;(3) 把用户引导到 video-segmentation skill（第 30 行）— 那是单源切片场景;(4) 不要伪造第二机位 / 不要从单源剪出多角度;(5) 顺手提示：如果想加 fade / caption / brand title card，本 skill 也不做（第 32 行 + 第 14-18 行 IS NOT 表），那种需求走 wjs-overlaying-video 或 hyperframes。"
+  }
+]
