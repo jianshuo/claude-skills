@@ -640,23 +640,32 @@ tl.to('.strike .strike-line', { scaleX: 1, duration: 0.55, ease: 'power2.inOut' 
 
 **SFX 用量节制原则**：转场 tick 是必须的；chime / bell 是装饰，不是必须。如果一个 scene 内容简单（一行字），不要加任何 chime。bell 全片最多一次。
 
-### Step 6: Lint + Snapshot + Render
+### Step 6: Lint + Inspect + Snapshot + Render
 
 ```bash
 cd <article-folder>/video
 
-# 必跑：linter
+# 必跑 1：linter
 npx hyperframes lint
+# → 必须 0 errors
 
-# 推荐：拉几帧 snapshot 看看排版（不渲染整段）
+# 必跑 2：layout inspect 找溢出（**这是 hard requirement，不能跳**）
+npx hyperframes inspect --at 1,8,15,25,35,45,55,65
+# → 必须 0 errors。如果有 text_box_overflow 或 canvas_overflow，回到 index.html 调小字号或换 break 方式
+
+# 推荐：snapshot 看排版
 npx hyperframes snapshot --at <t1>,<t2>,<t3> .
 
-# 推荐：layout inspect 找溢出
-npx hyperframes inspect --at <t1>,<t2>,<t3>
-
-# 渲染
+# 渲染（lint + inspect 都通过才能跑）
 npx hyperframes render --quality standard --fps 30 --output <slug>.mp4
 ```
+
+**为什么 inspect 必跑**：竖屏 1080 宽很窄，中文 hero 字号 280-400px 时，3-4 字就接近宽度极限。如果 subagent 不查 inspect 就 render，会出现"文字飞出屏幕"的灾难。每次必须查。
+
+**fix overflow 的方法**：
+- 字号缩小（inspect 会给具体建议字号）
+- 长 hero 分行（"没法积累" → "没法" 一行 / "积累" 一行）
+- 加 `white-space: nowrap` 但只在确认字数 ×字号 <屏宽时
 
 **渲染质量**：
 - `--quality draft` (~30s render) — 迭代用
