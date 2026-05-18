@@ -39,7 +39,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 每个 scene 是一个独立的视觉时刻 —— 一个对比、一个排比、一个数字、一个比喻。文字撑满屏幕，黑体加粗，重点字橙色高亮。背景是抽象水彩 (blur 后柔化)，整体调子稳重、克制、有冲击力。
 
-**节奏 > 模板**。一段 7-10 scene 的视频，如果从头到尾都是"两行对照"的同一种排版，就不是视频，是 slideshow。**现代感来自对比** —— 极端字号差、不对称布局、短 scene 与长 scene 交替、纯文字 scene 与几何元素 scene 交替、水彩底 scene 与亮色 punch scene 交替。
+**节奏 > 模板**。一段 5-10 scene 的视频，如果从头到尾都是"两行对照"的同一种排版，就不是视频，是 slideshow。**现代感来自对比** —— 极端字号差、不对称布局、短 scene 与长 scene 交替、纯文字 scene 与几何元素 scene 交替、水彩底 scene 与亮色 punch scene 交替。
 
 **默认是平庸的**。如果只是从模板表顶端挑几种最容易的，结果一定是"平铺直叙的两行格式"。强制走 [Step 1b Scene Mix Rule](#step-1b-scene-mix-rule强制) 配比。
 
