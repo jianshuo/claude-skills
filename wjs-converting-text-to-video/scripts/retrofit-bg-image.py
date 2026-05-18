@@ -13,23 +13,23 @@ Inserts (only if not already present):
 
 The bg-image points to ../illustration.png (or ../cover.png as fallback).
 """
-import sys, re
+import sys, re, shutil
 from pathlib import Path
 
 CSS_INJECT = """
   /* ============ bg-image layer (取代纯黑底) ============ */
   #bg-image {
     position: absolute; inset: 0;
-    background-image: url('../illustration.png');
+    background-image: url('bg.png');
     background-size: cover;
     background-position: center;
-    filter: blur(60px) brightness(0.22) saturate(0.55);
+    filter: blur(50px) brightness(0.38) saturate(0.6);
     z-index: 0;
     transform: scale(1.1);
   }
   #bg-overlay {
     position: absolute; inset: 0;
-    background: rgba(14, 11, 8, 0.55);
+    background: rgba(14, 11, 8, 0.45);
     z-index: 1;
   }
   .scene { z-index: 2; }
@@ -48,18 +48,25 @@ def find_video_dir(arg: str) -> Path:
         return p / "video"
     sys.exit(f"No index.html found at {p} or {p}/video")
 
+def ensure_bg_png(video_dir: Path) -> bool:
+    """Copy illustration.png (or cover.png) from article folder into video/bg.png."""
+    if (video_dir / "bg.png").exists():
+        return True
+    article_dir = video_dir.parent
+    for cand in ("illustration.png", "cover.png"):
+        src = article_dir / cand
+        if src.exists():
+            shutil.copy(src, video_dir / "bg.png")
+            print(f"  + copied {cand} → bg.png")
+            return True
+    print(f"  ⚠️  no illustration.png or cover.png in {article_dir}, skipping bg-image retrofit")
+    return False
+
 def retrofit(video_dir: Path) -> bool:
     html_path = video_dir / "index.html"
     html = html_path.read_text()
 
-    # Pick image source
-    article_dir = video_dir.parent
-    if (article_dir / "illustration.png").exists():
-        img_src = "../illustration.png"
-    elif (article_dir / "cover.png").exists():
-        img_src = "../cover.png"
-    else:
-        print(f"  ⚠️  no illustration.png or cover.png in {article_dir}, skipping")
+    if not ensure_bg_png(video_dir):
         return False
 
     changed = False
@@ -70,15 +77,26 @@ def retrofit(video_dir: Path) -> bool:
         if not m:
             print(f"  ✗  no </style> tag in {html_path}, cannot inject CSS")
             return False
-        css = CSS_INJECT.replace("../illustration.png", img_src)
-        html = html[:m.start()] + css + html[m.start():]
+        html = html[:m.start()] + CSS_INJECT + html[m.start():]
         changed = True
-        print(f"  + CSS injected ({img_src})")
+        print(f"  + CSS injected")
     else:
-        # Update image src in existing CSS in case it changed
+        # Update existing CSS to tuned values (idempotent)
         html = re.sub(
             r"background-image:\s*url\('[^']+'\);",
-            f"background-image: url('{img_src}');",
+            "background-image: url('bg.png');",
+            html,
+            count=1,
+        )
+        html = re.sub(
+            r"filter:\s*blur\([^)]+\)\s*brightness\([^)]+\)\s*saturate\([^)]+\);",
+            "filter: blur(50px) brightness(0.38) saturate(0.6);",
+            html,
+            count=1,
+        )
+        html = re.sub(
+            r"background:\s*rgba\(14,\s*11,\s*8,\s*[\d.]+\);",
+            "background: rgba(14, 11, 8, 0.45);",
             html,
             count=1,
         )
