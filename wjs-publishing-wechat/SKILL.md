@@ -228,6 +228,7 @@ pandoc article.md -f markdown -t html -o article.html
    - **Raw HTML 块透传**：以 `<` 开头的块（典型用例：`<section style="background:#f7f5f0;…">…</section>` 包一段"上篇精选"footer，淡底色 + 灰字 + 内嵌上一篇链接）会原样输出，不被包成 `<p>`。整段必须是**一个块**——内部不能有空行打断，否则会被切碎。作者自己负责 HTML 合法 + WeChat 编辑器能吃
    - **段落和图片等不写 inline CSS** —— 让微信编辑器的默认 line-height / font-size / color 接管
    - 段落之间用 `<p><br></p>` 作为间距块（和编辑器里手动按两次回车的源码一致；不能省，否则相邻 `<p>` 在没有 margin 的情况下会贴在一起；也不能用 `<br><br>` 或空 `<p></p>`，会被编辑器规范化吃掉）
+   - **段内多行 → 自动 `<br>` 分行**：如果一个 markdown 段落（行之间不留空行）写了多行，转 HTML 时每个 `\n` 被替换成 `<br>`，整段还在一个 `<p>` 里。专门给排比 / 并列短句这种「视觉上一行一句、但属于同一段」的写法用——参见 [[wangjianshuo-perspective]] 里的「排比 / 并列短句要分行写，不要分段写」。`**...**` 加粗也可以跨这些行（inline 正则用 `<br>` 而不是 `\n` 作内部边界）
    - **结构性样式例外**（这些 inline style 必须加，不加就破坏可读性）：
      - `<h2>`：`font-size:1.4em; font-weight:bold;`（比正文大两号 + 粗体）
      - `<h3>`：`font-size:1.2em; font-weight:bold;`（比正文大一号 + 粗体）
