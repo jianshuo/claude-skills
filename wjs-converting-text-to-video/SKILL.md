@@ -155,7 +155,7 @@ cd <article-folder>/video
 ```
 
 脚本会：
-- 默认用 `zh_male_silang_mars_bigtts`（思朗 — 稳重思考型中年男声）
+- 默认用 `zh_male_ahu_conversation_wvae_bigtts`（阿虎对话 — 自然口语对话感）
 - 每段 chunk 独立调 Volcano TTS API
 - 段间插 0.35s 静音
 - 输出 `narration.mp3` + `timing.json`（每段的 start/end/duration）
@@ -164,11 +164,12 @@ cd <article-folder>/video
 - 用 `volc.service_type.10029` resource，speaker 选 `zh_*_*_bigtts` 命名的（其他可能没开通）
 - **绝对不要传 `emotion` / `emotion_scale` 参数**——大部分 `_bigtts` 声音对这两个参数会返回 `data: null`（HTTP 200 但没音频），脚本会 retry 失败
 - **绝对不要用 kokoro**（hyperframes 自带的 `npx hyperframes tts`）—— 中文质量差，用户明确不接受。详见 [[no-kokoro-use-volcano]]
-- 备用稳重声音（按推荐顺序）：
-  - `zh_male_silang_mars_bigtts` (思朗) — 默认，沉稳思考
+- 备用声音（按推荐顺序）：
+  - `zh_male_ahu_conversation_wvae_bigtts` (阿虎对话) — 默认，自然口语
+  - `zh_male_M392_conversation_wvae_bigtts` — 同 wvae 系列，备选
+  - `zh_male_wennuanahu_moon_bigtts` (温暖阿虎) — 更暖、播音感
+  - `zh_male_silang_mars_bigtts` (思朗) — 沉稳思考，戏剧感强
   - `zh_male_baqiqingshu_mars_bigtts` (霸气) — 更有力度
-  - `zh_male_wennuanahu_moon_bigtts` (温暖) — 更暖
-  - `zh_male_M392_conversation_wvae_bigtts` — 偏 conversational
 - **避免** `zh_male_jieshuonansheng_mars_bigtts`（解说男声）—— 在含 "Claude Code" 等英文专名的句子会循环 hallucinate 数倍时长
 
 ### Step 4: 写 HyperFrames composition (`index.html`)
