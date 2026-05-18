@@ -5,7 +5,9 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 # wjs-converting-text-to-video
 
-把一篇王建硕风格的微信公众号 article.md，做成一段 1.5–3 分钟的中文解说视频（1920×1080 MP4，带 TTS 旁白、HyperFrames 全程动画、转场音效）。
+把一篇王建硕风格的微信公众号 article.md，做成一段 1.5–3 分钟的中文解说视频（**1080×1920 竖屏 MP4**，带 TTS 旁白、HyperFrames 全程动画、转场音效）。
+
+**默认 9:16 竖屏** — 微信视频号 / 抖音 / 小红书 / Reels 都用竖屏。横屏 16:9 仅在用户明确要求时改。
 
 ## Core Principle
 
