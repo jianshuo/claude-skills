@@ -1,6 +1,6 @@
 ---
 name: wjs-converting-text-to-video
-description: Use when the user wants a 王建硕-style WeChat article (article.md) turned into a narrated short MP4 video — TTS voiceover via 火山引擎 Volcano TTS, HyperFrames CSS/GSAP animation per scene, subtle SFX, abstract watercolor background, full pipeline rendering to 1080×1920 portrait MP4 (60-90s). Triggers — "把这篇文章做成视频", "做一个解说视频", "讲解视频", "/wjs-converting-text-to-video".
+description: Use when the user wants a 王建硕-style WeChat article (article.md) turned into a narrated short MP4 video — TTS voiceover via 火山引擎 Volcano TTS, HyperFrames CSS/GSAP animation per scene, subtle SFX, abstract watercolor background, full pipeline rendering to 1080×1920 portrait MP4 (30-90s). Triggers — "把这篇文章做成视频", "做一个解说视频", "讲解视频", "/wjs-converting-text-to-video".
 ---
 
 # wjs-converting-text-to-video
