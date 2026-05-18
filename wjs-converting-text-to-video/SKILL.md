@@ -489,7 +489,8 @@ npx hyperframes inspect --at 1,8,15,25,35,45,55,65
 npx hyperframes snapshot --at <t1>,<t2>,<t3> .
 
 # 渲染（lint + inspect 都通过才能跑）
-npx hyperframes render --quality standard --fps 30 --output <slug>.mp4
+# ⚠️ 输出到上级目录，与 video/ 平行 —— 最终 MP4 不放 video/ 里
+npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 ```
 
 **为什么 inspect 必跑**：竖屏 1080 宽很窄，3-4 字 hero 在 280-400px 字号下就接近溢出。每次必须 inspect，**0 errors 才能 render**。
