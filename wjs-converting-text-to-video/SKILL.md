@@ -99,7 +99,7 @@ description: Use when the user wants a 王建硕-style WeChat article (article.m
 
 #### 配比硬规则
 
-一段 10-12 scene 的视频必须包含：
+一段 7-10 scene 的视频必须包含：
 
 - [ ] **≥1 个 A 类**（Hero/Punch，超大字撑屏，≤4s）
 - [ ] **≥1 个 D 类**（Stat/数据，有具体数字）
