@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "scenario": "happy path — single file with explicit CLI flags",
+    "prompt": "把 /Users/jianshuo/Movies/talk.mp4 发到 YouTube，标题就叫「和任鑫聊 AI 编程」，描述写「第一次试录」，标签 AI,Claude,编程。",
+    "expected": "应该:(1) 走 single-file 分支，调用 scripts/upload_youtube.py 并传 --video / --title / --description / --tags (lines 53-59);(2) 不强求 UPLOAD_META.md，因为 CLI flags 已提供 metadata (lines 75-77, 101);(3) 默认 --privacy public、--category 28 (Science & Tech)、--made-for-kids false (lines 65-67, 105-107);(4) 频道 CTA 名字若被加入描述必须用「王建硕」而非嘉宾「任鑫」(lines 111-113);(5) 完成后回显 URL 表格并提醒视频已 public 立即上线 (lines 127-129)"
+  },
+  {
+    "id": 2,
+    "scenario": "batch upload — final/ directory with UPLOAD_META.md",
+    "prompt": "我录完了 /Users/jianshuo/Movies/wjs-renxin-ep1/final/ 里有 6 段切片，UPLOAD_META.md 也写好了，帮我批量发 YouTube。",
+    "expected": "应该:(1) 走 batch 分支，调用 upload_youtube.py 带 --dir 和 --meta 参数 (lines 39-43);(2) 解析 UPLOAD_META.md 里 `## NN · filename.mp4` 块并与 --dir 下文件配对 (line 46, 96);(3) 把 `**短标题**` 块映射成 YouTube title，把 `**视频描述**` 映射成 description，并从描述里 `#word` 抽出 tags (lines 97-99);(4) 检查 --results-file（默认 `<dir>/.youtube_upload_results.json`）跳过已上传文件，失败可安全重跑 (lines 47-49);(5) 不要凭想象调用 stock `google-api-python-client`，必须用本 skill 的脚本（见 lines 27-33 解释）"
+  },
+  {
+    "id": 3,
+    "scenario": "proxy workaround — must use raw requests, NOT MediaFileUpload",
+    "prompt": "上传一直卡住没动静，是不是 google-api-python-client 的问题？要不直接 `from googleapiclient.http import MediaFileUpload` 自己写一个？",
+    "expected": "应该:(1) 明确拒绝走 `MediaFileUpload` / 直接调 google-api-python-client 上传——stock client 走 httplib2，在用户本地 SOCKS+HTTP 代理栈下会抛 `[Errno 65] No route to host` 或 socket.timeout 并无限挂起 (lines 29, 33);(2) 解释本 skill 的做法：OAuth 用 google-auth，resumable upload 用 `requests` 手工驱动并显式传 proxy，chunk size 8 MB（而非 stock 的 256 KB），对 timeout/ConnectionError/5xx 走指数回退重试 (line 31);(3) 如果卡住中段建议降到 `--chunk-mb 4` 或重启 proxy daemon (line 121);(4) 用 `curl --max-time 10 https://upload.googleapis.com/upload/youtube/v3/videos` 验证代理是否可达——任意 4xx = 通，000 = 代理挂了 (line 120)"
+  },
+  {
+    "id": 4,
+    "scenario": "negative case — missing meta and no CLI flags",
+    "prompt": "把 ~/Movies/raw_clip.mp4 上传到 YouTube。",
+    "expected": "应该:(1) 注意到既没有 UPLOAD_META.md 也没有 --title/--description/--tags 等 CLI flags，不能直接以空 metadata 发布；(2) 向用户索要 title 与 description（至少 title），不要瞎编标题或用文件名糊弄上传；(3) 若用户坚持「就用文件名」，按 `--allow-missing-meta` 路径走：title = basename，description 空 (line 101);(4) 提醒默认 --privacy public 会立即上线，如果只是想先看看效果建议改 --privacy unlisted (lines 105, 129);(5) 不要替用户决定 #tag 列表——王建硕频道名虽然按全局规则会自动 prepend，但其他 tag 需要他亲口确认 (line 99)"
+  },
+  {
+    "id": 5,
+    "scenario": "scheduled publish with playlist",
+    "prompt": "这 3 段帮我排到明天上午 9 点（北京时间）发，先 private 待发布，全部加进我的「王建硕 × 任鑫」播放列表 PLxxxxxx。",
+    "expected": "应该:(1) 用 `--publish-at` 传 ISO8601 时间（北京时间换算成 UTC，例如 `2026-05-19T01:00:00Z`），并且必须同时带 `--privacy private`——这是 YouTube 调度发布的硬性要求 (line 69);(2) 用 `--playlist PLxxxxxx` 把每个上传后的视频加进播放列表 (line 68);(3) 频道 CTA 名字保持「王建硕」，「任鑫」属于描述正文里的对话嘉宾，不写进 channel-CTA 槽位 (lines 111-113);(4) 上传后回显 URL 列表，提醒视频处于 private + 定时状态，到点会自动转 public，不需要手动 flip;(5) 注意 YouTube Data API 默认配额 10000 units/天、每次上传 1600 units，3 段共 4800，仍在当天额度内 (line 122)"
+  }
+]

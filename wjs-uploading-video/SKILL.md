@@ -126,5 +126,5 @@ If you write description footers, signatures, or "subscribe to me" lines into a 
 
 - Results saved to `--results-file` (JSON: file, title, video id, URL)
 - Echo the URL list back to the user in a markdown table
-- Tell them the videos are `unlisted` by default and remind them to flip to public in YouTube Studio when ready
+- Videos are `public` by default — they're live the moment the upload completes. If the user wanted a review buffer, mention they can re-upload with `--privacy unlisted` (or flip back to unlisted in YouTube Studio)
 - If they mentioned a 合集 / series, offer to create a YouTube playlist and batch-add the new uploads (the user must give a playlist ID or let you create one)
