@@ -513,28 +513,29 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 
 `open <article-folder>/<slug>.mp4` 给用户预览。**不要自动上传到视频号**（用户可能想先剪/调）。
 
-### Step 9: 发布到 YouTube（自动，必须做）
+### Step 9: 发布到 YouTube（自动 cron，**不在 render 流程内**）
 
-每个新视频 render 完成后**自动发布到 YouTube**：
+新视频 render 完成后**不立即上传** —— YouTube 有 daily quota 限制（默认 6 个/天 @ 1600 配额点/上传），渲染多了会卡 quota。
 
+**做法**：cron 每天 10:00 自动跑 `daily-upload-batch.sh`，挑最多 5 个还没上传过的 MP4（按文章日期升序），上传后写 `.youtube.json` 记录。
+
+**cron 已注册**（一次性，不用重复跑）：
+```
+0 10 * * * /Users/jianshuo/.claude/skills/wjs-converting-text-to-video/scripts/daily-upload-batch.sh
+```
+
+**手动触发**（**不要在 wjs-converting-text-to-video 流程里跑** — 让 cron 处理）：
 ```bash
+~/.claude/skills/wjs-converting-text-to-video/scripts/daily-upload-batch.sh
+# 或单个文章立即上传
 ~/.claude/skills/wjs-converting-text-to-video/scripts/publish-to-youtube.py <article-folder>
 ```
 
-脚本自动：
-1. 检测 MP4 是 portrait (1080×1920) 还是 landscape (1920×1080)
-2. Portrait → **YouTube Shorts**（title 自动加 `#shorts` 标签）；Landscape → 普通 video
-3. 从 `article.md` 提取 H1 作 title，前几段作 description
-4. 检查 `<article-folder>/.youtube.json`：
-   - 如果存在（之前已上传过）→ **删除老视频**，上传新的（不累积重复）
-   - 如果不存在 → 直接上传
-5. 上传成功后写 `.youtube.json` 记录 `{video_id, url, kind, uploaded_at}`
-
-**Privacy 默认 public**（王建硕频道是公开的）。如果要私密预览：`--privacy unlisted` 或 `--privacy private`。
-
-**删除老视频需要 broader OAuth scope** (`youtube.force-ssl`)。如果当前 token 只有 `youtube.upload` scope，删除会被跳过（log warning），新视频照上传 —— 老视频留着用户手动删，或重新 OAuth 授权更广 scope。
-
-**Dry-run 测试**：`publish-to-youtube.py <article-folder> --dry-run`
+每个上传的脚本行为：
+1. 检测 MP4 portrait/landscape → portrait 标题加 `#shorts`、landscape 普通 video
+2. title 从 article.md H1 / description 从前几段
+3. 检查 `<article-folder>/.youtube.json`：存在 → 尝试删老再传新（需 `youtube.force-ssl` scope，当前 token 没这个 scope → 跳过 delete + 上传新）
+4. 写 `.youtube.json` 记录
 
 详见 memory: [[auto-publish-youtube]]
 
