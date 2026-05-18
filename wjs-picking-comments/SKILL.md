@@ -193,7 +193,7 @@ scripts/inject-footer.py <new-article-folder> /tmp/footer-section.html
 /wjs-picking-comments <new-article-folder> --prev <prev-folder>      # 显式指定本地 folder
 ```
 
-第一次跑会 prompt 抓包指引（URL + Cookie）。之后 cookie 保存到 `~/.config/wjs-picking-comments/cookie.json`，下次先试缓存。
+第一次跑会 prompt：(1) 用 gstack browse 扫码登录 mp.weixin.qq.com（一次几周）；(2) 把上一篇 appmsgcomment URL 存到 `<prev-folder>/comment-url.txt`（per article 一次）。之后 cookie + token 每次自动从 gstack 浏览器拿，不再要手抓。
 
 ## File Layout
 
