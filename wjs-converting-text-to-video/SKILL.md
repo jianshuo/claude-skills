@@ -266,16 +266,72 @@ tl.fromTo('#bg-image',
 
 #### 色彩系统
 
+**重要：palette 必须丰富，不能 12 个 scene 都是同样的深暖黑底 + 橙色 emphasis。**
+
+##### 主文字 / 锚定色（design system，全片一致）
+
 | 角色 | 值 | 用法 |
 |---|---|---|
-| 默认背景 | `#0e0b08` (深暖黑) | **底层 fallback**，被 #bg-image+overlay 覆盖；scenes 透明时显示 overlay 之上的氛围 |
-| Punch 背景 (A3) | `#e87a3e` (橙) / `#6b9bc4` (蓝) / `#f5efe5` (奶白) | color-flip scene 反相 |
-| 主文字 | `#f5efe5` (暖奶白) | hero / 主要内容 |
-| Emphasis | `#e87a3e` (橙) | 重点字、下划线、分隔条、装饰线 |
+| 主文字 | `#f5efe5` (暖奶白) | hero / 主要内容、所有 scene |
+| 默认 fallback bg | `#0e0b08` (深暖黑) | 被 #bg-image+overlay 覆盖；color-flip 不用 |
 | 二级文字 | `#8a7e72` (暖灰) | 副标题、caption |
-| 暗灰 (划掉) | `#6d635a` | strikethrough 的文字本身 |
-| 数据 / AI | `#6b9bc4` (蓝) | 数字 ticker、tech 概念 |
+| 划掉文字 | `#6d635a` (暗灰) | strikethrough |
 | Outline 描边 | `#f5efe5` 4-8px stroke + `color: transparent` | A2 空心字 |
+
+##### Scene 背景 palette（每片用 4-6 种）
+
+不要每个 scene 都用 `#0e0b08`。普通 scene（不是 color-flip）也可以有 scene-specific 的深色 tint，根据该 scene 的内容主题选：
+
+| 主题 | bg 色 | 适合 |
+|---|---|---|
+| 默认 / 中性 | `#0e0b08` (深暖黑) | 起手 scene、quote scene |
+| 个人 / 手作 / 温暖 | `#1a1208` (深暖棕) | "我画画" "我写" "手感" 类 scene |
+| 技术 / 数据 / 冷静 | `#0a1428` (深海军蓝) | code/AI/算法/数据 类 scene |
+| 思考 / 静水 / 沉静 | `#0e2422` (深墨绿青) | 反思、长线观察类 |
+| 神秘 / 复杂 / 高级 | `#1e1020` (深紫罗兰) | 抽象概念、哲学命题 |
+| 警示 / 张力 | `#2a0e0a` (深焦红) | 错误案例、警告、反差 |
+| 工业 / 系统 | `#161b22` (深石板) | 工具、系统、组织 |
+| 自然 / 生长 | `#0e1a12` (深苔绿) | 演化、积累、复利 |
+
+**用法**：在 CSS 里给特定 scene 加 `background:`：
+```css
+#s3 { background: #1a1208; }  /* 个人 scene */
+#s7 { background: #0a1428; }  /* 技术 scene */
+#s9 { background: #0e2422; }  /* 反思 scene */
+```
+
+Scene-specific bg 会盖住 #bg-image — 这是 OK 的，scene 用 bg 时就主动放弃 bg-image 的视觉氛围，换取该 scene 自己的色调。建议 12 个 scene 里 6-8 个用 scene-bg、4-6 个让 bg-image 透出。
+
+##### Color-flip 背景 palette（A3，不只是橙/蓝/白）
+
+| color-flip 色 | hex | 适合 |
+|---|---|---|
+| 经典橙 | `#e87a3e` | 警示、强调、climax punch |
+| 亮蓝 | `#6b9bc4` | 数据、技术 climax |
+| 暖奶白 | `#f5efe5` | 收尾、安静的反差 |
+| 深红 punch | `#c45c3e` | 警告、错误 climax |
+| 深金 | `#d4a040` | 成就、价值 climax |
+| 翠绿 | `#5a8c6a` | 增长、复利、生命力 |
+| 青松 | `#4a8a8a` | 冷静、长期主义 |
+| 暗紫 | `#7a5a8a` | 智慧、神秘 climax |
+| 暗粉 | `#c48a8a` | 柔软、人性 |
+
+color-flip scene 上的文字用 `#0e0b08` 或 `#f5efe5` 之一作反相。
+
+##### Emphasis / Accent palette（不只是橙色）
+
+| 色 | hex | 适合 |
+|---|---|---|
+| 橙 | `#e87a3e` | 默认 emphasis，重点字 / sweep |
+| 蓝 | `#6b9bc4` | 数据、技术词、AI |
+| 金 | `#d4a040` | 价值、成就关键词 |
+| 翠绿 | `#5a8c6a` | 增长、好结果 |
+| 青松 | `#4a8a8a` | 长期、稳定 |
+| 深红 | `#c45c3e` | 警告、错误、反差 |
+| 暗紫 | `#8a7aaa` | 抽象、智慧 |
+| 暗粉 | `#c48a8a` | 柔软、人性化 |
+
+**整片 emphasis 至少用 2-3 种颜色**（不要 12 个 scene 都只用橙色 sweep）。根据 scene 主题选 accent。
 
 #### 字体系统
 
