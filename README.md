@@ -83,6 +83,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | Skill | 一句话作用 | 输入 → 输出 |
 |---|---|---|
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
+| [`wjs-picking-comments`](./wjs-picking-comments/) | 抓取上一篇公众号精选留言 Top 5 → 生成 HTML footer 追加到新文章 | 新文章 folder → 末尾附精选留言 `<section>` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -95,6 +96,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-overlaying-video`](./wjs-overlaying-video/) | 后期：封面 / 字幕 / 动画 / CTA | 短片 + SRT → 带后期的成片 |
 | [`wjs-reframing-video`](./wjs-reframing-video/) | 横竖屏互转 + 说话人跟踪裁切 | 16:9 ↔ 9:16，4:3 ↔ 3:4 |
 | [`wjs-uploading-video`](./wjs-uploading-video/) | 批量上传 YouTube | MP4 (+ `UPLOAD_META.md`) → YouTube |
+| [`wjs-tweeting-from-articles`](./wjs-tweeting-from-articles/) | 从最近公众号文章萃取每日 X tweet，人工挑角度后真发 | article.md → X / Twitter |
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
@@ -114,6 +116,17 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 通过 `md2wechat` 上传草稿到公众号后台。
 
 > 触发词：`写一篇微信文章` / `公众号` / `润色` / `题图` / `发公众号`
+
+### [`wjs-picking-comments`](./wjs-picking-comments/)
+
+在**新一篇文章**末尾自动追加「上篇精选留言 Top 5」footer。
+
+- 通过 wewe-rss 定位上一篇已发布文章，用 gstack 持久浏览器抓取留言列表
+- 按王建硕精选标准挑出 Top 5（新角度 > 凝练 > 正向好奇；点赞数仅作 tie-breaker）
+- 生成淡底色灰字的 `<section>` HTML 块，幂等追加到 `article.md` 末尾
+- 一次扫码（gstack QR）可持续约 7 天，日常零手工
+
+> 触发词：`上篇精选` / `精选留言 footer` / `把上一篇的留言加到这篇` / `/wjs-picking-comments`
 
 ---
 
@@ -230,6 +243,18 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 读取 sibling `UPLOAD_META.md` 拿每个视频的 title / description / tags（用户自定义的 markdown 格式）
 - 在 SOCKS/HTTP 代理后能用 —— 直接走 `requests` 做 resumable upload，避开 `google-api-python-client` 的 `MediaFileUpload` 在该代理下卡死的问题
 - 不支持微信视频号（无公开 API）/ 抖音 / 小红书 / B 站
+
+### [`wjs-tweeting-from-articles`](./wjs-tweeting-from-articles/)
+
+每天一条 X tweet，**灵感直接从最近发布的公众号文章里萃取**。
+
+- 自动找到最近一篇还没推过的文章（7 天内按日期倒序）
+- 从文章里起草三条候选（A 金句 / B 核心比喻 / C 认知反差），让用户选一条
+- 用户确认后立刻真发（`xurl POST /2/tweets`），记录到 `state/history.jsonl` 防重复
+- 风格约束：王建硕语气，平实家常，不加 hashtag / emoji / mp.weixin 链接；中文 tweet ≤ 120 字
+- 可选 `--dry-run` 预览不发；支持 `/schedule daily` 自动触发
+
+> 触发词：`今天的 tweet` / `从文章里发推` / `每天发一个 tweet` / `/wjs-tweeting-from-articles`
 
 ### [`wjs-promoting-skills`](./wjs-promoting-skills/)
 
