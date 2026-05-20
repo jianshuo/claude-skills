@@ -100,6 +100,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
+| [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
 
 ---
@@ -269,7 +270,22 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 7. 项目体检 / 反思 / 自我维护
+## 7. 英语教学 / English Teaching
+
+### [`wjs-teaching-english`](./wjs-teaching-english/)
+
+把一个英语单词做成 HLS "超剪" 课程，从 mira 视频库里找出所有含该单词的 season2 片段，拼成一个完整的 `.m3u8` 播放列表。
+
+- **结构**：双语 intro card（word + IPA + 中文词义 + 用法，Volcano TTS 配音）→ 超剪片段 → 关注王建硕 CTA card
+- **不生成 MP4**：只有两张 intro/CTA 卡片被渲染成 `.ts`，其余直接引用 COS 上的原始片段，减少重编码
+- **card 编码**：自动对齐第一个超剪片段的 codec / fps / 分辨率，避免 HLS 播放器在 discontinuity 处重初始化解码器
+- 如果该词在库里没有片段，脚本直接退出并提示用户换一个更常用的词
+
+> 触发词：`teach <word>` / `讲讲 <word>` / `学英语 <word>` / `把 <word> 做成视频` / `/wjs-teaching-english <word>`
+
+---
+
+## 8. 项目体检 / 反思 / 自我维护
 
 ### [`wjs-auditing-project`](./wjs-auditing-project/)
 
@@ -292,7 +308,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 8. 思维框架 / Perspective
+## 9. 思维框架 / Perspective
 
 ### [`wangjianshuo-perspective`](./wangjianshuo-perspective/)
 

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-20]
+
+### Added
+
+- **`wjs-teaching-english`** — new skill: turns a single English word into a self-contained HLS "supercut" lesson built from the mira video base. Stitches every season2 clip where the word is spoken (via the search-app `/api/playlist`, COS URLs) into one `.m3u8`, prepended with a bilingual word-intro card (word + IPA + 中文 gloss + usage, Volcano TTS) and appended with a 关注王建硕 CTA card. No MP4 is burned — only the two cards are rendered as small `.ts` files, encoded to match the supercut's codec/fps so the first HLS discontinuity needs no decoder re-init. Triggers: `teach <word>` / `讲讲 <word>` / `学英语 <word>` / `把 <word> 做成视频` / `/wjs-teaching-english <word>`.
+- **README** — added `wjs-teaching-english` to the skills summary table and added new section 7 "英语教学 / English Teaching"; renumbered former sections 7–8 to 8–9.
+
 ## [2026-05-18]
 
 ### Added
