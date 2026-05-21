@@ -528,6 +528,5 @@ article.md 是源文件，下次改用这个。
 - [ ] `articles/YYYY-MM-DD-{slug}/` 文件夹存在
 - [ ] 包含 article.md、article.html、cover.png、meta.json、original.md
 - [ ] meta.json 字段齐全
-- [ ] **`article.md` 末尾已附「上篇精选留言」`<section>` 块**（除非这是工作目录里第一篇，或上一篇没拉留言；后者应先让用户跑 fetch-comments-by-cookie.sh 再回到 Step 5.5）
 - [ ] 用户拿到了发布指引
 - [ ] 用户没说"再改改"
