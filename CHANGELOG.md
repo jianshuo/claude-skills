@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-21]
+
+### Removed
+
+- **`wjs-picking-comments`** — retired the dedicated comment-picking skill. The 上篇精选留言 footer idea didn't pan out; the skill and all its scripts (`build-footer.py`, `capture-comment-url.sh`, `fetch-latest-from-rss.py`, `inject-footer.py`, `select-elected-comments.py`) have been deleted.
+
+### Changed
+
+- **`wjs-publishing-wechat`** — removed Step 5.5 (the 精选留言 footer integration step) from the publishing workflow now that `wjs-picking-comments` is gone. The `discover-prev-elected.sh` script reference and related "Done When" checklist item were removed. The workflow summary now goes directly from cover/illustration generation (step 7) to outputting publish instructions (step 8). Minor wording cleanup in the Raw HTML 块透传 description (example updated from "上篇精选 footer" to generic "引用/注释卡片").
+
 ## [2026-05-20]
 
 ### Added

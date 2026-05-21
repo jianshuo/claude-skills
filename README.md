@@ -83,7 +83,6 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | Skill | 一句话作用 | 输入 → 输出 |
 |---|---|---|
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
-| [`wjs-picking-comments`](./wjs-picking-comments/) | 抓取上一篇公众号精选留言 Top 5 → 生成 HTML footer 追加到新文章 | 新文章 folder → 末尾附精选留言 `<section>` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -117,17 +116,6 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 通过 `md2wechat` 上传草稿到公众号后台。
 
 > 触发词：`写一篇微信文章` / `公众号` / `润色` / `题图` / `发公众号`
-
-### [`wjs-picking-comments`](./wjs-picking-comments/)
-
-在**新一篇文章**末尾自动追加「上篇精选留言 Top 5」footer。
-
-- 通过 wewe-rss 定位上一篇已发布文章，用 gstack 持久浏览器抓取留言列表
-- 按王建硕精选标准挑出 Top 5（新角度 > 凝练 > 正向好奇；点赞数仅作 tie-breaker）
-- 生成淡底色灰字的 `<section>` HTML 块，幂等追加到 `article.md` 末尾
-- 一次扫码（gstack QR）可持续约 7 天，日常零手工
-
-> 触发词：`上篇精选` / `精选留言 footer` / `把上一篇的留言加到这篇` / `/wjs-picking-comments`
 
 ---
 
