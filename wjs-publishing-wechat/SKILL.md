@@ -232,7 +232,7 @@ pandoc article.md -f markdown -t html -o article.html
    - **结构性样式例外**（这些 inline style 必须加，不加就破坏可读性）：
      - `<h2>`：`font-size:1.4em; font-weight:bold;`（比正文大两号 + 粗体）
      - `<h3>`：`font-size:1.2em; font-weight:bold;`（比正文大一号 + 粗体）
-     - `<strong>`（即 `**...**`）：`color:#ff0000;`（纯红粗体——作者刻意要的视觉点。仅作用于 markdown `**bold**` 转出来的 `<strong>`；上篇精选 footer 里手写的灰色 `<strong style="color:#777;">` 等显式 inline style 不会被覆盖）
+     - `<strong>`（即 `**...**`）：`color:#ff0000;`（纯红粗体——作者刻意要的视觉点。仅作用于 markdown `**bold**` 转出来的 `<strong>`；raw HTML 块里手写的带显式 inline style 的 `<strong style="...">` 不会被覆盖）
      - `<table>`：`border-collapse:collapse; width:100%;`
      - `<th>/<td>`：`border:1px solid #d9d9d9; padding:6px 10px;`（`<th>` 另加 `background:#f6f6f6`）
      - `<code>`：`font-family:Menlo,Consolas,monospace; background:#f4f4f4; padding:1px 6px; border-radius:3px; font-size:0.92em;`（不加，命令和普通文字混一起看不出是命令）
