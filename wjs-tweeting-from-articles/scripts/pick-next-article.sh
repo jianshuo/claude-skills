@@ -10,7 +10,7 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SKILL_DIR="$(cd "$HERE/.." && pwd)"
 HISTORY="$SKILL_DIR/state/history.jsonl"
-ARTICLES_DIR="$HOME/code/wechat-publish/articles"
+ARTICLES_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles"
 MAX_AGE_DAYS=14
 
 [[ -d "$ARTICLES_DIR" ]] || { echo "error: $ARTICLES_DIR not found" >&2; exit 2; }
