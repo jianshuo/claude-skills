@@ -302,7 +302,7 @@ md2wechat preview article.md      # 生成本地 HTML 预览（degraded 模式�
 
 ```bash
 ~/.claude/skills/wjs-publishing-wechat/scripts/upload-draft.sh \
-  /Users/jianshuo/code/wechat-publish/articles/YYYY-MM-DD-{slug}
+  "/Users/jianshuo/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles/YYYY-MM-DD-{slug}"
 ```
 
 成功后输出 `draft media_id`，并在文章目录里留下 `content.html` 和 `draft.json` 两个产物，便于复查或下次直接 `md2wechat create_draft draft.json` 重发。
