@@ -26,10 +26,10 @@ for P in $(enabled_platforms); do
   if bash "$SCRIPTS/history.sh" has "$SLUG" "$P"; then echo "  $P: skipped (already done)"; continue; fi
 
   if [[ "$DRY" == "--dry-run" ]]; then
-    bash "$SCRIPTS/post-$P.sh" "$POST_TXT" --dry-run >/dev/null 2>&1; echo "  $P: DRY (exit $?)"; continue
+    bash "$SCRIPTS/post-$P.sh" "$POST_TXT" --dry-run >/dev/null 2>&1 || true; echo "  $P: DRY"; continue
   fi
 
-  OUT="$(bash "$SCRIPTS/post-$P.sh" "$POST_TXT")"; CODE=$?
+  OUT="$(bash "$SCRIPTS/post-$P.sh" "$POST_TXT" 2>&1)" || true; CODE=$?
   case $CODE in
     0) URL="$(echo "$OUT" | sed -n 's/^url=//p')"; PID="$(echo "$OUT" | sed -n 's/^post_id=//p')"
        bash "$SCRIPTS/history.sh" record "$SLUG" "$P" posted "$URL" "$PID"; echo "  $P: posted $URL" ;;
