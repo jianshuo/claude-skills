@@ -5,7 +5,7 @@ set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 ARTF="${1:?article folder}"; POST_TXT="${2:?post.txt}"; OUTBOX="${3:?outbox dir}"
 mkdir -p "$OUTBOX"
-cp "$POST_TXT" "$OUTBOX/post.txt"
+[[ "$POST_TXT" -ef "$OUTBOX/post.txt" ]] || cp "$POST_TXT" "$OUTBOX/post.txt"
 
 # hero image: cover.png > illustration.png > none
 if   [[ -f "$ARTF/cover.png" ]];        then cp "$ARTF/cover.png" "$OUTBOX/image.png"
