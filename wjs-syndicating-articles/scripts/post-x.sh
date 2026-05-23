@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # post-x.sh <post.txt> [--dry-run]   exit: 0 ok / non-zero fail
+# X auth is handled by xurl, not secrets.json; if xurl is unconfigured this exits 1 (recorded "failed"), never 3.
 set -uo pipefail
 TXT_FILE="${1:?usage: post-x.sh <post.txt> [--dry-run]}"
 DRY="${2:-}"

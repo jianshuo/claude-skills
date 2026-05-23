@@ -53,7 +53,7 @@ bash $SKILL_DIR/scripts/pick-next-article.sh
 # 先去重：tweeting skill 也可能发过 X
 if [[ "$P" == "x" ]]; then
   TW_HIST="$HOME/.claude/skills/wjs-tweeting-from-articles/state/history.jsonl"
-  if [[ -f "$TW_HIST" ]] && grep -q "\"$SLUG\"" "$TW_HIST" && grep "\"$SLUG\"" "$TW_HIST" | grep -q '"status":"posted"'; then
+  if [[ -f "$TW_HIST" ]] && jq -e --arg s "$SLUG" 'select(.slug==$s and .status=="posted")' "$TW_HIST" >/dev/null 2>&1; then
     bash $SKILL_DIR/scripts/history.sh record "$SLUG" x skipped; continue
   fi
 fi
