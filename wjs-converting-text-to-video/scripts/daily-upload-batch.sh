@@ -7,7 +7,7 @@
 set -euo pipefail
 
 MAX_PER_DAY="${MAX_PER_DAY:-5}"
-ARTICLES_ROOT="${ARTICLES_ROOT:-/Users/jianshuo/code/wechat-publish/articles}"
+ARTICLES_ROOT="${ARTICLES_ROOT:-/Users/jianshuo/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles}"
 PUBLISH_SCRIPT="/Users/jianshuo/.claude/skills/wjs-converting-text-to-video/scripts/publish-to-youtube.py"
 LOG_DIR="/Users/jianshuo/code/wechat-publish/.upload-logs"
 mkdir -p "$LOG_DIR"
