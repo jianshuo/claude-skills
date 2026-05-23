@@ -46,37 +46,11 @@ bash $SKILL_DIR/scripts/pick-next-article.sh
 
 `--dry-run` 时：打印 post.txt 内容 + 下面每个平台「将发什么」，**不**继续 Step 3+，结束。
 
-### Step 3: API 平台（逐个 try/catch，真发）
-对 `x bluesky threads linkedin` 各跑一次（按 config 里 mode==api 的）：
-
+### Step 3: 扇出（一个确定性脚本搞定，LLM 不碰 key）
 ```bash
-# 先去重：tweeting skill 也可能发过 X
-if [[ "$P" == "x" ]]; then
-  TW_HIST="$HOME/.claude/skills/wjs-tweeting-from-articles/state/history.jsonl"
-  if [[ -f "$TW_HIST" ]] && jq -e --arg s "$SLUG" 'select(.slug==$s and .status=="posted")' "$TW_HIST" >/dev/null 2>&1; then
-    bash $SKILL_DIR/scripts/history.sh record "$SLUG" x skipped; continue
-  fi
-fi
-if bash $SKILL_DIR/scripts/history.sh has "$SLUG" "$P"; then continue; fi   # already done
-
-OUT="$(bash $SKILL_DIR/scripts/post-$P.sh "$POST_TXT")"; CODE=$?
-case $CODE in
-  0) URL="$(echo "$OUT" | sed -n 's/^url=//p')"; PID="$(echo "$OUT" | sed -n 's/^post_id=//p')"
-     bash $SKILL_DIR/scripts/history.sh record "$SLUG" "$P" posted "$URL" "$PID" ;;
-  3) bash $SKILL_DIR/scripts/history.sh record "$SLUG" "$P" queued "" "" no_creds ;;  # degrade -> outbox
-  *) bash $SKILL_DIR/scripts/history.sh record "$SLUG" "$P" failed ;;                 # retry next run
-esac
+bash $SKILL_DIR/scripts/syndicate.sh "$FOLDER" "$POST_TXT"
 ```
-
-### Step 4: 手动平台 → 待发件箱
-```bash
-OUTBOX="$SKILL_DIR/outbox/$(date +%F)-$SLUG"
-bash $SKILL_DIR/scripts/build-outbox.sh "$FOLDER" "$POST_TXT" "$OUTBOX"
-for P in facebook xiaohongshu jike zhihu; do
-  bash $SKILL_DIR/scripts/history.sh has "$SLUG" "$P" || bash $SKILL_DIR/scripts/history.sh record "$SLUG" "$P" queued
-done
-```
-（degrade 到 outbox 的 API 平台同理已在 history 记为 queued；它们的文案就在同一个 OPEN.md 里。）
+`syndicate.sh` 内部：slug 一律取 `basename "$FOLDER"`；API 平台（X/Bluesky/Threads/LinkedIn）逐个 try/catch 真发，X 会先查 tweeting skill 的 history 防双发，缺凭证的自动降级记 `queued`；手动平台（Facebook/小红书/即刻/知乎）调 `build-outbox.sh` 备好 `outbox/<slug>/` 并记 `queued`。**不要自己手写平台循环或拼 slug** —— 全交给脚本，避免 key 漂移。`--dry-run` 时改跑 `syndicate.sh "$FOLDER" "$POST_TXT" --dry-run`（不发、不写 history）。脚本 stdout 的每行 `  <platform>: ...` 和末尾 `outbox=...` 就是 Step 5 汇总的数据来源。
 
 ### Step 5: 通知 + 汇总
 打印一张表：每个平台 status（posted+URL / queued(outbox) / failed / skipped）。
