@@ -7,14 +7,9 @@ HIST_SH="$(dirname "${BASH_SOURCE[0]}")/history.sh"
 ART_DIR="$(cfg '.articles_dir')"
 [[ -d "$ART_DIR" ]] || { echo "articles_dir not found: $ART_DIR" >&2; exit 1; }
 
-# folders named like 20YY-MM-DD-slug, newest date first
-while IFS= read -r dir; do
-  [[ -d "$dir" ]] || continue
-  slug="$(basename "$dir")"
-  if ! bash "$HIST_SH" fully-done "$slug"; then
-    echo "$dir"; exit 0
-  fi
-done < <(find "$ART_DIR" -maxdepth 1 -type d -name '20*-*' | sort -r)
-
-# none left -> rest day
-exit 0
+# Only the single newest folder (by name, ISO date prefix sorts correctly).
+NEWEST="$(find "$ART_DIR" -maxdepth 1 -type d -name '20*-*' | sort -r | head -1)"
+[[ -n "$NEWEST" ]] || exit 0          # no articles at all -> rest
+slug="$(basename "$NEWEST")"
+if bash "$HIST_SH" fully-done "$slug"; then exit 0; fi   # newest already syndicated -> rest day
+echo "$NEWEST"
