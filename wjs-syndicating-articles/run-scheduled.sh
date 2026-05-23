@@ -1,0 +1,20 @@
+#!/bin/zsh
+# Unattended daily run of wjs-syndicating-articles, launched by launchd at 10:00.
+# Deliberately does NOT source ~/.zshrc (interactive config can hang under launchd).
+# We set an explicit PATH covering: claude (~/.local/bin), xurl/jq (homebrew + /usr/bin).
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+
+WORKDIR="/Users/jianshuo/code/wechat-publish"
+LOG="$HOME/.claude/skills/wjs-syndicating-articles/state/scheduled.log"
+mkdir -p "$(dirname "$LOG")"
+
+cd "$WORKDIR" || { echo "$(date '+%F %T') cd failed" >> "$LOG"; exit 1; }
+
+echo "===== $(date '+%F %T') scheduled run start =====" >> "$LOG"
+
+PROMPT='运行 wjs-syndicating-articles skill 的定时流程：选最新一篇还没分发过的公众号文章，抽一套核心文案（保留王建硕语气），自动发到有 API 的平台（X 等），给手动平台备好 outbox，最后汇总结果。这是无人值守运行：不要问任何问题，不要开浏览器，发完即可。'
+
+# Headless, non-interactive. --dangerously-skip-permissions because no human is
+# present to approve the Bash/post steps; this is the user's own local automation.
+claude -p "$PROMPT" --dangerously-skip-permissions >> "$LOG" 2>&1
+echo "===== $(date '+%F %T') scheduled run end (exit $?) =====" >> "$LOG"
