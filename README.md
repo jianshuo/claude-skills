@@ -96,6 +96,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-reframing-video`](./wjs-reframing-video/) | 横竖屏互转 + 说话人跟踪裁切 | 16:9 ↔ 9:16，4:3 ↔ 3:4 |
 | [`wjs-uploading-video`](./wjs-uploading-video/) | 批量上传 YouTube | MP4 (+ `UPLOAD_META.md`) → YouTube |
 | [`wjs-tweeting-from-articles`](./wjs-tweeting-from-articles/) | 从最近公众号文章萃取每日 X tweet，人工挑角度后真发 | article.md → X / Twitter |
+| [`wjs-syndicating-articles`](./wjs-syndicating-articles/) | 把最新公众号文章一键扇出到 X / Bluesky / Threads / LinkedIn + 手动平台待发件箱 | article.md → API 平台直发 + outbox |
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
@@ -244,6 +245,20 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 可选 `--dry-run` 预览不发；支持 `/schedule daily` 自动触发
 
 > 触发词：`今天的 tweet` / `从文章里发推` / `每天发一个 tweet` / `/wjs-tweeting-from-articles`
+
+### [`wjs-syndicating-articles`](./wjs-syndicating-articles/)
+
+把最新一篇还没分发过的公众号文章，**一套文案扇出到所有平台**。
+
+- **API 平台真发**（有凭证时自动 POST）：X / Bluesky / Threads / LinkedIn
+- **手动平台生成待发件箱**（`outbox/` 目录，复制粘贴即可）：Facebook / 小红书 / 即刻 / 知乎
+- **幂等去重**：`state/history.jsonl` 记录每篇文章在每个平台的发布状态，重复跑只补发没成功的
+- **凭证降级**：某平台 API 凭证缺失或过期 → 自动降为 outbox，不中断其他平台
+- 可加 `--dry-run` 预览；`--mark <slug> <platform>` 手动标记已发；`--open` 交互模式开浏览器
+
+> 触发词：`分发文章到各平台` / `同步到社交平台` / `今天的文章发各平台` / `/wjs-syndicating-articles`
+
+---
 
 ### [`wjs-promoting-skills`](./wjs-promoting-skills/)
 

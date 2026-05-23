@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-24]
+
+### Changed
+
+- **`wjs-syndicating-articles`** — iterative workflow refinements (38 commits across the day, consolidating scripts and edge-case handling).
+- **`wjs-publishing-wechat`** — minor wording fix in the formatting section.
+- **`wjs-tweeting-from-articles`** — updated `pick-next-article.sh`; cleared stale state files (`today-angle.txt`, `today-tweet.txt`).
+- **`wjs-converting-text-to-video`** — updated `daily-upload-batch.sh` upload script.
+
+## [2026-05-23]
+
+### Added
+
+- **`wjs-syndicating-articles`** — new skill: syndicates the latest unpublished 微信公众号 article across social platforms in one run. Extracts a ≤120-character core copy, then posts to API platforms (X / Bluesky / Threads / LinkedIn) when credentials exist and writes a copy-paste outbox (`outbox/<date>-<slug>/`) for manual platforms (Facebook / 小红书 / 即刻 / 知乎). Fully idempotent via `state/history.jsonl` — re-runs only retry platforms that didn't succeed. Missing or expired credentials auto-degrade to the outbox without failing other platforms. Supports `--dry-run`, `--open`, and `--mark <slug> <platform>`. Triggers: `分发文章到各平台` / `同步到社交平台` / `今天的文章发各平台` / `/wjs-syndicating-articles`.
+- **README** — added `wjs-syndicating-articles` to the skills summary table and as a new subsection in section 6 "分发 / 上传 / 推广".
+
+### Changed
+
+- **`wjs-publishing-wechat`** — added two new formatting sections: (1) **加粗加红**: every article must include 2–4 `**bold**` spans, rendered as red by `upload-draft.sh`; placed on key conclusions / core concept words, never on whole paragraphs or transitions; (2) **命令/代码**: standalone commands must be formatted as full code blocks (淡底色 HTML `<section>` or fenced `bash` block), not inline code.
+
 ## [2026-05-21]
 
 ### Removed
