@@ -14,7 +14,8 @@ echo "===== $(date '+%F %T') scheduled run start =====" >> "$LOG"
 
 PROMPT='运行 wjs-syndicating-articles skill 的定时流程：选最新一篇还没分发过的公众号文章，抽一套核心文案（保留王建硕语气），自动发到有 API 的平台（X 等），给手动平台备好 outbox，最后汇总结果。这是无人值守运行：不要问任何问题，不要开浏览器，发完即可。'
 
-# Headless, non-interactive. --dangerously-skip-permissions because no human is
-# present to approve the Bash/post steps; this is the user's own local automation.
-claude -p "$PROMPT" --dangerously-skip-permissions >> "$LOG" 2>&1
+# Headless, non-interactive. Scoped guardrail: only these tools are pre-authorized
+# (no blanket --dangerously-skip-permissions). Anything outside this list is blocked
+# and logged rather than silently executed. This is the user's own local automation.
+claude -p "$PROMPT" --allowedTools "Bash,Read,Write,Edit,Skill" >> "$LOG" 2>&1
 echo "===== $(date '+%F %T') scheduled run end (exit $?) =====" >> "$LOG"
