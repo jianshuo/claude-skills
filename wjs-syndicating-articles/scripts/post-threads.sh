@@ -26,5 +26,6 @@ pub="$(curl -fsS -X POST "$API/$UID_/threads_publish" \
   --data-urlencode "access_token=$TOKEN")" || { echo "threads publish failed: $pub" >&2; exit 1; }
 PID="$(echo "$pub" | jq -r .id)"
 [[ -n "$PID" && "$PID" != "null" ]] || { echo "threads no post id: $pub" >&2; exit 1; }
-echo "url=https://www.threads.net/@$(secret '.threads.username' || echo me)/post/$PID"
+U="$(secret '.threads.username')"
+echo "url=https://www.threads.net/@${U:-me}/post/$PID"
 echo "post_id=$PID"
