@@ -29,7 +29,8 @@ for P in $(enabled_platforms); do
     bash "$SCRIPTS/post-$P.sh" "$POST_TXT" --dry-run >/dev/null 2>&1 || true; echo "  $P: DRY"; continue
   fi
 
-  OUT="$(bash "$SCRIPTS/post-$P.sh" "$POST_TXT" 2>/dev/null)"; CODE=$? || true
+  OUT=""; CODE=0
+  OUT="$(bash "$SCRIPTS/post-$P.sh" "$POST_TXT" 2>/dev/null)" && CODE=0 || CODE=$?
   case $CODE in
     0) URL="$(echo "$OUT" | sed -n 's/^url=//p')"; PID="$(echo "$OUT" | sed -n 's/^post_id=//p')"
        bash "$SCRIPTS/history.sh" record "$SLUG" "$P" posted "$URL" "$PID"; echo "  $P: posted $URL" ;;
