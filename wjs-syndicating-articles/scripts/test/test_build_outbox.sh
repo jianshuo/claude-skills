@@ -25,4 +25,12 @@ OUTBOX2="$TMP/outbox/2026-05-16-demo2"
 bash "$SKILL/scripts/build-outbox.sh" "$ARTF2" "$POST_TXT" "$OUTBOX2"
 assert_file "$OUTBOX2/image.png" "falls back to illustration.png"
 
+# regression: post.txt already inside the outbox dir (src == dst) must not abort
+ARTF3="$TMP/2026-05-17-demo3"; mkdir -p "$ARTF3"; printf 'P' > "$ARTF3/cover.png"
+OUTBOX3="$TMP/outbox/2026-05-17-demo3"; mkdir -p "$OUTBOX3"
+printf '原地文案。' > "$OUTBOX3/post.txt"
+bash "$SKILL/scripts/build-outbox.sh" "$ARTF3" "$OUTBOX3/post.txt" "$OUTBOX3"
+assert_file "$OUTBOX3/OPEN.md" "OPEN.md written even when post.txt is already in outbox"
+assert_contains "$(cat "$OUTBOX3/post.txt")" "原地文案" "in-place post.txt preserved"
+
 finish test_build_outbox
