@@ -42,6 +42,32 @@ description: Use when the user wants to write or publish a 微信公众号 (WeCh
 
 写完一定要数字数。`python3 -c "import re; t=open('article.md').read(); t=re.sub(r'\!\[.*?\]\(.*?\)','',t); print(len(re.findall(r'[一-鿿]',t)) + len(re.findall(r'[A-Za-z]+',t)))"`。超过 1200 就回去再砍一轮。
 
+## 加粗加红（每篇必须有，不是可选）
+
+`upload-draft.sh` 会把 markdown 的 `**...**` 渲染成**红色粗体**（`<strong style="color:#ff0000">`）——这是作者刻意要的视觉重点。**每篇文章正文都必须有合理的加粗，一处都没有 = 没写完。**
+
+规则：
+- **2–4 处**，打在点睛句、关键结论、核心概念词上。不通篇加，也绝不能零处
+- 优先加在：每节的「一句话结论」、全文情绪落点、读者最该记住的那句
+- 不要加在：整段、过渡句、罗列项。命令 / 代码用 `` `code` `` 样式或独立代码块，不用加粗
+- 标题（H2/H3）已有字号字重，不再 `**` 包
+
+这条**不属于**「不要提升作者表达」的禁区——红色加粗是作者既定风格的一部分，等同于错字和分段，必须补齐。
+
+写完检查：通篇 `**` 成对数在 2–4 之间，且每一处都值得变红。
+
+## 命令 / 代码：独立成段，用代码样式
+
+正文里出现安装 / 运行命令时，**默认拉出来单独成段**，不要混在叙述句里写成 inline `` `npm install` ``（除非只是顺带提一句命令名）。两种写法：
+
+- **首选**——和作者既有风格一致的淡底色代码块（raw HTML 块，整段一行，不能有内部空行）：
+  ```
+  <section style="background:#f6f8fa;border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:Menlo,Consolas,monospace;font-size:14px;line-height:1.8;color:#24292e;">npm install -g xxx<br>xxx run</section>
+  ```
+- 或 fenced ```` ```bash ```` 块，`upload-draft.sh` 会转成独立的 `<p><code>…</code></p>`。
+
+判断：单独展示一行 / 几行命令 → 用上面的块；只在句中提一下命令名 → inline `` `code` `` 即可。
+
 ## 介绍 skill 的文章：末尾必须附 5 平台安装方法
 
 **触发条件**：这篇文章是在介绍 / 推荐 / 解释某个具体的 Claude Code skill（不管是王建硕自己写的，还是别人的）。
