@@ -109,7 +109,7 @@ hermes skills install https://github.com/jianshuo/claude-skills/blob/main/<SKILL
 
 - 用户提供一段思路、草稿、或语音转写文字
 - 用户说"帮我写一篇公众号"、"润色一下"、"准备发布"
-- 用户在公众号写作工作目录下工作（默认 `~/wechat-publish/` 或 `~/code/wechat-publish/`，可由用户配置）
+- 用户在公众号写作工作目录下工作（默认 `~/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/`，可由用户配置）
 
 ## Workflow
 
