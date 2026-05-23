@@ -1,0 +1,16 @@
+{
+  "articles_dir": "/Users/jianshuo/code/wechat-publish/articles",
+  "author": "王建硕",
+  "article_url_base": "https://mp.weixin.qq.com/",
+  "schedule": "10:00",
+  "platforms": {
+    "x":           { "mode": "api" },
+    "bluesky":     { "mode": "api" },
+    "threads":     { "mode": "api" },
+    "linkedin":    { "mode": "api" },
+    "facebook":    { "mode": "outbox", "web_compose": "https://www.facebook.com/" },
+    "xiaohongshu": { "mode": "outbox", "web_compose": "https://creator.xiaohongshu.com/publish/publish" },
+    "jike":        { "mode": "outbox", "web_compose": "https://web.okjike.com/" },
+    "zhihu":       { "mode": "outbox", "web_compose": "https://zhuanlan.zhihu.com/write" }
+  }
+}
