@@ -208,6 +208,7 @@ rm _audio.wav
 
 ## Downstream
 
+- **`/wjs-mining-articles`** — turn a 王建硕 monologue/对谈 SRT into multiple 微信公众号 articles.
 - **`/wjs-translating-subtitles`** — translate the source SRT to a target language with punctuation-bounded re-segmentation.
 - **`/wjs-dubbing-video`** — only if the user wants voice dub *in the source language* (rare); usually you translate first.
 - **`/wjs-burning-subtitles`** — only if the user wants the source-language SRT burned onto the source video (e.g., Spanish video with Spanish subs for hearing-impaired).
