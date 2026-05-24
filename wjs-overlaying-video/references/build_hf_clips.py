@@ -81,8 +81,7 @@ CTA_SCENE_DUR = 3.24
 # Production pipeline version — bump on every change to the recipe.
 # Stamped bottom-right on the end card of every clip.
 SKILL_NAME = "wjs-overlaying-video"
-VERSION = "v1.7"   # v1.7: 字幕风格04 — 思源黑体特粗(剪映风)白字黑边+黄色关键词,字号按字数自适应(短句~120px)
-# v1.5: 面部安全布局 — 所有文字/图形避开人脸(主体侧),图形走对侧/底部
+VERSION = "v1.5"   # v1.5: 面部安全布局 — 所有文字/图形避开人脸(主体侧),图形走对侧/底部
 # v1.4: 生动化 — 数据三幕动画+关键词弹跳+开场hook+人物条+Ken Burns+暗角呼吸
 # v1.3: 字幕风格03 关键词高亮(金块)+思源宋体 Noto Serif SC
 # v1.2: 火山流式ASR字幕 + zscale(npl=203 hable) HLG→SDR 调色
