@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Build hyperframes projects for all clips from segments.json.
 
-Each clip gets: AI cover (full-frame) + body video + outlined HTML/CSS
+Each clip gets: cover (full-frame — use a FRAME FROM THE VIDEO itself, e.g. the
+clip's first frame, NOT a brand-new AI painting) + body video + outlined HTML/CSS
 captions + chapter chip + optional illustrations + end-card CTA.
 Renders to ONE final encode per clip (no decode/encode cascade).
 
