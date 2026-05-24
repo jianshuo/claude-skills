@@ -299,7 +299,7 @@ slot.
   <div class="cta-line-1">关注王建硕</div>
   <div class="arrow">↓</div>
   <div class="cta-line-2">微信公众号 · 视频号</div>
-  <div class="cta-foot">AI 炼金术 · 持续更新</div>
+  <div class="cta-foot">聊 AI · 聊创业 · 持续更新</div>
 </div>
 ```
 
