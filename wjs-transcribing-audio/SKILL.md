@@ -190,6 +190,24 @@ rm _audio.wav
 
 `medium` is the practical floor for Chinese accuracy; `small` is OK only for clean studio English. Whisper writes `.` milliseconds; the file is still valid SRT. If you regenerate the SRT, always emit `,` ms.
 
+## AI 润色 pass — fix obvious 错别字 (final step, always run for Chinese)
+
+Even Volcano ASR ships clear homophone errors that read wrong on screen — observed: 「总数」→「意数」, 「需求」→「虚求」, 「程序员」→「成员」. Raw ASR text is the floor, not the ceiling. After the SRT is assembled, do **one Claude polish pass** over the full SRT to correct obvious errors using sentence context.
+
+This pass is done **in-session by Claude reading the SRT** — no external API call. Rewrite the `.srt` in place (or to `<stem>.polished.srt`).
+
+**Hard rules — this is correction, not editing:**
+
+- ✅ Fix only *clear* homophone / 错别字 errors where the intended word is unambiguous from context (意数→总数, 虚求→需求).
+- ⛔ **NEVER change timestamps, cue numbering, or cue boundaries.** Edit the text line *inside* each existing cue only. Same number of cues in and out.
+- ⛔ **Do not paraphrase, polish grammar, condense, or "improve" phrasing.** Keep the spoken register, fillers the assembler kept, repetitions, and sentence shape. The SRT must still match the audio word-for-word except for the corrected characters.
+- ⛔ **Do not silently "correct" 专有名词 / 人名 / 品牌 / 产品名.** Homophone-guessing names is how you ship 「黄一孟」→「黄一梦」. Leave them as-is and surface a list to the user for confirmation (see pitfall below). Never invent a name you didn't hear.
+- ✅ Keep the gold-block-worthy numbers exactly as spoken (50万, 1,000万) — don't normalize digits/units.
+
+**Workflow:** read the SRT → produce the corrected SRT with identical timing → report a short diff list of what changed (`意数→总数 @ 00:01:11`) so the user can spot-check. If a correction is uncertain, leave the original and add it to the proper-noun/uncertain list rather than guessing.
+
+Run this **before** segmentation/clip-building so every downstream clip inherits the clean text.
+
 ## Output
 
 - **File name**: `<source-stem>.srt` (no language suffix — this is the *source* language SRT, the master).
