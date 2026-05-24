@@ -107,10 +107,14 @@ jq -nc --arg date "$(date +%F)" --arg slug "$SLUG" --arg angle "$ANGLE" \
 ~/.claude/skills/wjs-tweeting-from-articles/
 ├── SKILL.md
 ├── scripts/
-│   └── pick-next-article.sh    # 找最近一篇未推的 article folder
+│   ├── pick-next-article.sh        # 找最近一篇未推的 article folder
+│   └── post-next-from-queue.sh     # 批量排期模式:每次发队列里下一条,自节流
 └── state/
     ├── .gitignore              # 屏蔽 history.jsonl 不被推到 public repo
-    └── history.jsonl           # 每条 tweet 一行 JSON record
+    ├── history.jsonl           # 每条 tweet 一行 JSON record
+    ├── queue-<DATE>.tsv        # 批量模式:待发队列 idx/slug/text
+    ├── queue-cursor            # 批量模式:下一条序号
+    └── last-post-epoch         # 批量模式:上次发出的时间戳(节流用)
 ```
 
 ## 批量排期模式（多篇一次排，每 N 小时一条）
