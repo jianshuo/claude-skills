@@ -83,6 +83,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | Skill | 一句话作用 | 输入 → 输出 |
 |---|---|---|
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
+| [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -117,6 +118,16 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 通过 `md2wechat` 上传草稿到公众号后台。
 
 > 触发词：`写一篇微信文章` / `公众号` / `润色` / `题图` / `发公众号`
+
+### [`wjs-mining-articles`](./wjs-mining-articles/)
+
+把一个视频的 SRT（独白或对谈）挖掘成多篇独立的微信公众号文章。
+
+- **口语是矿，文章是提炼的金属。** 识别字幕里 2–6 个各自独立、各自值得成文的话题，每个话题长成一篇 800–1000 字的公众号文章。
+- **支持独白和对谈两种源。** 对谈模式先让用户确认哪一方是王建硕，只提炼他的观点；自动跳过调麦克风、寒暄、离席等非正片段落。
+- 生成每篇文章的微信草稿（对接 `wjs-publishing-wechat` 上传），可选再排期发到 X。
+
+> 触发词：`把这个视频写成文章` / `从字幕里挖文章` / `这个 SRT 能写几篇` / `把对谈写成文章` / `/wjs-mining-articles <srt>`
 
 ---
 

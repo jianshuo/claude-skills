@@ -8,11 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2026-05-24]
 
+### Added
+
+- **`wjs-mining-articles`** — new skill: turns a video's SRT into multiple standalone 微信公众号 articles. Reads the transcript, identifies 2–6 distinct topics (or more for long interviews), polishes each into an 800–1000-word article in 王建硕's natural written voice, creates WeChat drafts, and optionally queues posts to X. Supports both monologue and interview/dialogue sources — for interviews Claude asks the user to confirm which speaker is 王建硕 before extracting his perspective, and automatically skips mic-check chatter, setup banter, and off-camera breaks. Triggers: `把这个视频写成文章` / `从字幕里挖文章` / `这个 SRT 能写几篇` / `把对谈写成文章` / `/wjs-mining-articles <srt>`.
+- **README** — added `wjs-mining-articles` to the skills summary table and as a new subsection in section 1 "公众号 / WeChat".
+
 ### Changed
 
 - **`wjs-syndicating-articles`** — iterative workflow refinements (38 commits across the day, consolidating scripts and edge-case handling).
-- **`wjs-publishing-wechat`** — minor wording fix in the formatting section.
-- **`wjs-tweeting-from-articles`** — updated `pick-next-article.sh`; cleared stale state files (`today-angle.txt`, `today-tweet.txt`).
+- **`wjs-publishing-wechat`** — minor wording fix in the formatting section; further iterative content updates.
+- **`wjs-tweeting-from-articles`** — updated `pick-next-article.sh`; cleared stale state files (`today-angle.txt`, `today-tweet.txt`); further iterative updates.
+- **`wjs-transcribing-audio`** — multiple iterative updates to transcription routing and SRT assembly.
+- **`wjs-overlaying-video`** — extensive iterative updates to the HyperFrames-based post-production workflow and overlay logic.
+- **`wjs-segmenting-video`** — workflow refinements to the topic-boundary detection and clip-extraction pipeline.
+- **`wjs-reframing-video`** — workflow refinements to the speaker-tracking crop logic.
 - **`wjs-converting-text-to-video`** — updated `daily-upload-batch.sh` upload script.
 
 ## [2026-05-23]
