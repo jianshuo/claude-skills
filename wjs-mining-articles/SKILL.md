@@ -67,7 +67,15 @@ scripts/parse-srt.sh <srt-path> --raw    # 一行一 cue: HH:MM:SS<TAB>text(需�
 - **不加 AI 连接词**(首先/其次/综上所述/值得注意的是)、不加 emoji、不把口语强行八股化
 - 默认不写 `## 后注`,正文最后落点收束
 
+写完每篇 article.md 后,**跑一遍盘古之白**(中英文之间补空格,机械活、不靠自己记):
+
+```bash
+python3 ~/.claude/skills/wjs-publishing-wechat/scripts/pangu.py <folder>/article.md   # 幂等
+```
+
 **对谈成文额外规则(归属红线)**:文章是**王建硕第一人称**,主体是他的观点和思考。对方(如汤维维)的话**只作引子/背景**——「有人问我…」「聊到 X 的时候」——绝不把对方的独到观点写成王建硕自己的主张。对方提了一个王建硕没正面回应的点,就别写进这篇。`source.srt.md` 里要注明本篇基于对谈、对方是谁、引用了对方哪几句作引子。
+
+**选中很多篇时(长对谈)用并行 agent 批量写**:每个 agent 载入 `wangjianshuo-perspective`、拿到对应的逐字稿行区间和上面全部硬约束,各写 2–3 篇,落 `article.md`+`meta.json`+`source.srt.md`。一条 1–2 小时的对谈一次写 10+ 篇,串行太慢,并行又快又互不干扰(每篇独立)。**派 agent 前先把全片通读一遍、把归属和事实更正都定下来**(比如这次「黄一孟」被 ASR 听成「黄一梦」,得在派单时就写明),否则每个 agent 各猜一遍容易出错。
 
 每篇落到一个**新文件夹** `<workspace>/articles/YYYY-MM-DD-{slug}/`,写两个文件:
 
