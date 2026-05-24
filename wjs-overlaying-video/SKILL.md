@@ -111,11 +111,27 @@ viewer sees full-frame, so mismatch is visible. Re-roll one with
 `gpt-image-2-skill`. If `~/.codex/auth.json` is missing, the script
 errors. See `gpt-image-2-skill` for setup.
 
-### 2. `caption` — outlined HTML/CSS captions synced to SRT
+### 2. `caption` — 关键词高亮 captions (字幕风格 03) synced to SRT
 
-White text with thick black stroke, no bubble background, vertically
-centered in a fixed zone (so 1-line vs 2-line captions don't make the
-visual center jump up and down).
+**Chosen style for 王建硕 (user-approved): 字幕风格 03「关键词高亮」+ 思源宋体 Noto Serif SC.**
+Serif white text with a black stroke, and punchy QUANTITATIVE keywords
+(倍数 / 大数量级 / 百分比) wrapped in a small **gold gradient block**.
+Captions are vertically centered in a fixed zone (so 1-line vs 2-line
+cues don't make the visual center jump up and down).
+
+There were 4 candidate styles (描边白字 / 质感底条 / 关键词高亮 / 逐字点亮);
+the user picked **03 关键词高亮** with **serif sc** font. Use that. The
+plain-stroke style (`-webkit-text-stroke: 5px #000`, no gold block, sans
+font) is the fallback if a clip has no quantitative keywords to highlight.
+
+**Font — load Noto Serif SC from Google Fonts in `<head>`** (the
+HyperFrames compiler fetches & inlines requested Google font families
+automatically; verify the render log says `Fetched … Noto Serif SC`):
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&display=swap" rel="stylesheet">
+```
 
 **HTML:**
 ```html
@@ -123,7 +139,7 @@ visual center jump up and down).
      data-duration="{body_dur}" data-track-index="4"></div>
 ```
 
-**CSS (vertical 1080×1920):**
+**CSS (vertical 1080×1920) — 字幕风格 03:**
 ```css
 #caption {
   position: absolute; left: 0; right: 0; bottom: 240px;
@@ -131,15 +147,32 @@ visual center jump up and down).
 }
 #caption .bubble {
   position: absolute; top: 50%; left: 50%;
-  display: inline-block;
-  padding: 0 24px;
-  font-size: 56px; line-height: 1.18; font-weight: 900;
-  color: #ffffff; max-width: 1020px; text-align: center;
-  -webkit-text-stroke: 5px #000;
+  display: inline-block; padding: 0 24px;
+  font-family: "Noto Serif SC", "Songti SC", "STSong", serif;
+  font-size: 52px; line-height: 1.32; font-weight: 700;
+  color: #fff; max-width: 980px; text-align: center;
+  -webkit-text-stroke: 2.5px rgba(0,0,0,0.9);
   paint-order: stroke fill;
-  text-shadow: 0 6px 12px rgba(0,0,0,0.55), 0 0 4px rgba(0,0,0,0.6);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.9);
   letter-spacing: 0.01em;
 }
+#caption .bubble .hot {        /* gold keyword block */
+  color: #1a1206; -webkit-text-stroke: 0;
+  background: linear-gradient(180deg, #f3c877, #c79655);
+  padding: 2px 12px; border-radius: 9px; margin: 0 3px;
+  box-shadow: 0 3px 10px -3px rgba(232,176,99,0.6);
+}
+```
+
+**Keyword auto-selection (sparse on purpose).** Wrap only genuinely
+emphatic magnitudes so the gold block stays meaningful, not noisy.
+Deliberately EXCLUDE generic 个/年 ("一个", "20年"). Handles thousands-commas
+("1,000万"). `build_hf_clips.py` does this in `mark_keywords()`:
+```python
+_NUM = r"[0-9０-９,，一二三四五六七八九十百千两零几]+"
+_HOT_RE = re.compile(rf"(?:翻了?{_NUM}?[倍番]|{_NUM}\s*(?:[倍番]|万亿?|亿|％|%))")
+# → highlights: 一倍 五六倍 十倍 10倍 50万 800万 1,000万 50% 翻一倍
+# render the cue with b.innerHTML = g.html (HTML-escape the non-keyword text)
 ```
 
 **JS (one bubble per cue + GSAP fade in/out, all centered at container midpoint):**
