@@ -114,7 +114,9 @@ upload-draft.sh   <folder>   # 上传到微信后台建草稿(只建草稿,不�
 |---|---|
 | `wjs-publishing-wechat` 三个脚本 | 题图/解释图/建草稿,直接调,不重写 |
 | `wjs-publishing-wechat` 字数/加粗/无 AI 味规则 | 单一事实源,本 skill 不另立标准 |
+| `wjs-publishing-wechat/scripts/pangu.py` | 盘古之白,每篇 article.md 写完跑一遍 |
 | `wangjianshuo-perspective` | 写正文时载入,保语气 |
+| `wjs-tweeting-from-articles` | (可选)Step 5 把文章排期发到 X |
 
 **本 skill 唯一新增代码**:`scripts/parse-srt.sh`。
 
