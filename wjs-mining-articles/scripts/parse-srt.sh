@@ -71,21 +71,21 @@ if mode == "--raw":
         print(f"{hms(s)}\t{t}")
     sys.exit(0)
 
-# Merge into sentence-bounded chunks with a leading start timestamp.
+# Merge into sentence-bounded chunks, each tagged with its [start–end] range.
 END = "。！？!?.…"
-chunks, buf, buf_start, prev_end = [], "", None, None
+chunks, buf, buf_start, buf_end, prev_end = [], "", None, None, None
 for s, e, t in cues:
     if buf and prev_end is not None and (s - prev_end) >= gap:
-        chunks.append((buf_start, buf)); buf, buf_start = "", None
+        chunks.append((buf_start, buf_end, buf)); buf, buf_start = "", None
     if buf_start is None:
         buf_start = s
     buf += t
-    prev_end = e
+    buf_end = prev_end = e
     if t and t[-1] in END:
-        chunks.append((buf_start, buf)); buf, buf_start = "", None
+        chunks.append((buf_start, buf_end, buf)); buf, buf_start = "", None
 if buf:
-    chunks.append((buf_start, buf))
+    chunks.append((buf_start, buf_end, buf))
 
-for s, t in chunks:
-    print(f"[{hms(s)}] {t}")
+for s, e, t in chunks:
+    print(f"[{hms(s)}–{hms(e)}] {t}")
 PY
