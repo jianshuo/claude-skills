@@ -367,7 +367,25 @@ HTML_TEMPLATE = '''\
         captionEl.appendChild(b);
         return b;
       });
-      gsap.set(bubbles, { xPercent: -50, yPercent: -50 });
+      gsap.set(bubbles, { xPercent: -50 });   // bottom-anchored; grows upward
+      // 字幕风格04: per-cue font-size from CHAR COUNT (deterministic, no DOM
+      // measurement -> identical across parallel render workers regardless of
+      // web-font load timing). Short cue -> full 120px (参考片观感); long cue
+      // shrinks to stay within ~2 lines.
+      (function sizeCaptions(){
+        const CAP = 120, MIN = 56, MAXW = 980;
+        bubbles.forEach((el, i) => {
+          const txt = (groups[i].text || "").replace(/\s+/g, "");
+          const n = Math.max([...txt].length, 1);
+          let fs;
+          if (n * CAP <= MAXW) { fs = CAP; }                 // fits one line
+          else {
+            const perLine = Math.ceil(n / 2);                // aim <= 2 lines
+            fs = Math.min(CAP, Math.max(MIN, Math.floor(MAXW / perLine)));
+          }
+          el.style.fontSize = fs + "px";
+        });
+      })();
       groups.forEach((g, i) => {
         const el = bubbles[i];
         tl.fromTo(el,
