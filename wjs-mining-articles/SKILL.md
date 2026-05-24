@@ -5,7 +5,7 @@ description: Use when the user has a video's SRT subtitle file — a 王建硕 m
 
 # wjs-mining-articles
 
-一个独白视频的 SRT → 一桌选题 → 用户勾几个 → 每个长成一篇可发布的公众号文章,自动建好微信草稿。
+一个视频的 SRT(独白或对谈)→ 一桌选题 → 用户勾几个(长对谈可「全要」)→ 每个长成一篇可发布的公众号文章,自动建好微信草稿,可选再排期发到 X。
 
 ## Core Principle
 
