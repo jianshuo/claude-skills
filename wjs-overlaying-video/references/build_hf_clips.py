@@ -12,13 +12,14 @@ This is a TEMPLATE — copy it into your project and edit:
   - illustrations.py (sibling file: per-clip illustration definitions)
 
 Sources read from `<ROOT>/output/`:
-  clip_NN_slug.mp4           (or _v2.mp4 if re-cropped)
+  clip_NN_slug.mp4           (HLG/HDR source; tone-mapped to SDR via tonemap_to_sdr)
   cover_NN_slug.png
-  clip_NN_slug.zh-CN.burn.srt
+  clip_NN_slug.asr.srt       (火山 streaming-ASR word-timed SRT)
 
 Targets written under `<ROOT>/hf_clip_NN/1080/`.
 
-Run with `python3 build_hf_clips.py` after editing the constants below.
+Run with `python3 build_hf_clips.py [seg_id ...]` — pass segment ids to build
+a subset (e.g. `python3 build_hf_clips.py 1`); no args builds all.
 """
 import json, os, re, shutil, subprocess, sys
 from pathlib import Path
@@ -28,36 +29,119 @@ sys.path.insert(0, str(Path(__file__).parent))
 from illustrations import render_for_clip, ILLUSTRATIONS
 
 # ── EDIT THESE PER PROJECT ──────────────────────────────────────
-ROOT = Path("/PATH/TO/YOUR/PROJECT")
-SEG = json.load(open(ROOT / "segments.json"))
+ROOT = Path(__file__).resolve().parent
+SEG_FILE = os.environ.get("SEG_FILE", "segments.json")
+SEG = json.load(open(ROOT / SEG_FILE))
 
 # Per-clip sync offset (seconds). Use 0.0 when clips were accurate-cut
-# with `segment.py --reencode` (the recommended default). If you used
-# stream-copy and have keyframe-snap drift, fill in
-# `requested_start − nearest_preceding_keyframe` per clip here.
-SYNC = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0}
+# with `segment.py --reencode` (the recommended default).
+SYNC = {i: 0.0 for i in range(1, 11)}
 
 # Per-clip chapter chip text — short label for the top-left chip
 CHAPTER = {
-    1: "第一段 · ...",
-    2: "第二段 · ...",
-    3: "第三段 · ...",
-    4: "第四段 · ...",
-    5: "第五段 · ...",
+    1: "第一段 · 效率暴涨",
+    2: "第二段 · 需求与失业",
+    3: "第三段 · 编程的终结",
+    4: "第四段 · 差距变大",
+    5: "第五段 · 一句 hello",
+    6: "第六段 · 最好的职业",
+    7: "第七段 · 学校禁 AI",
+    8: "第八段 · 代码成艺术",
+    9: "第九段 · 真有用吗",
+    10: "第十段 · 驾驭层",
 }
 
-# Source video suffix. After re-crop, you typically have clip_NN_slug_v2.mp4
-# (the cropped vertical version). Use "" to point at clip_NN_slug.mp4.
-CLIP_SUFFIX = "_v2"
+# Opener hook lines shown big over the cover (0→cover end). Each entry is a
+# list of HTML lines; wrap the punch word in <span class="hk">…</span> (gold).
+HOOK = {
+    1: ["效率翻了一倍", "需求却涨了<span class=\"hk\">十倍</span>"],
+    2: ["AI 来了", "谁会先<span class=\"hk\">失业</span>？"],
+    3: ["编程", "真的要<span class=\"hk\">终结</span>了吗？"],
+    4: ["AI 时代", "差距只会<span class=\"hk\">越来越大</span>"],
+    5: ["一句 <span class=\"hk\">hello</span>", "就能改变什么？"],
+    6: ["现在", "什么才是<span class=\"hk\">最好的职业</span>？"],
+    7: ["学校为什么", "要<span class=\"hk\">禁用 AI</span>？"],
+    8: ["写代码", "正在变成一门<span class=\"hk\">艺术</span>"],
+    9: ["AI", "真的<span class=\"hk\">有用</span>吗？"],
+    10: ["未来属于", "会<span class=\"hk\">驾驭 AI</span>的人"],
+}
+
+# Lower-third nameplate (王建硕 slides in when the speaker first appears).
+NAMEPLATE_NAME = "王建硕"
+NAMEPLATE_ROLE = "聊 AI · 聊创业"
+
+# Source video suffix. Our cropped vertical clips ARE the canonical
+# clip_NN_slug.mp4 (horizontal originals archived), so no suffix.
+CLIP_SUFFIX = ""
 # ────────────────────────────────────────────────────────────────
 
 COVER_SCENE_DUR = 1.5
 CTA_SCENE_DUR = 3.24
 
+# Production pipeline version — bump on every change to the recipe.
+# Stamped bottom-right on the end card of every clip.
+SKILL_NAME = "wjs-overlaying-video"
+VERSION = "v1.5"   # v1.5: 面部安全布局 — 所有文字/图形避开人脸(主体侧),图形走对侧/底部
+# v1.4: 生动化 — 数据三幕动画+关键词弹跳+开场hook+人物条+Ken Burns+暗角呼吸
+# v1.3: 字幕风格03 关键词高亮(金块)+思源宋体 Noto Serif SC
+# v1.2: 火山流式ASR字幕 + zscale(npl=203 hable) HLG→SDR 调色
+
+# zscale-capable ffmpeg (system Homebrew build lacks zscale/tonemap).
+TM_FFMPEG = os.environ.get("TM_FFMPEG",
+    str(Path.home() / "Library/Python/3.9/lib/python/site-packages/"
+        "imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1"))
+# Locked HLG(BT2020/arib-std-b67)->SDR(BT709) tone map. npl=203 matches the
+# macOS-native (qlmanage) reference brightness; hable keeps contrast.
+TONEMAP_VF = ("zscale=tin=arib-std-b67:min=bt2020nc:pin=bt2020:t=linear:npl=203,"
+              "format=gbrpf32le,tonemap=tonemap=hable:desat=0,"
+              "zscale=t=bt709:m=bt709:p=bt709:r=tv,format=yuv420p,fps=30")
+
+
+def tonemap_to_sdr(src, dst):
+    """HLG->SDR 30fps h264 with the locked recipe. Skips if dst is up-to-date."""
+    if dst.exists() and dst.stat().st_mtime >= src.stat().st_mtime:
+        print(f"  [color] reuse {dst.name} (up-to-date)")
+        return
+    print(f"  [color] tonemap {src.name} -> {dst.name} (zscale npl=203 hable)")
+    subprocess.run([TM_FFMPEG, "-y", "-hide_banner", "-loglevel", "error",
+                    "-i", str(src), "-vf", TONEMAP_VF,
+                    "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                    "-pix_fmt", "yuv420p",
+                    # dense keyframes (1/frame-second) so the HyperFrames renderer
+                    # can seek every frame without freezing on sparse GOPs.
+                    "-g", "30", "-keyint_min", "30", "-movflags", "+faststart",
+                    "-color_primaries", "bt709", "-color_trc", "bt709",
+                    "-colorspace", "bt709",
+                    "-c:a", "aac", "-b:a", "192k", str(dst)], check=True)
+
 
 def parse_ts(t):
     h, m, s = t.split(":")
     return int(h)*3600 + int(m)*60 + float(s)
+
+
+# Keyword highlight (字幕风格 03): wrap punchy QUANTITATIVE phrases in a gold
+# block. Auto-selected, sparse on purpose — most cues stay clean serif white.
+# Only the genuinely emphatic magnitudes: 倍数(一倍/十倍/翻倍), 大数量级(50万/
+# 一亿/1,000万), 百分比(50%). Deliberately EXCLUDES generic 个/年 ("一个","20年")
+# so the gold block stays meaningful, not noisy. Handles thousands-commas.
+_NUM = r"[0-9０-９,，一二三四五六七八九十百千两零几]+"
+_HOT_RE = re.compile(
+    rf"(?:翻了?{_NUM}?[倍番]|{_NUM}\s*(?:[倍番]|万亿?|亿|％|%))"
+)
+
+
+def mark_keywords(text):
+    """Return HTML with quantitative keywords wrapped in <span class='hot'>.
+    HTML-escapes the rest so cue text never injects markup."""
+    import html as _html
+    out, last = [], 0
+    for m in _HOT_RE.finditer(text):
+        out.append(_html.escape(text[last:m.start()]))
+        out.append(f'<span class="hot">{_html.escape(m.group())}</span>')
+        last = m.end()
+    out.append(_html.escape(text[last:]))
+    return "".join(out)
 
 
 def srt_to_cues(srt_path, cover_offset, sync_offset):
@@ -78,6 +162,7 @@ def srt_to_cues(srt_path, cover_offset, sync_offset):
             continue
         cues.append({
             "text": text,
+            "html": mark_keywords(text),
             "start": to_s(m[0]) + cover_offset + sync_offset,
             "end":   to_s(m[1]) + cover_offset + sync_offset,
         })
@@ -90,6 +175,9 @@ HTML_TEMPLATE = '''\
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1080, height=1920" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -107,23 +195,29 @@ HTML_TEMPLATE = '''\
       #cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
       #video { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
       #caption {
-        position: absolute; left: 0; right: 0; bottom: 240px;
-        height: 240px; z-index: 10; overflow: visible;
+        position: absolute; left: 0; right: 0; bottom: 200px;
+        height: 420px; z-index: 10; overflow: visible;
       }
+      /* 字幕风格 04 · 思源黑体特粗(剪映风) 白字黑边 + 黄色关键词
+         尺寸由 JS 按字数自适应(短句 120px,长句缩到不超 2 行),复刻参考片观感。*/
       #caption .bubble {
-        position: absolute; top: 50%; left: 50%;
+        position: absolute; bottom: 0; left: 50%;
         display: inline-block;
-        padding: 0 24px;
-        font-size: 56px;
-        line-height: 1.18;
+        padding: 0 14px;
+        font-family: "Noto Sans SC", "PingFang SC", "Heiti SC", sans-serif;
+        font-size: 120px;              /* cap; JS sets per-cue size */
+        line-height: 1.22;
         font-weight: 900;
         color: #ffffff;
-        max-width: 1020px;
+        max-width: 1000px;
         text-align: center;
-        -webkit-text-stroke: 5px #000;
+        -webkit-text-stroke: 7px rgba(0,0,0,0.92);
         paint-order: stroke fill;
-        text-shadow: 0 6px 12px rgba(0,0,0,0.55), 0 0 4px rgba(0,0,0,0.6);
-        letter-spacing: 0.01em;
+        text-shadow: 0 6px 12px rgba(0,0,0,0.5);
+        letter-spacing: 0.005em;
+      }
+      #caption .bubble .hot {
+        color: #f0cc00;                /* 黄色关键词(实心字,非金底块) */
       }
       #chapter {
         position: absolute; top: 80px; left: 60px; z-index: 9;
@@ -147,6 +241,49 @@ HTML_TEMPLATE = '''\
       #cta .cta-line-1 { font-size: 88px; font-weight: 800; color: #f4f4f5; letter-spacing: -0.01em; }
       #cta .cta-line-2 { font-size: 44px; font-weight: 600; color: #e8b063; letter-spacing: 0.04em; }
       #cta .cta-foot { font-size: 26px; color: #6b6b71; letter-spacing: 0.12em; margin-top: 24px; }
+      #ver-stamp {
+        position: absolute; right: 28px; bottom: 28px; z-index: 30;
+        font-size: 20px; color: rgba(150,150,156,0.55);
+        letter-spacing: 0.06em; font-weight: 500;
+      }
+      /* breathing vignette — darkens edges (legibility) + slow pulse for life */
+      #vignette {
+        position: absolute; inset: 0; z-index: 4; pointer-events: none;
+        background: radial-gradient(ellipse 82% 72% at 50% 42%,
+          transparent 52%, rgba(0,0,0,0.5) 100%);
+      }
+      /* opener hook — big serif line over the cover */
+      #hook {
+        position: absolute; inset: 0; z-index: 14;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        padding: 0 90px; text-align: center; gap: 8px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.6) 100%);
+      }
+      #hook .hook-line {
+        font-family: "Noto Serif SC", "Songti SC", serif;
+        font-size: 92px; font-weight: 900; line-height: 1.22; color: #ffffff;
+        -webkit-text-stroke: 2px rgba(0,0,0,0.55); paint-order: stroke fill;
+        text-shadow: 0 6px 28px rgba(0,0,0,0.85);
+      }
+      #hook .hook-line .hk {
+        color: #1a1206; -webkit-text-stroke: 0;
+        background: linear-gradient(180deg, #f3c877, #c79655);
+        padding: 2px 16px; border-radius: 12px;
+        box-shadow: 0 6px 20px -4px rgba(232,176,99,0.7);
+      }
+      /* lower-third nameplate */
+      #nameplate {
+        position: absolute; left: 60px; bottom: 150px; z-index: 13;
+      }
+      #nameplate .np-bar {
+        display: flex; flex-direction: column; gap: 4px;
+        padding: 16px 30px 16px 22px;
+        background: linear-gradient(135deg, rgba(31,17,8,0.94), rgba(12,13,16,0.92));
+        border-left: 6px solid #e8b063; border-radius: 4px 16px 16px 4px;
+        box-shadow: 0 12px 36px rgba(0,0,0,0.55);
+      }
+      #nameplate .np-name { font-size: 48px; font-weight: 800; color: #ffffff; letter-spacing: 0.02em; line-height: 1.1; }
+      #nameplate .np-role { font-size: 27px; font-weight: 600; color: #e8b063; letter-spacing: 0.06em; }
       @@ILL_CSS@@
     </style>
   </head>
@@ -157,7 +294,11 @@ HTML_TEMPLATE = '''\
         <img src="cover.png" alt="" data-layout-allow-overflow />
       </div>
       <video id="video" class="clip" data-start="@@BODY_START@@" data-duration="@@BODY_DUR@@" data-track-index="0"
-             src="clip.mp4" muted playsinline></video>
+             src="clip.mp4" muted playsinline data-layout-allow-overflow></video>
+      <div id="vignette" class="clip" data-start="0" data-duration="@@CTA_START@@" data-track-index="8"></div>
+      <div id="hook" class="clip" data-start="0" data-duration="@@COVER_DUR@@" data-track-index="9">
+@@HOOK_LINES@@
+      </div>
       <audio id="audio" class="clip" data-start="@@BODY_START@@" data-duration="@@BODY_DUR@@" data-track-index="2"
              src="clip.mp4" data-volume="1"></audio>
       <div id="chapter" class="clip" data-start="@@BODY_START@@" data-duration="@@BODY_DUR@@" data-track-index="3">
@@ -165,6 +306,12 @@ HTML_TEMPLATE = '''\
         <span class="text">@@CHAPTER_TEXT@@</span>
       </div>
       <div id="caption" class="clip" data-start="@@BODY_START@@" data-duration="@@BODY_DUR@@" data-track-index="4"></div>
+      <div id="nameplate" class="clip" data-start="@@BODY_START@@" data-duration="@@NAMEPLATE_DUR@@" data-track-index="10">
+        <div class="np-bar">
+          <span class="np-name">@@NP_NAME@@</span>
+          <span class="np-role">@@NP_ROLE@@</span>
+        </div>
+      </div>
 
 @@ILL_HTML@@
 
@@ -172,8 +319,9 @@ HTML_TEMPLATE = '''\
         <div class="cta-line-1">关注王建硕</div>
         <div class="arrow">↓</div>
         <div class="cta-line-2">微信公众号 · 视频号</div>
-        <div class="cta-foot">AI 炼金术 · 持续更新</div>
+        <div class="cta-foot">聊 AI · 聊创业 · 持续更新</div>
       </div>
+      <div id="ver-stamp" class="clip" data-start="@@CTA_START@@" data-duration="@@CTA_DUR@@" data-track-index="2">@@VER_STAMP@@</div>
     </div>
     <script id="captions-data" type="application/json">
 @@CAPTIONS_JSON@@
@@ -181,6 +329,29 @@ HTML_TEMPLATE = '''\
     <script>
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
+
+      // ── opener hook (over cover) ──
+      tl.fromTo("#hook .hook-line",
+        { y: 46, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: "expo.out", stagger: 0.12 }, 0.08);
+      tl.to("#hook", { opacity: 0, duration: 0.3, ease: "power2.in" }, @@HOOK_OUT@@);
+      tl.set("#hook", { opacity: 0 }, @@BODY_START@@);  // hard kill: seek past fade stays hidden
+
+      // ── breathing vignette (slow opacity pulse, seek-safe finite repeat) ──
+      tl.fromTo("#vignette",
+        { opacity: 0.82 },
+        { opacity: 1.0, duration: 4.5, yoyo: true, repeat: 40, ease: "sine.inOut" }, 0);
+
+      // ── Ken Burns: slow constant push-in on the body video ──
+      tl.fromTo("#video",
+        { scale: 1.0 },
+        { scale: 1.07, duration: @@BODY_DUR@@, ease: "none" }, @@BODY_START@@);
+
+      // ── nameplate lower-third (slides in when speaker appears) ──
+      tl.fromTo("#nameplate",
+        { x: -380, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.55, ease: "expo.out" }, @@NAMEPLATE_IN@@);
+      tl.to("#nameplate", { x: -380, opacity: 0, duration: 0.45, ease: "power2.in" }, @@NAMEPLATE_OUT@@);
 
       tl.from("#chapter", { x: -40, opacity: 0, duration: 0.5, ease: "expo.out" }, @@CHAPTER_IN@@);
       tl.to("#chapter", { opacity: 0, duration: 0.4, ease: "power2.in" }, @@CHAPTER_OUT@@);
@@ -191,7 +362,7 @@ HTML_TEMPLATE = '''\
         const b = document.createElement("span");
         b.className = "bubble";
         b.id = "cap-" + i;
-        b.textContent = g.text;
+        b.innerHTML = g.html || g.text;
         b.style.opacity = "0";
         captionEl.appendChild(b);
         return b;
@@ -204,6 +375,18 @@ HTML_TEMPLATE = '''\
           { opacity: 1, y: 0, duration: 0.18, ease: "power2.out" },
           g.start
         );
+        // kinetic keyword: gold blocks stamp in (scale+rotate spring) as the
+        // bubble lands. Start exactly at g.start so there is no pre-pop frame
+        // where the keyword shows full-size before snapping small (seek-safe).
+        const hots = el.querySelectorAll(".hot");
+        if (hots.length) {
+          gsap.set(hots, { transformOrigin: "center center" });
+          tl.fromTo(hots,
+            { scale: 0.35, rotation: -7 },
+            { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(3)", stagger: 0.08 },
+            g.start
+          );
+        }
         const exitStart = Math.max(g.start + 0.18, g.end - 0.12);
         tl.to(el, { opacity: 0, duration: 0.12, ease: "power2.in" }, exitStart);
         tl.set(el, { opacity: 0 }, g.end);
@@ -241,24 +424,35 @@ def build_clip(seg):
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     work.mkdir(exist_ok=True)
 
-    # Copy media + cover. CLIP_SUFFIX="_v2" if re-cropped vertical, else "".
-    shutil.copy(ROOT / "output" / f"clip_{sid:02d}_{slug}{CLIP_SUFFIX}.mp4", work / "clip.mp4")
+    # Color-convert HLG source -> SDR clip.mp4 (locked zscale recipe), copy cover.
+    tonemap_to_sdr(ROOT / "output" / f"clip_{sid:02d}_{slug}{CLIP_SUFFIX}.mp4",
+                   work / "clip.mp4")
     shutil.copy(ROOT / "output" / f"cover_{sid:02d}_{slug}.png", work / "cover.png")
 
-    # Build captions json
+    # Build captions json from the 火山 streaming-ASR SRT (word-timed).
     cues = srt_to_cues(
-        ROOT / "output" / f"clip_{sid:02d}_{slug}.zh-CN.burn.srt",
+        ROOT / "output" / f"clip_{sid:02d}_{slug}.asr.srt",
         cover_offset=COVER_SCENE_DUR,
         sync_offset=SYNC[sid],
     )
     captions_json = json.dumps(cues, ensure_ascii=False, indent=2)
 
     ill_css, ill_html, ill_gsap = render_for_clip(sid, body_offset=body_start)
+    hook_lines = "\n".join(
+        f'        <div class="hook-line">{ln}</div>' for ln in HOOK.get(sid, [])
+    )
     subs = {
         "@@TOTAL_DUR@@": f"{total_dur:.2f}",
         "@@COVER_DUR@@": f"{COVER_SCENE_DUR + 0.1:.2f}",
         "@@BODY_START@@": f"{body_start:.2f}",
         "@@BODY_DUR@@": f"{body_dur:.2f}",
+        "@@HOOK_LINES@@": hook_lines,
+        "@@HOOK_OUT@@": f"{COVER_SCENE_DUR - 0.3:.2f}",
+        "@@NAMEPLATE_DUR@@": f"{min(5.0, body_dur):.2f}",
+        "@@NAMEPLATE_IN@@": f"{body_start + 0.3:.2f}",
+        "@@NAMEPLATE_OUT@@": f"{body_start + 4.0:.2f}",
+        "@@NP_NAME@@": NAMEPLATE_NAME,
+        "@@NP_ROLE@@": NAMEPLATE_ROLE,
         "@@CHAPTER_TEXT@@": CHAPTER[sid],
         "@@CHAPTER_IN@@": f"{body_start + 0.4:.2f}",
         "@@CHAPTER_OUT@@": f"{body_start + 4.0:.2f}",
@@ -268,6 +462,7 @@ def build_clip(seg):
         "@@CTA_IN_2@@": f"{cta_start + 0.34:.2f}",
         "@@CTA_IN_3@@": f"{cta_start + 0.54:.2f}",
         "@@CTA_IN_4@@": f"{cta_start + 0.84:.2f}",
+        "@@VER_STAMP@@": f"{SKILL_NAME} {VERSION}",
         "@@CAPTIONS_JSON@@": captions_json,
         "@@ILL_CSS@@": ill_css,
         "@@ILL_HTML@@": ill_html,
@@ -280,5 +475,8 @@ def build_clip(seg):
     print(f"[clip {sid}] built {work} ({body_dur:.1f}s body, {len(cues)} cues, sync +{SYNC[sid]:.2f}s)")
 
 
+_only = {int(a) for a in sys.argv[1:] if a.isdigit()}
 for s in SEG["segments"]:
+    if _only and s["id"] not in _only:
+        continue
     build_clip(s)
