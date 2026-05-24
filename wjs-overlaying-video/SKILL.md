@@ -156,6 +156,25 @@ viewer sees full-frame, so mismatch is visible. Re-roll one with
 `gpt-image-2-skill`. If `~/.codex/auth.json` is missing, the script
 errors. See `gpt-image-2-skill` for setup.
 
+**Reference frame must match the OUTPUT orientation.** make_cover reads
+`output/frame_NN_slug.jpg` as the photographic background it keeps. For
+a vertical clip that came from a horizontal two-person source, the
+default `frame_NN` is the horizontal two-shot — feeding that to a
+`1024x1792` cover crams both people into portrait awkwardly. Replace
+`frame_NN_slug.jpg` with a **vertical single-speaker frame** pulled from
+the already-cropped body clip first
+(`ffmpeg -ss <t> -i clip_vert.mp4 -frames:v 1 frame_NN_slug.jpg`), then
+run make_cover. The cover then matches the body framing.
+
+**Baked-title cover ⇒ drop the animated `#hook` opener.** make_cover
+stamps the segment *title* into the cover image (white fill + heavy black
+stroke, placed clear of faces). That cover IS the title card. Do NOT also
+run the animated `#hook` opener over it (overlay type below) — you'd
+double-stamp the title. Pick one: either a make_cover baked-title cover
+(then leave `HOOK` empty), or a plain video-frame cover + animated hook.
+The house default the user approved is the **make_cover baked-title
+cover** (a clean video frame with the title burned in, no AI painting).
+
 ### 2. `caption` — 关键词高亮 captions (字幕风格 03) synced to SRT
 
 **Chosen style for 王建硕 (user-approved): 字幕风格 03「关键词高亮」+ 思源宋体 Noto Serif SC.**
