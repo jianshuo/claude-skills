@@ -18,10 +18,12 @@ description: Use when the user has a video's SRT subtitle file — a 王建硕 m
 - 用户给一个 SRT 路径,说「把这个视频写成文章」/「从字幕里挖文章」/「能写几篇」
 - 用户跑 `/wjs-mining-articles <srt-path>`
 
+支持两种源:**独白/讲解**(你一个人说)和**对谈/访谈**(你和别人对话)。两种走不同的识别路径(见 Step 1),但成文标准一致。
+
 ## When NOT to use
 
 - **没有 SRT,只有视频/音频**——先用 `wjs-transcribing-audio` 出 SRT,再回来
-- **多人对谈/嘉宾访谈**——本 skill v1 只服务独白。对谈要从多人对话抽观点再用第一人称重写,暂不支持
+- **对谈里王建硕根本没怎么说话**(纯主持、对方独角戏)——挖不出他第一人称的文章,别硬写
 - **已有一篇成稿要发**——直接用 `wjs-publishing-wechat`
 
 ## Workflow
