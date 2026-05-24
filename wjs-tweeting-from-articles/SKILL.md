@@ -113,6 +113,26 @@ jq -nc --arg date "$(date +%F)" --arg slug "$SLUG" --arg angle "$ANGLE" \
     └── history.jsonl           # 每条 tweet 一行 JSON record
 ```
 
+## 批量排期模式（多篇一次排，每 N 小时一条）
+
+一次要发**很多篇**（典型来源：`wjs-mining-articles` 从一场长对谈挖出十几篇文章），用这个模式——一次连发会被 X 判刷屏，所以排成队列、按固定间隔自动发。
+
+**为什么不用 `AskUserQuestion` 逐篇选 angle**：十几篇 × A/B/C 太多。每篇直接抠**一条**最 quotable 的(≤120 字、王建硕语气、无 hashtag/emoji/链接、带盘古之白)，列全文给用户一次过目 + 定节奏，确认后排期。
+
+**机制**（`scripts/post-next-from-queue.sh` + 每小时 cron，脚本自己节流）：
+
+```bash
+# 1. 队列文件:state/queue-<DATE>.tsv,每行  idx<TAB>slug<TAB>text
+# 2. cursor: state/queue-cursor(下一条序号);last-post-epoch(上次发的时间)
+# 3. 立刻发第一条(FORCE 绕过节流,顺便验证 xurl 能发):
+FORCE=1 bash scripts/post-next-from-queue.sh
+# 4. 装 cron:每小时跑,脚本只在距上次 ≥ MIN_GAP(默认 4h)才真发:
+( crontab -l 2>/dev/null | grep -v post-next-from-queue.sh; \
+  echo "5 * * * * /bin/bash $HOME/.claude/skills/wjs-tweeting-from-articles/scripts/post-next-from-queue.sh >/dev/null 2>&1" ) | crontab -
+```
+
+脚本要点:单机锁(防并发)、发失败不推进 cursor(下小时重试)、发成功才写 `history.jsonl` 并推进、**队列发完自动删掉自己的 cron 行**。改间隔用 `MIN_GAP`(秒)。
+
 ## Daily 自动化（可选）
 
 要每天自动跑：
