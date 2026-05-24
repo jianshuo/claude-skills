@@ -28,12 +28,14 @@ description: Use when the user has a video's SRT subtitle file (a 王建硕 mono
 
 ### Step 1 · 读 SRT,识别选题
 
+脚本在本 skill 目录下,从 skill 根目录跑(或写全 `~/.claude/skills/wjs-mining-articles/scripts/parse-srt.sh`):
+
 ```bash
-scripts/parse-srt.sh <srt-path>          # 句子合并、每块前缀 [HH:MM:SS]
+scripts/parse-srt.sh <srt-path>          # 句子合并、每块前缀 [起–止] 时间区间
 scripts/parse-srt.sh <srt-path> --raw    # 一行一 cue: HH:MM:SS<TAB>text(需要细看时)
 ```
 
-读输出全文,识别出 **N 个独立的、各自值得成文**的话题(典型 2–6 个)。`[HH:MM:SS]` 时间戳用来给每个选题标 SRT 时间段。
+读输出全文,识别出 **N 个独立的、各自值得成文**的话题(典型 2–6 个)。每块前的 `[HH:MM:SS–HH:MM:SS]` 区间直接拿来标选题的 SRT 时间段——一个话题跨多块时,取第一块的起到最后一块的止。**没有「几个才算独立」的死规则**:看作者是否真的换了一个能独立成文的点(他常会自己数「第一个/第二个」,顺着他的切分走)。
 
 ### Step 2 · 出选题清单,等用户勾选 ⟵ 唯一的人工闸
 
