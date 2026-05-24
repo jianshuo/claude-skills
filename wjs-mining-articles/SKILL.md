@@ -1,6 +1,6 @@
 ---
 name: wjs-mining-articles
-description: Use when the user has a video's SRT subtitle file (a 王建硕 monologue / 讲解, not a multi-person interview) and wants to mine it into multiple standalone 微信公众号 articles — one article per distinct topic the video covers. Triggers — "把这个视频写成文章", "从字幕里挖文章", "这个 SRT 能写几篇", "/wjs-mining-articles <srt>".
+description: Use when the user has a video's SRT subtitle file — a 王建硕 monologue / 讲解, OR a 对谈 / 访谈 where 王建硕 is one of the speakers — and wants to mine it into multiple standalone 微信公众号 articles, one article per distinct topic. Triggers — "把这个视频写成文章", "从字幕里挖文章", "这个 SRT 能写几篇", "把对谈写成文章", "/wjs-mining-articles <srt>".
 ---
 
 # wjs-mining-articles
