@@ -56,6 +56,18 @@ description: Use when the user wants to write or publish a 微信公众号 (WeCh
 
 写完检查：通篇 `**` 成对数在 2–4 之间，且每一处都值得变红。
 
+## 盘古之白（中英之间留空格，每篇必须）
+
+作者要求**中文里所有英文单词/词组前后都留一个空格**——「用 AI 写 skill」「Claude Code 是车」「发过去 13 万字」。纯数字与中文之间不强制（「13万字」可不加），要留白的是**英文**。
+
+机械活，**别靠手敲、靠脚本**（幂等，自动跳过代码块 / 链接 / URL）：
+
+```bash
+python3 ~/.claude/skills/wjs-publishing-wechat/scripts/pangu.py <folder>/article.md
+```
+
+`upload-draft.sh` 在建草稿时会先对 `article.md` 跑一遍 `pangu.py`，所以走完整发布流程的文章自动带盘古之白；但如果只是手写片段 / 单独生成 tweet，记得自己跑一下。
+
 ## 命令 / 代码：独立成段，用代码样式
 
 正文里出现安装 / 运行命令时，**默认拉出来单独成段**，不要混在叙述句里写成 inline `` `npm install` ``（除非只是顺带提一句命令名）。两种写法：
