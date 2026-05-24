@@ -393,7 +393,7 @@ HTML_TEMPLATE = '''\
           { opacity: 1, y: 0, duration: 0.18, ease: "power2.out" },
           g.start
         );
-        // kinetic keyword: gold blocks stamp in (scale+rotate spring) as the
+        // kinetic keyword: yellow keywords stamp in (scale+rotate spring) as the
         // bubble lands. Start exactly at g.start so there is no pre-pop frame
         // where the keyword shows full-size before snapping small (seek-safe).
         const hots = el.querySelectorAll(".hot");
