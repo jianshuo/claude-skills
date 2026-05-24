@@ -185,7 +185,8 @@ const groups = JSON.parse(document.getElementById("captions-data").textContent);
 const bubbles = groups.map((g, i) => {
   const b = document.createElement("span");
   b.className = "bubble"; b.id = "cap-" + i;
-  b.textContent = g.text; b.style.opacity = "0";
+  b.innerHTML = g.html || g.text;   // g.html has <span class="hot"> keyword blocks
+  b.style.opacity = "0";
   captionEl.appendChild(b);
   return b;
 });
