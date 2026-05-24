@@ -196,27 +196,34 @@ HTML_TEMPLATE = '''\
       #cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
       #video { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
       #caption {
-        position: absolute; left: 0; right: 0; bottom: 200px;
-        height: 420px; z-index: 10; overflow: visible;
+        position: absolute; left: 0; right: 0; bottom: 240px;
+        height: 240px; z-index: 10; overflow: visible;
       }
-      /* 字幕风格 04 · 思源黑体特粗(剪映风) 白字黑边 + 黄色关键词
-         尺寸由 JS 按字数自适应(短句 120px,长句缩到不超 2 行),复刻参考片观感。*/
+      /* 字幕风格 03 关键词高亮 · 思源宋体 Noto Serif SC */
       #caption .bubble {
-        position: absolute; bottom: 0; left: 40px; right: 40px;
-        padding: 0 14px;
-        font-family: "Noto Sans SC", "PingFang SC", "Heiti SC", sans-serif;
-        font-size: 120px;              /* cap; JS sets per-cue size */
-        line-height: 1.22;
-        font-weight: 900;
+        position: absolute; top: 50%; left: 50%;
+        display: inline-block;
+        padding: 0 24px;
+        font-family: "Noto Serif SC", "Songti SC", "STSong", serif;
+        font-size: 52px;
+        line-height: 1.32;
+        font-weight: 700;
         color: #ffffff;
+        max-width: 980px;
         text-align: center;
-        -webkit-text-stroke: 7px rgba(0,0,0,0.92);
+        -webkit-text-stroke: 2.5px rgba(0,0,0,0.9);
         paint-order: stroke fill;
-        text-shadow: 0 6px 12px rgba(0,0,0,0.5);
-        letter-spacing: 0.005em;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.9);
+        letter-spacing: 0.01em;
       }
       #caption .bubble .hot {
-        color: #f0cc00;                /* 黄色关键词(实心字,非金底块) */
+        color: #1a1206;
+        -webkit-text-stroke: 0;
+        background: linear-gradient(180deg, #f3c877, #c79655);
+        padding: 2px 12px;
+        border-radius: 9px;
+        margin: 0 3px;
+        box-shadow: 0 3px 10px -3px rgba(232,176,99,0.6);
       }
       #chapter {
         position: absolute; top: 80px; left: 60px; z-index: 9;
