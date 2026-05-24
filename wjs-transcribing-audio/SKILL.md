@@ -219,3 +219,4 @@ rm _audio.wav
 - **Treating `segments[]` text as authoritative.** It's inconsistently punctuated across chunks of the same file — never trust it without the assembler.
 - **Letting Whisper auto-detect language.** Pin every time.
 - **Forgetting to add chunk offsets.** Each API response has timestamps relative to the chunk's t=0; merging without adding the chunk's absolute start makes every cue past the first chunk wrong by minutes.
+- **专有名词 / 人名几乎一定有错。** ASR 把人名、品牌、产品名听成同音别字是常态(实测「黄一孟」→「黄一梦」)。SRT 里的专有名词都先当存疑,下游成文/发布前(尤其 `/wjs-mining-articles`)一定跟用户核对,别照着错字写出去。
