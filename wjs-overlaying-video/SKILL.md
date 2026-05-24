@@ -63,6 +63,51 @@ clip.mp4 + clip.zh-CN.burn.srt   (from /wjs-segmenting-video hand-off)
 
 A 2-minute vertical 1080×1920 composition renders in ~2-3 min on M-series Mac.
 
+## Color: tone-map HLG/HDR source → SDR BEFORE compositing
+
+iPhone / modern-camera footage is often **HLG HDR (bt2020 / arib-std-b67)**.
+If you feed that straight into HyperFrames it either renders washed-out
+("发白") or, with a naive `--sdr`, too dark ("发黑"); and the HDR x265
+path can hang the renderer. **Pre-convert the body clip to SDR (bt709)
+30fps h264 with a locked zscale tone-map**, then composite the SDR clip.
+
+The verified recipe (`tonemap_to_sdr()` in `build_hf_clips.py`). `npl=203`
+matches macOS-native (qlmanage) reference brightness; `hable` keeps
+contrast; this preserves the ORIGINAL look (natural skin / foliage / brick),
+no wash, no darkening:
+```python
+# zscale-capable ffmpeg — Homebrew's lacks zscale/tonemap.
+# imageio-ffmpeg ships one: .../imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1
+TONEMAP_VF = ("zscale=tin=arib-std-b67:min=bt2020nc:pin=bt2020:t=linear:npl=203,"
+              "format=gbrpf32le,tonemap=tonemap=hable:desat=0,"
+              "zscale=t=bt709:m=bt709:p=bt709:r=tv,format=yuv420p,fps=30")
+# encode: libx264 -crf 18 -color_primaries/-trc/-colorspace bt709
+#         -g 30 -keyint_min 30 -movflags +faststart   ← see gotcha below
+```
+
+**Dense-keyframe gotcha.** HyperFrames seeks the body video frame-by-frame.
+A clip with sparse keyframes (long GOP) makes it freeze on stale frames —
+the render log warns `Video "video" has sparse keyframes`. Always encode the
+SDR clip with `-g 30 -keyint_min 30` (one keyframe per frame-second) so every
+seek lands clean.
+
+**Verify** the render log says `No HDR sources detected — rendering SDR`.
+If it says HDR detected, your clip wasn't tone-mapped — fix that first.
+
+## Version stamp (every output)
+
+Stamp `「skill名字 + 版本号」` bottom-right, shown during the END/CTA scene,
+so every render is traceable to the pipeline version that made it. Bump
+`VERSION` in `build_hf_clips.py` on each pipeline change.
+```css
+#ver-stamp { position: absolute; right: 28px; bottom: 28px; z-index: 30;
+  font-size: 20px; color: rgba(150,150,156,0.55); letter-spacing: 0.06em; }
+```
+```html
+<div id="ver-stamp" class="clip" data-start="{cta_start}" data-duration="{cta_dur}"
+     data-track-index="2">wjs-overlaying-video v1.3</div>
+```
+
 ## Standard overlay types (the 6 building blocks)
 
 Every clip's final composition is built from some combination of these.
