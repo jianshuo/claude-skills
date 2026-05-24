@@ -221,10 +221,17 @@ done
 
 **Sanity check**: face-on-screen detection rate in the crop log can
 read low (e.g. `face#0: 9.6s on screen (9%)`) when speakers sit
-further than ~2 m from the camera. That number being low is OK — the
+further than ~2 m from the camera. A *low* number is OK — the
 active-speaker hysteresis + fallback-to-largest-face still produces
-well-centered crops. **Verify visually** by extracting a midpoint
-frame and confirming the speaker is centered before committing.
+well-centered crops. But **`0 face observations` / `(no face /
+fallback): 100%` is NOT OK**: with zero landmarks the crop falls back
+to the frame *center*, which on a two-person interview set lands on the
+background between the speakers (fireplace / plant), not on anyone. When
+you see that, abandon the MediaPipe crop and do a **deterministic fixed
+crop** on the speaker's known screen position — see
+`/wjs-reframing-video` → "Zero-detection fallback". **Always verify
+visually** by extracting a midpoint frame and confirming the speaker is
+centered before committing.
 
 ## Step 4 — Slice per-clip SRTs
 
