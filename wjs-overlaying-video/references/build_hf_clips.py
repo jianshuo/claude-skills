@@ -366,7 +366,7 @@ HTML_TEMPLATE = '''\
         captionEl.appendChild(b);
         return b;
       });
-      gsap.set(bubbles, { xPercent: -50 });   // bottom-anchored; grows upward
+      gsap.set(bubbles, { transformOrigin: "center bottom" });   // full-width centered, grows upward
       // 字幕风格04: per-cue font-size from CHAR COUNT (deterministic, no DOM
       // measurement -> identical across parallel render workers regardless of
       // web-font load timing). Short cue -> full 120px (参考片观感); long cue
