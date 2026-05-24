@@ -202,15 +202,13 @@ HTML_TEMPLATE = '''\
       /* 字幕风格 04 · 思源黑体特粗(剪映风) 白字黑边 + 黄色关键词
          尺寸由 JS 按字数自适应(短句 120px,长句缩到不超 2 行),复刻参考片观感。*/
       #caption .bubble {
-        position: absolute; bottom: 0; left: 50%;
-        display: inline-block;
+        position: absolute; bottom: 0; left: 40px; right: 40px;
         padding: 0 14px;
         font-family: "Noto Sans SC", "PingFang SC", "Heiti SC", sans-serif;
         font-size: 120px;              /* cap; JS sets per-cue size */
         line-height: 1.22;
         font-weight: 900;
         color: #ffffff;
-        max-width: 1000px;
         text-align: center;
         -webkit-text-stroke: 7px rgba(0,0,0,0.92);
         paint-order: stroke fill;
