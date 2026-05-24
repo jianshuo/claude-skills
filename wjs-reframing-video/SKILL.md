@@ -130,3 +130,42 @@ Override the final size via `--output-size 1080x1920` if you want native crop di
 - **Wide-angle / fish-eye lenses** — landmarks miss faces near edges. Pre-correct distortion with `ffmpeg lenscorrection` first.
 - **Upscaling artifacts** — `608×1080 → 1080×1920` is a 1.78× upscale and visible on sharp text. Render at native crop dims (`--output-size 608x1080`) and let the platform upscale, if you have overlays you want to keep sharp.
 - **Output bitrate > platform limit** — default is `--bitrate 12M`. WeChat Channels (视频号) caps at 10 Mbps; pass `--bitrate 8M` for that target.
+
+## Zero-detection fallback: deterministic fixed crop
+
+The "may not detect" range limit isn't just a warning — when MediaPipe
+detects **0 faces** (far/static two-person interview, ~2 m+ from a wide
+lens), the crop log reads `0 face observations across N sampled frames`
+and the script **center-crops the frame** — which on an interview set
+lands the window on the *background between the two people* (a fireplace,
+a plant, a logo), not on anyone. The output looks broken and no
+`--mar-var-threshold` tuning helps, because there are no landmarks at all.
+
+**Always read the crop log before trusting the output.** If it says
+`0 face track(s) identified` / `(no face / fallback): … 100%`, abandon
+the MediaPipe crop and do a **deterministic fixed crop** instead. The
+camera on these shoots is static and the speakers sit at fixed screen
+positions, so a hand-set X offset is rock-solid:
+
+```bash
+# 1920×1080 → 9:16 ⇒ crop window 608×1080. X = speaker's screen position:
+#   left speaker  → x=0      right speaker → x=1920-608=1312      centred → x=656
+# Do crop + (HLG→SDR tone-map) + 30fps + dense keyframes in ONE pass so the
+# body clip is final and HyperFrames can seek it (see /wjs-overlaying-video).
+ZF=~/Library/Python/3.9/.../imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1
+"$ZF" -i clip.mp4 -vf \
+  "crop=608:1080:0:0,zscale=t=linear:npl=203,format=gbrpf32le,\
+tonemap=tonemap=hable:desat=0,\
+zscale=w=1080:h=1920:t=bt709:m=bt709:p=bt709:r=tv,format=yuv420p,fps=30" \
+  -c:v libx264 -crf 19 -preset medium -g 30 -keyint_min 30 \
+  -color_primaries bt709 -color_trc bt709 -colorspace bt709 \
+  -c:a aac -b:a 192k -movflags +faststart clip_vert.mp4
+```
+
+Verify by extracting a frame (`-ss 20 -frames:v 1`) and confirming the
+speaker is centred before committing. For clips that genuinely need to
+follow *both* speakers (heavy back-and-forth), hand-label per-speaker
+windows from the transcript and concatenate fixed crops; for a clip that
+is one person's monologue, a single fixed X is enough. Drop the
+tonemap filters if the source is already SDR (bt709) — applying the HLG
+recipe to SDR mis-colors it.
