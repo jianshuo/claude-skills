@@ -202,9 +202,12 @@ groups.forEach((g, i) => {
 });
 ```
 
-**Source SRT — slice + shift before inlining.** Take
-`clip_NN.zh-CN.burn.srt` from segmentation, parse each cue, add the
-cover duration to every `start`/`end`, and inline as JSON in a
+**Source SRT — slice + shift before inlining.** Prefer the
+**word-timed `.asr.srt`** built by `/wjs-transcribing-audio` (火山 streaming
+ASR → `build_srt_from_asr.py`) — its per-word timing means cues sit
+exactly on the spoken audio with no drift. Parse each cue, add the cover
+duration to every `start`/`end`, run `mark_keywords()` to produce the
+`html` field, and inline as JSON in a
 `<script id="captions-data" type="application/json">` block.
 
 **MarginV / position notes:**
