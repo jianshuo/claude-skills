@@ -9,7 +9,8 @@
 # Behavior:
 #   - Joins consecutive cues until a sentence-ending mark (。！？!?.…) or a
 #     time gap >= GAP_SEC (default 8s, signals a topic/scene jump).
-#   - Prefixes each merged chunk with its [HH:MM:SS] start time.
+#   - Prefixes each merged chunk with its [HH:MM:SS–HH:MM:SS] start–end range,
+#     so a topic's full SRT span (including the last topic's end) is readable.
 #   - Collapses the dangling filler that survives ASR ("呃" leading a cue) is
 #     left in place — cleanup is the writer's judgment call, not the parser's.
 #   - Handles both ',' and '.' millisecond separators.
