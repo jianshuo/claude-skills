@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""火山引擎 大模型流式语音识别 (bigmodel streaming ASR) — the WORKING Chinese path.
+
+Pushes raw PCM audio bytes over a WebSocket. NO public URL, NO server-side
+file download, NO 飞书妙记. Returns utterances with per-word ms timestamps,
+which `build_srt_from_asr.py` turns into a clean, audio-aligned SRT.
+
+Why streaming (not 录音文件识别 / MediaKit): every file/URL API requires a
+publicly reachable HTTP(S) URL for the audio. Hosting that is fragile (tunnels
+fail on hotspots) and the user rejected the "server downloads the mp3" model.
+Streaming sidesteps the URL entirely by pushing bytes.
+
+Protocol: openspeech v3 binary framing (gzip + JSON).
+Endpoint:  wss://openspeech.bytedance.com/api/v3/sauc/bigmodel
+
+Usage:
+  volc_asr_stream.py <input.pcm|wav|mp3|mp4|mov> <out.json>
+
+Credentials (env, either naming works):
+  VOLC_ASR_APPID  / VOLC_APPID
+  VOLC_ASR_ACCESS_TOKEN / VOLC_TOKEN
+Optional:
+  FFMPEG_BIN  (default: ffmpeg on PATH)  — used to decode non-.pcm input
+"""
+import sys, os, json, gzip, uuid, time, struct, subprocess
+import websocket  # pip install websocket-client
+
+APPID = os.environ.get("VOLC_ASR_APPID") or os.environ["VOLC_APPID"]
+TOKEN = os.environ.get("VOLC_ASR_ACCESS_TOKEN") or os.environ["VOLC_TOKEN"]
+FFMPEG = os.environ.get("FFMPEG_BIN", "ffmpeg")
+ENDPOINT = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel"
+RESOURCE_ID = "volc.bigasr.sauc.duration"
+
+# ---- binary protocol constants ----
+PROTOCOL_VERSION = 0b0001
+DEFAULT_HEADER_SIZE = 0b0001
+FULL_CLIENT = 0b0001
+AUDIO_ONLY = 0b0010
+FULL_SERVER = 0b1001
+ERROR_RESP = 0b1111
+POS_SEQ = 0b0001
+NEG_WITH_SEQ = 0b0011
+JSON_SER = 0b0001
+GZIP = 0b0001
+
+
+def header(msg_type, flags, ser=JSON_SER, comp=GZIP):
+    return bytes([
+        (PROTOCOL_VERSION << 4) | DEFAULT_HEADER_SIZE,
+        (msg_type << 4) | flags,
+        (ser << 4) | comp,
+        0x00,
+    ])
+
+
+def build_full_client(seq):
+    payload = {
+        "user": {"uid": "wjs-asr"},
+        "audio": {"format": "pcm", "rate": 16000, "bits": 16, "channel": 1, "codec": "raw"},
+        "request": {
+            "model_name": "bigmodel",
+            "enable_punc": True,
+            "enable_itn": True,
+            "show_utterances": True,
+            # NOTE: do NOT set result_type:"single" — that returns only the
+            # latest sentence each frame; default mode accumulates all.
+        },
+    }
+    body = gzip.compress(json.dumps(payload).encode("utf-8"))
+    return header(FULL_CLIENT, POS_SEQ) + struct.pack(">i", seq) + struct.pack(">I", len(body)) + body
+
+
+def build_audio(chunk, seq, last):
+    flags = NEG_WITH_SEQ if last else POS_SEQ
+    body = gzip.compress(chunk)
+    seqv = -seq if last else seq
+    return header(AUDIO_ONLY, flags, ser=0, comp=GZIP) + struct.pack(">i", seqv) + struct.pack(">I", len(body)) + body
+
+
+def parse_response(data):
+    msg_type = (data[1] >> 4) & 0x0f
+    flags = data[1] & 0x0f
+    ser = (data[2] >> 4) & 0x0f
+    comp = data[2] & 0x0f
+    payload = data[4:]
+    if flags & 0x01 or flags & 0x02:
+        payload = payload[4:]  # skip seq
+    if msg_type == ERROR_RESP:
+        code = struct.unpack(">I", payload[:4])[0]
+        sz = struct.unpack(">I", payload[4:8])[0]
+        body = payload[8:8+sz]
+        if comp == GZIP:
+            body = gzip.decompress(body)
+        return {"_error": code, "_msg": body.decode("utf-8", "replace")}
+    sz = struct.unpack(">I", payload[:4])[0]
+    body = payload[4:4+sz]
+    if comp == GZIP and body:
+        body = gzip.decompress(body)
+    if ser == JSON_SER and body:
+        return json.loads(body.decode("utf-8"))
+    return {"_raw": body}
+
+
+def to_pcm(path):
+    if path.endswith(".pcm"):
+        return open(path, "rb").read()
+    out = subprocess.run([FFMPEG, "-v", "error", "-i", path, "-vn", "-ac", "1",
+                          "-ar", "16000", "-f", "s16le", "-"], capture_output=True)
+    return out.stdout
+
+
+def main():
+    inp, outp = sys.argv[1], sys.argv[2]
+    pcm = to_pcm(inp)
+    hdrs = {
+        "X-Api-App-Key": APPID,
+        "X-Api-Access-Key": TOKEN,
+        "X-Api-Resource-Id": RESOURCE_ID,
+        "X-Api-Connect-Id": str(uuid.uuid4()),
+    }
+    ws = websocket.create_connection(ENDPOINT, header=[f"{k}: {v}" for k, v in hdrs.items()],
+                                     timeout=30, max_size=None)
+    seq = 1
+    ws.send_binary(build_full_client(seq))
+    init = parse_response(ws.recv())
+    if init.get("_error"):
+        print("ERROR on init:", init); sys.exit(1)
+
+    CHUNK = 6400  # 200ms @ 16k mono s16le
+    chunks = [pcm[i:i+CHUNK] for i in range(0, len(pcm), CHUNK)]
+    last_result = None
+    for i, ch in enumerate(chunks):
+        seq += 1
+        ws.send_binary(build_audio(ch, seq, i == len(chunks) - 1))
+        try:
+            ws.settimeout(0.01)
+            while True:
+                r = parse_response(ws.recv())
+                if "result" in r:
+                    last_result = r
+        except Exception:
+            pass
+        ws.settimeout(30)
+        time.sleep(0.02)
+
+    while True:
+        try:
+            r = parse_response(ws.recv())
+        except Exception:
+            break
+        if r.get("_error"):
+            print("ERROR:", r); break
+        if "result" in r:
+            last_result = r
+    ws.close()
+
+    if not last_result:
+        print("NO RESULT"); sys.exit(1)
+    json.dump(last_result, open(outp, "w"), ensure_ascii=False, indent=2)
+    res = last_result.get("result", {})
+    print(f"utterances={len(res.get('utterances', []))} text_len={len(res.get('text',''))} -> {outp}")
+
+
+if __name__ == "__main__":
+    main()

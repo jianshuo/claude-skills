@@ -148,10 +148,33 @@ Tweak `TARGET_DUR` and `MAX_CHARS` to platform reading rhythm. The 18-char cap m
 
 Volcano ASR routinely beats Whisper on Mandarin accuracy (recognition rate, punctuation, named entities). Use this as the default for `zh-*` source.
 
-- Endpoint and auth: see the user's `lark-minutes` and 豆包 ASR docs — credentials in `~/code/.env` (`VOLC_ASR_APPID`, `VOLC_ASR_ACCESS_TOKEN`).
-- For long-form Chinese audio (>10 min): use the user's bundled scripts under `scripts/` if present; otherwise route through 飞书妙记 (`/lark-minutes`), which is the user's standing fallback for `.m4a` / `.mp3` / `.mp4` → SRT.
+> ⛔ **NEVER use 飞书妙记 / lark-minutes for ASR.** It only gives turn-level (speaker-turn) timestamps, not per-word timing — subtitles built from it drift by seconds and break at unnatural places. The user's standing rule: "以后不要用飞书妙记来做ASR，不能作为SRT使用，记住". There is no 飞书妙记 fallback. If Volcano is unavailable, fall back to the OpenAI Whisper word-level path above (pin `language=zh`).
 
-If Volcano isn't available on this machine, fall back to OpenAI Whisper API with the same word-level recipe above — pin `language=zh`, and follow the cue assembly steps.
+### Use the STREAMING WebSocket API — pushes bytes, needs NO public URL
+
+The file / 录音文件识别 / MediaKit APIs all require a publicly reachable HTTP(S) audio URL. The user rejected URL-hosting ("不要再用什么从服务器端去 download 的这 mp3 这样的模式" — tunnels fail on their hotspot). The **大模型流式语音识别 (bigmodel streaming)** API sidesteps the URL entirely by pushing raw PCM bytes over a WebSocket. **This is the working path.** It returns per-word ms timestamps.
+
+**Bundled scripts (use these — they are the verified working path):**
+
+```bash
+# 1. Transcribe: pushes 16k mono PCM bytes over WebSocket → ASR JSON
+#    (decodes any input via ffmpeg; .pcm passes straight through)
+export VOLC_ASR_APPID=…  VOLC_ASR_ACCESS_TOKEN=…   # credentials live with the user
+python3 scripts/volc_asr_stream.py <clip.mp4|wav|mp3|pcm> <out.asr.json>
+
+# 2. Build a clean, word-timed SRT from the ASR JSON
+python3 scripts/build_srt_from_asr.py <out.asr.json> <out.srt> [max_chars=18]
+```
+
+- **Endpoint:** `wss://openspeech.bytedance.com/api/v3/sauc/bigmodel`
+- **Headers:** `X-Api-App-Key:{appid}`, `X-Api-Access-Key:{token}`, `X-Api-Resource-Id:volc.bigasr.sauc.duration`, `X-Api-Connect-Id:{uuid}`
+- **Binary v3 framing:** 4-byte header `[(ver<<4)|hdrsize, (msgtype<<4)|flags, (ser<<4)|comp, 0]`. Full-client(0x1)+POS_SEQ sends gzipped JSON config; audio(0x2) packets send gzipped PCM chunks (200ms = 6400 bytes @16k mono s16le); last packet uses NEG_WITH_SEQ(0x3) with **negative** seq. Server full-response(0x9) returns gzipped JSON.
+- **Config JSON:** `{user:{uid}, audio:{format:"pcm",rate:16000,bits:16,channel:1,codec:"raw"}, request:{model_name:"bigmodel", enable_punc:true, enable_itn:true, show_utterances:true}}`. **Do NOT set `result_type:"single"`** — that returns only the latest sentence each frame; default mode accumulates all utterances.
+- **Result shape:** `result.utterances[]`, each with `text` (punctuated) + `words[]` (token + ms `start_time`/`end_time`). Latin tokens like "AI" come back with `start=end=0` — `build_srt_from_asr.py` forward/backward-fills from neighbours.
+- **build_srt_from_asr.py** also: splits cues on punctuation (HARD `。！？` flush; SOFT `，、；` flush past 8 chars; hard cap 18 chars), drops 呃/嗯/唉 fillers, and collapses immediate duplicate short tokens (才才→才). Every cue is timed by its first/last word so it sits exactly on the spoken audio — no drift.
+- **Per-clip transcription:** transcribe each *clip's own* audio (16k mono PCM) so the SRT timestamps come out clip-relative.
+- **Credentials:** live with the user (豆包语音引擎). Env names accepted by the script: `VOLC_ASR_APPID`/`VOLC_APPID` and `VOLC_ASR_ACCESS_TOKEN`/`VOLC_TOKEN`; `FFMPEG_BIN` optional.
+- **Dead ends (don't retry):** MediaKit asr-subtitles (doc 6448/2381968) still needs a public URL *and* a separate MediaKit API key. The 录音文件识别 file API needs a public URL.
 
 ## Local Whisper as last resort
 
