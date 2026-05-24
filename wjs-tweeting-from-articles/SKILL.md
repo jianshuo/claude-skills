@@ -11,7 +11,7 @@ description: Use when the user wants to post a daily X/Twitter tweet inspired by
 
 **文章已经过了一轮王建硕式的精炼，tweet 只是再短一格的版本。** 不要重新构思——从 article.md 里直接抠最 quotable 的一句 / 一段，按 X 的节奏切。
 
-**一天最多一条，一篇文章只推一次。** 状态文件 `state/history.jsonl` 记录哪些 article 已经推过；不重复。
+**一天最多一条，一篇文章只推一次。** 状态文件 `state/history.jsonl` 记录哪些 article 已经推过；不重复。（**例外:批量排期模式**——一次把多篇排进队列、按每 N 小时一条自动发,见下文。）
 
 **真发，不暂存。** 用户确认后立刻 `xurl POST`。失败原文 dump 给用户重试。
 
