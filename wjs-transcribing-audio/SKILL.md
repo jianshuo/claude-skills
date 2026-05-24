@@ -223,6 +223,7 @@ Run this **before** segmentation/clip-building so every downstream clip inherits
 - No cue ends mid-word
 - No cue exceeds MAX_CHARS without an internal split
 - No phrase repeats 3+ times consecutively (loop residue)
+- AI 润色 pass run — obvious 错别字 corrected, timestamps/cue count untouched, 专有名词 surfaced to user not silently changed
 
 ## Downstream
 
