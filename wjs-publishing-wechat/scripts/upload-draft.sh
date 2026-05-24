@@ -39,6 +39,9 @@ for f in "$META" "$ARTICLE_MD" "$COVER"; do
   [[ -f "$f" ]] || { echo "error: missing $f" >&2; exit 1; }
 done
 
+# 盘古之白:中英文之间补空格(幂等;自动跳过代码块/链接/URL)。出错绝不阻断发布。
+python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pangu.py" "$ARTICLE_MD" >&2 2>&1 || true
+
 cd "$ARTICLE_DIR"
 
 parse_upload_data() {
