@@ -102,11 +102,11 @@ ffmpeg -itsoffset $(jq -r .delta_seconds cam_b.MOV.sync.json) -i cam_b.MOV \
 ffmpeg -ss <overlap_in_source[0]> -i cam_b.MOV -t <overlap_dur> ...
 ```
 
-For `wjs-editing-multicam`, the EDL builder in `autoedit.py` ingests every `<input>.sync.json` automatically; you don't compose these flags by hand.
+For `wjs-editing-multicam`, `polysync edit` ingests every `<input>.sync.json` automatically; you don't compose these flags by hand.
 
-## Partial-coverage clips — `sync.py --partial`
+## Partial-coverage clips — `polysync sync --partial`
 
-Common case — main cams cover 75 min, a Riverside / phone / lavalier recorder only covers the middle 30 min. Run `scripts/sync.py REF.MOV NEW.mp4 --partial`:
+Common case — main cams cover 75 min, a Riverside / phone / lavalier recorder only covers the middle 30 min. Run `polysync sync REF.MOV NEW.mp4 --partial`:
 
 1. Cross-correlates the new input against the reference (same envelope algorithm as full-overlap mode).
 2. Finds where the new clip's `t=0` sits in the reference timeline (`delta_seconds` may be large, e.g. 1842.5).
