@@ -117,6 +117,6 @@ working_dir/
 ## Common pitfalls
 
 - **Trusting `audio_source` without listening.** Spread + coverage is a proxy. Always sample a 30 s clip before committing — a high-spread track can still be clipped / distorted.
-- **Running `autoedit.py` on the full 75 min before tuning.** Run on a 2-min slice first (`ffmpeg -ss A -t 120` an extract per cam), listen, adjust `--min-dwell` / `--mode`, then commit to full length.
+- **Running `polysync edit` on the full 75 min before tuning.** Run on a 2-min slice first (`ffmpeg -ss A -t 120` an extract per cam), listen, adjust `--min-dwell` / `--mode`, then commit to full length.
 - **Expecting face-driven framing.** This skill doesn't see the video — only the audio. If one cam is well-framed but quiet, the editor won't favor it. Use `--audio-source` + per-segment `pip` overrides as the manual escape hatch.
-- **Re-rendering when sync was wrong.** EDL bakes in `deltas[]` at autoedit time. If you fix the sidecars later, re-run `autoedit.py` to regenerate the EDL before re-rendering.
+- **Re-rendering when sync was wrong.** EDL bakes in `deltas[]` at edit time. If you fix the sidecars later, re-run `polysync edit` to regenerate the EDL before re-rendering.
