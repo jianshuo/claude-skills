@@ -7,6 +7,20 @@ description: Use when the user has 2+ video / audio recordings of the same event
 
 Compute a single time offset for each multi-source recording of the same event using audio cross-correlation, and emit a `.sync.json` sidecar next to each original. **Originals are never modified, copied, or re-encoded.** Downstream tools use `-itsoffset` to apply the offset at consume time.
 
+## Setup & commands
+
+The implementation lives in the open-source **`polysync`** pip package (<https://pypi.org/project/polysync/> · <https://github.com/jianshuo/polysync>) — this skill no longer ships its own scripts. Ensure it's installed, then drive it via its CLI:
+
+```bash
+python3 -m pip install -U polysync      # needs ffmpeg/ffprobe on PATH
+
+polysync sync   REFERENCE SOURCE        # align SOURCE to REFERENCE, write sidecars
+polysync sync   REFERENCE SOURCE --partial   # source covers only part of the session
+polysync verify REFERENCE SOURCE SOURCE.sync.json   # independent residual check
+```
+
+Run one `polysync sync` per non-reference angle (reference first, same reference each time). The sections below document the algorithm, the sidecar schema, and the gotchas baked into the package — read them to interpret output and choose flags.
+
 ## Design principle — sidecar over re-encode
 
 Earlier versions of this skill produced `*_synced.MOV` files by trimming + re-encoding to bake the offset into the file. We removed that:
