@@ -1,13 +1,27 @@
 #!/usr/bin/env python3
-"""Multicam audio sync — find time offset between two camera files via envelope
-cross-correlation, run multi-probe drift check, emit `.sync.json` sidecars.
+"""Multicam audio sync — find the time offset between two recordings of the same
+event via envelope cross-correlation, run a multi-probe drift check, and emit
+`.sync.json` sidecars.
 
-Originals are never modified. Output is one sidecar per input next to the
-original file. Downstream tools apply the offset at consume time via
-`ffmpeg -itsoffset`.
+Originals are never modified. Downstream tools apply the offset at consume time
+via `ffmpeg -itsoffset`.
+
+Two modes (same algorithm, different failure philosophy):
+
+  Full-overlap (default) — both inputs cover essentially the whole event, as
+  with simultaneous multicam. Requires >=3 good probes or it FAILS loudly
+  (too few good matches almost always means the wrong files or no shared
+  audio). Writes a sidecar for BOTH inputs (reference gets delta=0).
+
+  --partial — the source covers only PART of the reference's span (a Riverside
+  / phone / lavalier recording that started mid-session, a late-arriving clip).
+  Degrades gracefully instead of failing: median delta on few probes, coarse
+  delta if none. Writes ONLY the source sidecar (the reference is assumed to
+  already belong to a sync set). `delta_seconds` may be large (e.g. +1842.5).
 
 Usage:
-    python sync.py CAM_A.MOV CAM_B.MOV
+    python sync.py REFERENCE.MOV SOURCE.MOV            # full-overlap multicam
+    python sync.py REFERENCE.MOV PARTIAL.mp4 --partial # partial-coverage source
 """
 import argparse, json, subprocess, sys, tempfile
 from pathlib import Path
