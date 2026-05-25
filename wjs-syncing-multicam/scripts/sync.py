@@ -21,10 +21,50 @@ ENV_WIN_MS = 50
 SCHEMA_VERSION = 1
 
 
-def extract_audio_pcm(video_path: Path, dst: Path):
+def loudest_audio_stream(video_path: Path) -> int:
+    """Return the index N of the audio stream (`0:a:N`) with the highest mean
+    volume, probed over a 60 s window mid-file.
+
+    Why this matters: pro cameras often record multiple audio tracks where the
+    first one is dead. Sony FX6 MXF clips carry 4 mono PCM tracks and commonly
+    leave a:0 / a:1 silent (~-90 dB) with the real room mic on a:2 / a:3.
+    Hard-coding `0:a:0` would cross-correlate silence and fail to sync, so pick
+    the loudest track instead. Single-stream files (most MP4 cams) short-circuit
+    to a:0.
+    """
+    streams = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=index", "-of", "csv=p=0", str(video_path)],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip().splitlines()
+    if len(streams) <= 1:
+        return 0
+    best_idx, best_db = 0, -1e9
+    for ch in range(len(streams)):
+        err = subprocess.run(
+            ["ffmpeg", "-nostdin", "-hide_banner", "-ss", "300", "-t", "60",
+             "-i", str(video_path), "-map", f"0:a:{ch}",
+             "-af", "volumedetect", "-f", "null", "-"],
+            capture_output=True, text=True,
+        ).stderr
+        for line in err.splitlines():
+            if "mean_volume" in line:
+                try:
+                    db = float(line.split("mean_volume:")[1].strip().split()[0])
+                except (IndexError, ValueError):
+                    db = -1e9
+                if db > best_db:
+                    best_db, best_idx = db, ch
+                break
+    print(f"  [{video_path.name}] loudest audio stream: a:{best_idx} ({best_db:.1f} dB)")
+    return best_idx
+
+
+def extract_audio_pcm(video_path: Path, dst: Path, stream: int | None = None):
+    ch = loudest_audio_stream(video_path) if stream is None else stream
     cmd = [
         "ffmpeg", "-nostdin", "-y", "-i", str(video_path),
-        "-map", "0:a:0", "-ac", "1", "-ar", str(SR),
+        "-map", f"0:a:{ch}", "-ac", "1", "-ar", str(SR),
         "-f", "s16le", str(dst),
     ]
     subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL)
