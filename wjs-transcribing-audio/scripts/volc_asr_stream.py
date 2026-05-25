@@ -109,9 +109,15 @@ def to_pcm(path):
     return out.stdout
 
 
-def main():
-    inp, outp = sys.argv[1], sys.argv[2]
-    pcm = to_pcm(inp)
+BYTES_PER_SEC = 16000 * 2          # 16k mono s16le
+CHUNK_SEC = 600                    # 10-min ASR chunks — the streaming session
+                                   # times out ("waiting next packet") on long
+                                   # (>~12 min) single connections, so split.
+
+
+def transcribe_pcm(pcm):
+    """Stream one PCM blob over a single WebSocket connection and return the
+    final result dict (raises on server error / init failure)."""
     hdrs = {
         "X-Api-App-Key": APPID,
         "X-Api-Access-Key": TOKEN,
@@ -120,44 +126,100 @@ def main():
     }
     ws = websocket.create_connection(ENDPOINT, header=[f"{k}: {v}" for k, v in hdrs.items()],
                                      timeout=30, max_size=None)
-    seq = 1
-    ws.send_binary(build_full_client(seq))
-    init = parse_response(ws.recv())
-    if init.get("_error"):
-        print("ERROR on init:", init); sys.exit(1)
+    try:
+        seq = 1
+        ws.send_binary(build_full_client(seq))
+        init = parse_response(ws.recv())
+        if init.get("_error"):
+            raise RuntimeError(f"init error: {init}")
 
-    CHUNK = 6400  # 200ms @ 16k mono s16le
-    chunks = [pcm[i:i+CHUNK] for i in range(0, len(pcm), CHUNK)]
-    last_result = None
-    for i, ch in enumerate(chunks):
-        seq += 1
-        ws.send_binary(build_audio(ch, seq, i == len(chunks) - 1))
-        try:
-            ws.settimeout(0.01)
-            while True:
+        CHUNK = 6400  # 200ms @ 16k mono s16le
+        chunks = [pcm[i:i+CHUNK] for i in range(0, len(pcm), CHUNK)]
+        last_result = None
+        for i, ch in enumerate(chunks):
+            seq += 1
+            ws.send_binary(build_audio(ch, seq, i == len(chunks) - 1))
+            try:
+                ws.settimeout(0.01)
+                while True:
+                    r = parse_response(ws.recv())
+                    if r.get("_error"):
+                        raise RuntimeError(f"stream error: {r}")
+                    if "result" in r:
+                        last_result = r
+            except RuntimeError:
+                raise
+            except Exception:
+                pass
+            ws.settimeout(30)
+            time.sleep(0.02)
+
+        while True:
+            try:
                 r = parse_response(ws.recv())
-                if "result" in r:
-                    last_result = r
-        except Exception:
-            pass
-        ws.settimeout(30)
-        time.sleep(0.02)
+            except Exception:
+                break
+            if r.get("_error"):
+                raise RuntimeError(f"tail error: {r}")
+            if "result" in r:
+                last_result = r
+        return last_result
+    finally:
+        ws.close()
 
-    while True:
-        try:
-            r = parse_response(ws.recv())
-        except Exception:
-            break
-        if r.get("_error"):
-            print("ERROR:", r); break
-        if "result" in r:
-            last_result = r
-    ws.close()
 
-    if not last_result:
-        print("NO RESULT"); sys.exit(1)
-    json.dump(last_result, open(outp, "w"), ensure_ascii=False, indent=2)
-    res = last_result.get("result", {})
+def _shift(res, off_ms):
+    """Add off_ms to every (non-zero) timestamp in a chunk result, in place.
+    Zero stays zero — build_srt treats 0 as 'missing' and fills from neighbours."""
+    for u in res.get("result", {}).get("utterances", []):
+        if u.get("start_time"):
+            u["start_time"] += off_ms
+        if u.get("end_time"):
+            u["end_time"] += off_ms
+        for w in u.get("words", []):
+            if w.get("start_time"):
+                w["start_time"] += off_ms
+            if w.get("end_time"):
+                w["end_time"] += off_ms
+    return res
+
+
+def main():
+    inp, outp = sys.argv[1], sys.argv[2]
+    pcm = to_pcm(inp)
+    chunk_bytes = CHUNK_SEC * BYTES_PER_SEC
+
+    if len(pcm) <= chunk_bytes:
+        result = transcribe_pcm(pcm)
+        if not result:
+            print("NO RESULT"); sys.exit(1)
+    else:
+        n = (len(pcm) + chunk_bytes - 1) // chunk_bytes
+        print(f"long audio ({len(pcm)/BYTES_PER_SEC:.0f}s) -> {n} chunks of {CHUNK_SEC}s")
+        utts, text = [], ""
+        for i in range(n):
+            seg = pcm[i*chunk_bytes:(i+1)*chunk_bytes]
+            off_ms = i * CHUNK_SEC * 1000
+            res = None
+            for attempt in range(3):
+                try:
+                    res = transcribe_pcm(seg); break
+                except Exception as e:
+                    print(f"  chunk {i+1}/{n} attempt {attempt+1} failed: {e}")
+                    time.sleep(min(2 ** attempt, 10))
+            if not res:
+                print(f"  chunk {i+1}/{n}: NO RESULT, skipping"); continue
+            _shift(res, off_ms)
+            r = res.get("result", {})
+            utts += r.get("utterances", [])
+            text += r.get("text", "")
+            print(f"  chunk {i+1}/{n}: {len(r.get('utterances', []))} utts")
+        if not utts:
+            print("NO RESULT (all chunks failed)"); sys.exit(1)
+        result = {"result": {"utterances": utts, "text": text}}
+
+    json.dump(result, open(outp, "w"), ensure_ascii=False, indent=2)
+    res = result.get("result", {})
     print(f"utterances={len(res.get('utterances', []))} text_len={len(res.get('text',''))} -> {outp}")
 
 
