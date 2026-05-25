@@ -23,6 +23,7 @@ Optional:
   FFMPEG_BIN  (default: ffmpeg on PATH)  — used to decode non-.pcm input
 """
 import sys, os, json, gzip, uuid, time, struct, subprocess
+from concurrent.futures import ThreadPoolExecutor
 import websocket  # pip install websocket-client
 
 APPID = os.environ.get("VOLC_ASR_APPID") or os.environ["VOLC_APPID"]
