@@ -81,14 +81,14 @@ If you need face tracking, fade transitions, captions, or HyperFrames compositio
 }
 ```
 
-`autoedit.py` writes `_about` + `_help` directly into the file so opening the JSON in any editor explains itself.
+`polysync edit` writes `_about` + `_help` directly into the file so opening the JSON in any editor explains itself.
 
 ## Render
 
-| Script | What it does |
+| Command | What it does |
 |---|---|
-| `scripts/render_cuts.py` | Hard cuts only. `concat` filter graph over per-segment `trim+scale+pad`. Audio = `audio_source` cam, trimmed to first EDL row's start. |
-| `scripts/render_pip.py` | Hard cuts + corner picture-in-picture overlay. Main cam = EDL row's `cam`; PiP cam picked round-robin (or via per-row `pip` field). PiP is scaled to `--pip-width` (default 480 px), placed in a configurable corner with optional white border. **No fade / no opacity — solid block on/off.** |
+| `polysync render-cuts` | Hard cuts only. `concat` filter graph over per-segment `trim+scale+pad`. Audio = `audio_source` cam, trimmed to first EDL row's start. |
+| `polysync render-pip` | Hard cuts + corner picture-in-picture overlay. Main cam = EDL row's `cam`; PiP cam picked round-robin (or via per-row `pip` field). PiP is scaled to `--pip-width` (default 480 px), placed in a configurable corner with optional white border. **No fade / no opacity — solid block on/off.** |
 
 Both apply `-itsoffset deltas[k]` per input.
 
