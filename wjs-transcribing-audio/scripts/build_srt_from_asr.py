@@ -37,7 +37,10 @@ def fmt(ms):
 
 
 def clean(t):
-    return t.strip().strip(PUNCT).strip()
+    t = t.strip().strip(PUNCT).strip()
+    if STRIP_ALL:
+        t = "".join(c for c in t if c not in PUNCT)
+    return t
 
 
 def fix_words(utt):
