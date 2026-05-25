@@ -63,7 +63,7 @@ If you need face tracking, fade transitions, captions, or HyperFrames compositio
 
 ```json
 {
-  "_about": "EDL produced by wjs-editing-multicam/autoedit.py. Times in reference timeline. Render scripts apply ffmpeg -itsoffset deltas[k] per input.",
+  "_about": "EDL produced by polysync.edit.autoedit. Times in reference timeline. Render commands apply ffmpeg -itsoffset deltas[k] per input.",
   "_help": {
     "inputs":        "Original media paths, in cam-index order (cam 0, cam 1, ...).",
     "deltas":        "Per-cam delta_seconds from each sidecar. Render uses ffmpeg -itsoffset deltas[k].",
