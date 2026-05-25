@@ -122,7 +122,7 @@ For sync-sound / lip-sync at long durations (>30 min and `verification.residual_
 
 ## Verification (always run)
 
-`scripts/verify.py REF.MOV SRC.MOV SRC.sync.json` re-extracts audio from BOTH originals **natively** (loudest stream, no ffmpeg offset) and runs multi-probe correlation again. It applies the sidecar's `delta_seconds` (and, with `--apply-drift`, the drift slope) as **index arithmetic in numpy** — a probe at reference time `bs` is drawn from the source at local time `bs - delta`, then sought near reference index `bs`; the peak offset is the residual. Writes results back into the sidecar's `verification` field.
+`polysync verify REF.MOV SRC.MOV SRC.sync.json` re-extracts audio from BOTH originals **natively** (loudest stream, no ffmpeg offset) and runs multi-probe correlation again. It applies the sidecar's `delta_seconds` (and, with `--apply-drift`, the drift slope) as **index arithmetic in numpy** — a probe at reference time `bs` is drawn from the source at local time `bs - delta`, then sought near reference index `bs`; the peak offset is the residual. Writes results back into the sidecar's `verification` field.
 
 Pass criteria — `median_residual_ms < 15` and `residual_spread_ms < 1 frame at delivery fps`. Fail = retry with drift correction enabled.
 
