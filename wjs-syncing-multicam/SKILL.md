@@ -36,7 +36,7 @@ Raw PCM cross-correlation gives weak peaks and false matches when the two mics h
 6. **Compute overlap window** in the reference timeline: `overlap = [max(0, delta), min(ref_dur, delta + src_dur)]`.
 7. **Emit `.sync.json` sidecar** next to each non-reference input. No file is copied, trimmed, or re-encoded. The reference input gets a sidecar too (with `delta_seconds: 0`) so downstream code can treat all inputs uniformly.
 
-`scripts/sync.py` is the implementation. **Note**: the current script still emits `_synced.MOV` files alongside the sidecar — that path is deprecated; the sidecar is the only authoritative output.
+`scripts/sync.py` is the implementation. It emits **only** the `.sync.json` sidecar — no `_synced.MOV`, no re-encode.
 
 ## Sidecar schema (`<input>.sync.json`)
 
