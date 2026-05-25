@@ -620,6 +620,7 @@ npx hyperframes render --quality standard --fps 30 --output ../<slug>.mp4
 
 ## Common Pitfalls
 
+- **改了旁白文字但 TTS 没变（用了缓存）** → `tts_narration.py` 按 chunk `id` 缓存单段 mp3，改文案但 `id` 没变会复用旧音频（症状：`timing.json` 时长和上一版一模一样，明明文字变长了）。重合成前先 `rm -rf narration/ narration.mp3 timing.json` 再跑
 - **narration 写「——」破折号** → TTS 念出 "破折号"。删掉用句号或逗号
 - **某段 chunk 异常长（>3 chars/s）** → Volcano hallucinate 循环。换声音，或拆短
 - **scene 时长 < narration 时长** → 旁白被下一个 scene 切掉。scene 必须覆盖整段 narration + 0.3s 缓冲
