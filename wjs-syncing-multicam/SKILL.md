@@ -108,9 +108,11 @@ For sync-sound / lip-sync at long durations (>30 min and `verification.residual_
 
 ## Verification (always run)
 
-`scripts/verify.py REF.MOV SRC.MOV SRC.sync.json` re-extracts audio from BOTH originals (with `-itsoffset` applied to the source per the sidecar) and runs multi-probe correlation again. Writes results back into the sidecar's `verification` field.
+`scripts/verify.py REF.MOV SRC.MOV SRC.sync.json` re-extracts audio from BOTH originals **natively** (loudest stream, no ffmpeg offset) and runs multi-probe correlation again. It applies the sidecar's `delta_seconds` (and, with `--apply-drift`, the drift slope) as **index arithmetic in numpy** — a probe at reference time `bs` is drawn from the source at local time `bs - delta`, then sought near reference index `bs`; the peak offset is the residual. Writes results back into the sidecar's `verification` field.
 
 Pass criteria — `median_residual_ms < 15` and `residual_spread_ms < 1 frame at delivery fps`. Fail = retry with drift correction enabled.
+
+**A spread-only fail with a near-zero median is usually noise, not desync.** Far-field mics on a wide / B-roll camera (high reverb, low SNR, ncoef ~0.2) produce a few outlier probes that blow up the spread while the median stays at a few ms. For camera-cut editing that is aligned — the median is the truth; the spread gate is conservative. Only chase it for long-form lip-sync.
 
 ## Common pitfalls
 
