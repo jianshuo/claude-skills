@@ -32,15 +32,10 @@ HISTORY="${STATE_DIR}/history.jsonl"
 mkdir -p "$STATE_DIR"
 touch "$HISTORY"
 
-# Idempotency: skip if already posted today (any slug, status=posted).
-# DRY_RUN bypasses this — it's safe to repeatedly preview without re-posting.
-if [[ "${DRY_RUN:-0}" != "1" ]]; then
-  if grep -F "\"date\":\"${today}\"" "$HISTORY" 2>/dev/null \
-       | grep -qF "\"status\":\"posted\""; then
-    echo "Already posted today. Skipping."
-    exit 0
-  fi
-fi
+# Hourly mode: NO per-day cap. pick-next-article.sh only ever returns an
+# un-tweeted article (dedup by slug in history.jsonl), so each hourly run posts
+# a DIFFERENT article — one new tweet per hour until the backlog is empty.
+# (To restore once-per-day, re-add a guard on "\"date\":\"${today}\"" + posted.)
 
 # --- Step 1: pick article ---
 if [[ -n "${FORCE_FOLDER:-}" ]]; then
