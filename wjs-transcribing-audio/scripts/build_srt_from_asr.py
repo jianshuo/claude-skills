@@ -133,7 +133,23 @@ def cues_from_utt(utt):
 
 
 def main():
-    data = json.load(open(sys.argv[1]))
+    global MAX, SOFT_MIN, STRIP_ALL
+    ap = argparse.ArgumentParser()
+    ap.add_argument("asr_json")
+    ap.add_argument("out_srt")
+    ap.add_argument("max_chars", nargs="?", type=int, default=18,
+                    help="hard cap per cue (positional, back-compat)")
+    ap.add_argument("--max-chars", dest="max_chars_opt", type=int, default=None)
+    ap.add_argument("--soft-min", type=int, default=8,
+                    help="min chars before a soft (，、；) break flushes")
+    ap.add_argument("--strip-punct", action="store_true",
+                    help="strip ALL punctuation from displayed cue text")
+    args = ap.parse_args()
+    MAX = args.max_chars_opt if args.max_chars_opt is not None else args.max_chars
+    SOFT_MIN = args.soft_min
+    STRIP_ALL = args.strip_punct
+
+    data = json.load(open(args.asr_json))
     utts = data["result"]["utterances"]
     all_cues = []
     for u in utts:
