@@ -215,7 +215,9 @@ cp -r /tmp/g/skills/gpt-image-2-skill ~/.claude/skills/
 
 **⚠️ 正文里除 `cover.png` / `illustration.png` 之外的图不会自动上 CDN。** `upload-draft.sh` 只对这两个固定文件名做 `upload_image` + 替换；如果文章正文引用了别的本地图（如用户给的 `img-xxx.png` 截图），`content.html` 里会留下 `./img-xxx.png` 本地路径 → 草稿里是裂图。处理：每张先 `md2wechat upload_image img-xxx.png --json` 拿到 `data.wechat_url`，再把 `article.md` 里的 `./img-xxx.png` 替换成那个 `http://mmbiz.qpic.cn/...` URL，然后正常 `upload-draft.sh`（带 https 的 img src 会原样保留）。验证：`grep -c mmbiz content.html` 应等于正文图片数，`grep -c 'img-' content.html` 应为 0。
 
-默认插入位置：**正文最后落点之后**（默认无后注；如果有 `## 后注` 则放在后注之前；如果有 `## 安装方法` 则放在安装方法之前）——把解释图当作"整件事画起来就是这样"的视觉总结，配一句口语化引导（例如"整件事画出来，大概就是这样："），不要写"如图所示"这种说明文腔。如果解释图只针对某一节（不是全文摘要），就紧跟在那一节正文之后。
+默认插入位置：**正文最后落点之后**（默认无后注；如果有 `## 后注` 则放在后注之前；如果有 `## 安装方法` 则放在安装方法之前）。如果解释图只针对某一节（不是全文摘要），就紧跟在那一节正文之后。
+
+**绝不要给解释图写引导语 / 说明文字。** 直接放 `![](./illustration.png)`，前面不写任何「整件事画出来，大概就是这样：」「如图所示」「整件事画起来是这样」之类的话——用户明确反复要求过，图自己说话，正文在文字落点收束即可。详见 [[no-illustration-caption]]。
 
 > 安全网：如果生成了 `illustration.png` 但 `article.md` 漏掉了这一行引用，`upload-draft.sh` 会自动在最合适的位置（有后注则后注前，否则文末）插入引用并改写 `article.md`，确保结果幂等。但首选还是在 Step 5 写 `article.md` 时就把它放进去。
 
