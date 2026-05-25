@@ -37,7 +37,7 @@ If you need face tracking, fade transitions, captions, or HyperFrames compositio
 
 **Original camera files (untouched) plus their `.sync.json` sidecars next to them.** If sources aren't synced yet, run **wjs-syncing-multicam** first to write the sidecars. Missing sidecar = cam assumed at delta=0, full coverage.
 
-`autoedit.py` reads each sidecar for `delta_seconds` + `overlap_in_reference`, lifts the cam's audio envelope into the reference timeline, and only schedules a cam during its coverage window. `render_cuts.py` / `render_pip.py` apply `ffmpeg -itsoffset` per input using the EDL's `deltas[]` array.
+`polysync edit` reads each sidecar for `delta_seconds` + `overlap_in_reference`, lifts the cam's audio envelope into the reference timeline, and only schedules a cam during its coverage window. `polysync render-cuts` / `polysync render-pip` apply `ffmpeg -itsoffset` per input using the EDL's `deltas[]` array.
 
 ## When NOT to use
 
