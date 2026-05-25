@@ -56,7 +56,7 @@ If you need face tracking, fade transitions, captions, or HyperFrames compositio
 7. **Editor decides EDL** — two modes:
    - `rotation` (default): random dwell in [`min_dwell=8`, `max_dwell=15`] s, pick best-scoring covered cam (≠ current) at each cut.
    - `greedy`: hysteresis — hold current unless another cam's lookahead-window score beats it by `--switch-threshold`. Floor `min_dwell=4`, ceiling `max_dwell=18`.
-   Both force-switch if the active cam exits its coverage window mid-shot.
+   Both force-switch if the active cam exits its coverage window mid-shot. If no cam covers `t=0` (overlap windows that start a few seconds in), the editor opens at the first covered second and backfills the lead-in with cam 0.
 8. Emit EDL JSON.
 
 ## EDL schema (`edl.json`)
