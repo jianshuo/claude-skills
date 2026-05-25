@@ -21,6 +21,32 @@ polysync render-pip  edl.json --out out.mp4 --pip bottom-right   # cuts + corner
 
 `edit` and the renderers read each input's `.sync.json` automatically. Sync first with **wjs-syncing-multicam** (`polysync sync`) if the sidecars don't exist yet.
 
+Render flags for raw camera footage (see **Preflight** below for when to use each):
+
+```bash
+# Sony S-Log3 footage, shot vertical, FX6 cams turned on their side, for 小红书:
+polysync render-cuts edl.json --out out.mp4 \
+    --log slog3 \           # S-Log3/S-Gamut3.Cine -> Rec.709 grade
+    --rotate 1:90 --rotate 2:90 \   # rotate cam1,cam2 90° CW (FX6 with no flag)
+    --width 1080 --height 1920 --fill   # vertical, crop-to-fill (no black bars)
+```
+
+## Preflight — ALWAYS check raw footage before rendering (hard-won)
+
+Straight-off-the-card footage renders WRONG without these checks. Spend 2 minutes here or you'll render the whole thing broken (we did).
+
+1. **Color profile (Log).** Sony FX3/FX6 default to **S-Log3 / S-Gamut3.Cine** — flat, grey, low-contrast. It MUST be converted to Rec.709 or it looks washed-out and broken. Check the `.XML` sidecar's `CaptureGammaEquation` (`s-log3-cine`) or `ffprobe -show_entries stream=color_transfer`. Fix: `--log slog3`. (Performance: the LUT is applied AFTER downscale automatically — a 3D LUT on 4K is ~4x slower than on 1080p for an identical result.)
+2. **Orientation.** Phone / vertically-mounted shoots record rotated. Extract one frame per cam (`ffmpeg -ss 200 -i CAM -frames:v 1 f.jpg`) and LOOK. Some cameras (FX3) write a rotation flag → ffmpeg auto-rotates, fine. Others (FX6 physically turned on its side) write **no flag** → people come out lying down. Fix per-cam: `--rotate 1:90` (90 = clockwise; try 270 if upside-from-the-other-side).
+3. **Delivery orientation.** 小红书 / Reels / Shorts are **vertical** — and this footage is usually shot vertical. Render `--width 1080 --height 1920 --fill`. Default (1920×1080, pad) is for landscape only; mixing a portrait source into a landscape frame pillarboxes it (ugly black side bars).
+4. **Staggered camera starts.** Cameras rarely roll at the same instant; the sidecar `delta`/coverage shows it. The opening N seconds may be single-cam (only the first-rolling camera covers t=0). That's unavoidable — expect a single-cam intro of `max(delta)` seconds.
+
+## Editing quality — when `polysync edit` isn't enough
+
+`polysync edit` switches to the **loudest mic** per second. With **close, bleeding mics** (each cam's mic also picks up the other speaker loudly), the close/guest mic stays loudest even when the *other* person talks, so the editor over-selects that cam and the cuts don't track the real speaker. Two fixes, applied by hand on the EDL when "cut to the correct speaker" matters:
+
+- **Per-mic baseline-normalized speaker attribution.** Per second, subtract each mic's own median energy, then pick whichever mic is *highest relative to its own baseline* → that's who's actually talking. (polysync's raw `cam[k] - mean(others)` doesn't remove the per-mic baseline offset, so it favors the loud mic.)
+- **Cutaways for rhythm (剪辑感).** Audio attribution alone gives long static holds. Cap any single shot (~8–10 s) and insert ~3 s cutaways to the **listener** (reaction shot) and the **wide** cam, alternating. The wide cam's quiet mic means the editor never picks it on energy — inject it deliberately for establishing / 整体.
+
 ## What this skill IS — and IS NOT
 
 | Is | Is not |
