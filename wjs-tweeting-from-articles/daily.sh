@@ -37,6 +37,10 @@ touch "$HISTORY"
 # a DIFFERENT article — one new tweet per hour until the backlog is empty.
 # (To restore once-per-day, re-add a guard on "\"date\":\"${today}\"" + posted.)
 
+# --- Step 0: refresh local mirror of iCloud articles (python3 reads iCloud
+# fine from launchd; bash doesn't). Picker then reads the local mirror. ---
+python3 "${HERE}/scripts/mirror-articles.py" || echo "WARN: mirror refresh failed (picker will use whatever's already mirrored / iCloud fallback)"
+
 # --- Step 1: pick article ---
 if [[ -n "${FORCE_FOLDER:-}" ]]; then
   FOLDER="$FORCE_FOLDER"
