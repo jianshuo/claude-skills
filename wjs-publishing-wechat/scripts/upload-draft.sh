@@ -80,7 +80,7 @@ if [[ -f "$ARTICLE_DIR/illustration.png" ]]; then
 import re, sys
 path = sys.argv[1]
 text = open(path).read()
-snippet = '\n\n整件事画出来，大概就是这样：\n\n![整件事画起来，是这样的](./illustration.png)\n'
+snippet = '\n\n![](./illustration.png)\n'
 m = re.search(r'\n##\s*后注\b', text)
 if m:
     new = text[:m.start()] + snippet + text[m.start():]
