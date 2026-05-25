@@ -14,6 +14,12 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${HOME}/.local/bin:${PATH}"
 export PATH
 
+# launchd has no proxy env; the Anthropic API (claude -p draft) needs the local
+# proxy from China or it 403s. Match the interactive shell's proxy.
+export HTTPS_PROXY="http://127.0.0.1:1087" HTTP_PROXY="http://127.0.0.1:1087"
+export https_proxy="http://127.0.0.1:1087" http_proxy="http://127.0.0.1:1087"
+export ALL_PROXY="socks5://127.0.0.1:1087" NO_PROXY="localhost,127.0.0.1,::1"
+
 LOG_DIR="${HOME}/Library/Logs/wjs-tweeting-from-articles"
 mkdir -p "$LOG_DIR"
 LOG="${LOG_DIR}/daily-$(date +%Y-%m-%d).log"
