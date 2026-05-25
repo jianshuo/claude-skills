@@ -174,6 +174,7 @@ python3 scripts/build_srt_from_asr.py <out.asr.json> <out.srt> [max_chars=18]
 - **build_srt_from_asr.py** also: splits cues on punctuation (HARD `。！？` flush; SOFT `，、；` flush past 8 chars; hard cap 18 chars), drops 呃/嗯/唉 fillers, and collapses immediate duplicate short tokens (才才→才). Every cue is timed by its first/last word so it sits exactly on the spoken audio — no drift.
 - **Per-clip transcription:** transcribe each *clip's own* audio (16k mono PCM) so the SRT timestamps come out clip-relative.
 - **Credentials:** live with the user (豆包语音引擎). Env names accepted by the script: `VOLC_ASR_APPID`/`VOLC_APPID` and `VOLC_ASR_ACCESS_TOKEN`/`VOLC_TOKEN`; `FFMPEG_BIN` optional.
+  - **This user's 火山 ASR and TTS share ONE credential set** — same appid + access token work for both services. They're stored in `~/code/.env` as `VOLC_TTS_APPID` / `VOLC_TTS_ACCESS_TOKEN` (plus `VOLC_APPID` in `~/.zshrc`), with `VOLC_ASR_APPID` / `VOLC_ASR_ACCESS_TOKEN` aliases appended pointing at the same values. So `set -a; source ~/code/.env; set +a` is enough — no separate ASR token to hunt for. If the aliases are ever missing, recreate them from the TTS values (they're the same secret).
 - **Dead ends (don't retry):** MediaKit asr-subtitles (doc 6448/2381968) still needs a public URL *and* a separate MediaKit API key. The 录音文件识别 file API needs a public URL.
 
 ## Local Whisper as last resort
