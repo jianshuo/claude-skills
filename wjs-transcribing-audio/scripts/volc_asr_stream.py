@@ -201,25 +201,36 @@ def main():
             print("NO RESULT"); sys.exit(1)
     else:
         n = (len(pcm) + chunk_bytes - 1) // chunk_bytes
-        print(f"long audio ({len(pcm)/BYTES_PER_SEC:.0f}s) -> {n} chunks of {CHUNK_SEC}s")
-        utts, text = [], ""
-        for i in range(n):
+        workers = min(MAX_WORKERS, n)
+        print(f"long audio ({len(pcm)/BYTES_PER_SEC:.0f}s) -> {n} chunks of {CHUNK_SEC}s, "
+              f"{workers} parallel")
+
+        def do_chunk(i):
             seg = pcm[i*chunk_bytes:(i+1)*chunk_bytes]
-            off_ms = i * CHUNK_SEC * 1000
-            res = None
             for attempt in range(3):
                 try:
-                    res = transcribe_pcm(seg); break
+                    return i, transcribe_pcm(seg)
                 except Exception as e:
-                    print(f"  chunk {i+1}/{n} attempt {attempt+1} failed: {e}")
+                    print(f"  chunk {i+1}/{n} attempt {attempt+1} failed: {e}", flush=True)
                     time.sleep(min(2 ** attempt, 10))
+            return i, None
+
+        results = [None] * n
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            for i, res in ex.map(do_chunk, range(n)):
+                results[i] = res
+                got = len(res.get("result", {}).get("utterances", [])) if res else 0
+                print(f"  chunk {i+1}/{n}: {got} utts" if res
+                      else f"  chunk {i+1}/{n}: FAILED", flush=True)
+
+        utts, text = [], ""
+        for i, res in enumerate(results):
             if not res:
-                print(f"  chunk {i+1}/{n}: NO RESULT, skipping"); continue
-            _shift(res, off_ms)
+                continue
+            _shift(res, i * CHUNK_SEC * 1000)
             r = res.get("result", {})
             utts += r.get("utterances", [])
             text += r.get("text", "")
-            print(f"  chunk {i+1}/{n}: {len(r.get('utterances', []))} utts")
         if not utts:
             print("NO RESULT (all chunks failed)"); sys.exit(1)
         result = {"result": {"utterances": utts, "text": text}}
