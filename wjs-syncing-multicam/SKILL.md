@@ -50,7 +50,7 @@ Raw PCM cross-correlation gives weak peaks and false matches when the two mics h
 6. **Compute overlap window** in the reference timeline: `overlap = [max(0, delta), min(ref_dur, delta + src_dur)]`.
 7. **Emit `.sync.json` sidecar** next to each non-reference input. No file is copied, trimmed, or re-encoded. The reference input gets a sidecar too (with `delta_seconds: 0`) so downstream code can treat all inputs uniformly.
 
-`scripts/sync.py` is the implementation. It emits **only** the `.sync.json` sidecar — no `_synced.MOV`, no re-encode.
+`polysync sync` is the implementation. It emits **only** the `.sync.json` sidecar — no `_synced.MOV`, no re-encode.
 
 ## Sidecar schema (`<input>.sync.json`)
 
@@ -86,7 +86,7 @@ One sidecar per original input, written next to it. Pure JSON, no comments in-fi
 | `drift_slope` | float | Linear clock-drift slope (dimensionless, ~10⁻⁵). `0.0` means no measurable drift. Downstream applies `atempo = 1 + drift_slope` to the source ONLY for sync-sound / long-form lip-sync — for camera-cut editing, ignore. |
 | `overlap_in_reference` | `[start, end]` (seconds) | The window during which both source and reference have coverage, expressed in the reference's timeline. Use this to trim outputs to mutually-valid time ranges. |
 | `overlap_in_source` | `[start, end]` (seconds) | Same window expressed in the source's local timeline. `overlap_in_reference[0] - delta_seconds = overlap_in_source[0]`. |
-| `verification` | object | Output of running verify.py — drives a "did sync converge?" gate. `median_residual_ms` should be a few ms; `residual_spread_ms` > 1 frame at delivery fps means drift correction was needed but skipped. |
+| `verification` | object | Output of running `polysync verify` — drives a "did sync converge?" gate. `median_residual_ms` should be a few ms; `residual_spread_ms` > 1 frame at delivery fps means drift correction was needed but skipped. |
 
 ## How downstream consumes the sidecar
 
