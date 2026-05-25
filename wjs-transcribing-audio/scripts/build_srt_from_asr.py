@@ -8,14 +8,24 @@ utterance into short cues (good for vertical video), timing every cue by its
 first/last word — so cues sit exactly on the spoken audio with no drift.
 
 Usage: build_srt_from_asr.py <asr.json> <out.srt> [max_chars]
+                             [--soft-min N] [--strip-punct]
+
+Segmentation knobs:
+  max_chars / --max-chars  hard cap; raise it to avoid mid-sentence splits and
+                           let cue boundaries fall on punctuation (default 18).
+  --soft-min N             min chars before a comma/、/； flushes a cue (default 8).
+  --strip-punct            remove ALL punctuation from the displayed cue text
+                           (turns commas/periods into clean line breaks). By
+                           default only leading/trailing punctuation is stripped.
 """
-import sys, json, re
+import sys, json, argparse
 
 HARD = "。！？!?…"
 SOFT = "，、；,;：: "
 PUNCT = HARD + SOFT
-MAX = int(sys.argv[3]) if len(sys.argv) > 3 else 18   # max chars per cue
-SOFT_MIN = 8                                          # min chars before a soft break flushes
+MAX = 18           # overwritten from CLI in main()
+SOFT_MIN = 8       # overwritten from CLI in main()
+STRIP_ALL = False  # overwritten from CLI in main()
 
 
 def fmt(ms):
