@@ -168,10 +168,10 @@ def main():
             out[-1][1] = min(out[-1][1], c[0])  # trim previous to avoid overlap
         out.append(c)
 
-    with open(sys.argv[2], "w", encoding="utf-8") as f:
+    with open(args.out_srt, "w", encoding="utf-8") as f:
         for i, (a, b, t) in enumerate(out, 1):
             f.write(f"{i}\n{fmt(a)} --> {fmt(b)}\n{t}\n\n")
-    print(f"{len(utts)} utterances -> {len(out)} cues -> {sys.argv[2]}")
+    print(f"{len(utts)} utterances -> {len(out)} cues -> {args.out_srt}")
 
 
 if __name__ == "__main__":
