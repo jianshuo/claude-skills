@@ -60,7 +60,7 @@ def loudest_audio_stream(video_path: Path) -> int:
     return best_idx
 
 
-def extract_audio_pcm(video_path: Path, dst: Path, stream: int | None = None):
+def extract_audio_pcm(video_path: Path, dst: Path, stream=None):
     ch = loudest_audio_stream(video_path) if stream is None else stream
     cmd = [
         "ffmpeg", "-nostdin", "-y", "-i", str(video_path),
