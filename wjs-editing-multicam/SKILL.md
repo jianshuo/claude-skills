@@ -7,6 +7,20 @@ description: Use when the user has 2+ recordings of the same event (each with a 
 
 Combine N synced camera angles into a single rendered MP4. Decisions are audio-energy-driven only — the cam with the loudest mic each second wins. Output is hard cuts (or hard cuts plus a corner PiP).
 
+## Setup & commands
+
+The implementation lives in the open-source **`polysync`** pip package (<https://pypi.org/project/polysync/> · <https://github.com/jianshuo/polysync>) — this skill no longer ships its own scripts. Install it, then drive it via its CLI:
+
+```bash
+python3 -m pip install -U polysync      # needs ffmpeg/ffprobe on PATH
+
+polysync edit        CAM_A CAM_B CAM_C --out edl.json   # build the decision list
+polysync render-cuts edl.json --out out.mp4             # hard cuts
+polysync render-pip  edl.json --out out.mp4 --pip bottom-right   # cuts + corner inset
+```
+
+`edit` and the renderers read each input's `.sync.json` automatically. Sync first with **wjs-syncing-multicam** (`polysync sync`) if the sidecars don't exist yet.
+
 ## What this skill IS — and IS NOT
 
 | Is | Is not |
