@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-25]
+
+### Changed
+
+- **`wjs-syncing-multicam`** — implementation migrated to the open-source **`polysync`** pip package (`pip install polysync`; driven via `polysync sync` / `polysync verify`). Added multi-probe drift detection with linear fit — corrects 5–50 ppm clock drift between cameras over long shoots. Added auto-selection of the loudest audio stream per file, handling Sony FX6 MXF clips where `a:0`/`a:1` are silent and the room mic sits on `a:2`/`a:3`. Reference input now also receives a `.sync.json` sidecar (`delta_seconds: 0`) so downstream tools can treat all inputs uniformly.
+- **`wjs-editing-multicam`** — implementation migrated to `polysync` (`polysync edit` builds the decision list; `polysync render-cuts` / `render-pip` render). New render flags: `--log slog3` (S-Log3 → Rec.709 LUT applied after downscale for speed); `--rotate N:DEG` (per-cam rotation for physically-tilted cameras without a rotation flag); `--width`/`--height`/`--fill` (vertical output for 小红书/Shorts/Reels); `--duck-audio` + `--audio-cams` (speaker-gated multi-mic mix — keeps the active speaker's close mic and ducks the rest, replacing the single-cam soundtrack with a much cleaner signal). Added detailed preflight checklist covering color profile, orientation check, and delivery format. Documented per-mic baseline-normalized speaker attribution and deliberate cutaway injection for richer cut logic beyond raw energy-switching.
+- **`wjs-tweeting-from-articles`** — added batch scheduling mode: enqueue multiple articles at once and auto-post at a configurable interval (every N hours). Updated `pick-next-article.sh` selection logic; cleared stale state files (`today-angle.txt`, `today-tweet.txt`). Continued iterative workflow refinements.
+- **`wjs-transcribing-audio`** — hardened the Whisper path: explicit 10-min chunking at 64 kbps mono MP3 for resilience under flaky proxies; added offline local `openai-whisper` (medium model) as a quality-floor fallback when no API access is available; tightened guidance on never using `response_format=srt` — always request word-level timestamps and assemble cues with the punctuation-aware assembler. Continued iterative routing improvements.
+- **`wjs-publishing-wechat`** — added **加粗加红** enforcement rule: every article must contain 2–4 `**bold**` spans (rendered as red `<strong>` by `upload-draft.sh`), placed on key conclusions and core concept words — never on whole paragraphs or transitions. Zero instances = article is not finished. Also enforced 盘古之白 (space between CJK and Latin/digit runs).
+- **`wjs-converting-text-to-video`** — iterative update to the daily upload batch script.
+- **README** — updated `wjs-syncing-multicam` and `wjs-editing-multicam` sections to reference the `polysync` package, the drift-correction approach, and new render flags (log grading, rotation, vertical output, speaker-gated audio); updated `wjs-publishing-wechat` to document the 加粗加红 requirement; updated `wjs-tweeting-from-articles` to note batch scheduling mode.
+
 ## [2026-05-24]
 
 ### Added

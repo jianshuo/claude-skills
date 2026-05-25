@@ -115,6 +115,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - **轻润色，不重写。** 保留作者语气和节奏，只改错字、调段落、抚平特别拗口的句子。
 - 自动生成 **题图（cover）** 和 **解释图（illustration）**。
 - 自动生成标题候选、摘要、可直接粘贴到 mp.weixin.qq.com 的 HTML。
+- 每篇正文必须有 2–4 处 `**加粗**`（`upload-draft.sh` 渲染为红色），打在点睛句和核心概念词上。
 - 通过 `md2wechat` 上传草稿到公众号后台。
 
 > 触发词：`写一篇微信文章` / `公众号` / `润色` / `题图` / `发公众号`
@@ -180,18 +181,21 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ### [`wjs-syncing-multicam`](./wjs-syncing-multicam/)
 
-同一事件、不同设备拍的 N 路素材，用 **音频互相关** 算出每个文件相对共同时间轴的偏移。
+同一事件、不同设备拍的 N 路素材，用 **音频互相关** 算出每个文件相对共同时间轴的偏移。实现由开源的 **[`polysync`](https://pypi.org/project/polysync/)** pip 包承载（`pip install polysync`），通过 `polysync sync` 命令驱动。
 
 - **关键设计：sidecar over re-encode。** 不生成 `_synced.MOV`，只输出每个原始文件旁边一份 `.sync.json`。原片永不被改写、不被复制、不被重编码。
 - 75 分钟 3 机位 4K 拍摄 = 60+ GB，重编码同步会让磁盘翻倍且画质下降。Sidecar 是无损可逆元数据。
-- 下游用 `ffmpeg -itsoffset` 在消费侧应用偏移。
+- 多探针漂移检测 + 线性拟合 —— 校正相机时钟间 5–50 ppm 晶振偏差，保证长节目末尾不跑偏。
+- 自动选最响音频轨（处理 Sony FX6 MXF 等多轨文件中 `a:0`/`a:1` 静音的边界情况）。
+- 下游用 `ffmpeg -itsoffset` 在消费侧应用偏移；`polysync verify` 做独立残差校验。
 
 ### [`wjs-editing-multicam`](./wjs-editing-multicam/)
 
-读 sidecar，自动剪辑成单条 MP4。决策完全由 **每秒音频能量** 驱动 —— 哪个机位的麦最响，就切到哪个。
+读 sidecar，自动剪辑成单条 MP4。决策完全由 **每秒音频能量** 驱动 —— 哪个机位的麦最响，就切到哪个。实现由 **[`polysync`](https://pypi.org/project/polysync/)** 驱动（`polysync edit` 生成 EDL，`polysync render-cuts` / `render-pip` 渲染）。
 
-- 硬切（无 crossfade）+ 可选的 picture-in-picture 小窗。
-- 音频取自被选中那个机位的麦（不做多麦克风 mix）。
+- 硬切（无 crossfade）+ 可选的 picture-in-picture 小窗（`render-pip`）。
+- 音频可选单机位麦（默认）或 `--duck-audio` 说话人门控混音——每秒保留当前说话人的领夹麦、压低其余麦，消除串音和底噪。`--audio-cams` 限定门控范围，排除宽景/空间感声道。
+- 原生支持 Sony S-Log3 → Rec.709 套 LUT（`--log slog3`）、逐机位旋转（`--rotate 1:90`）、竖屏输出（`--width 1080 --height 1920 --fill`）。
 - 不做人脸 / 取景识别 —— 那是 [`wjs-overlaying-video`](./wjs-overlaying-video/) 或 HyperFrames 的事。
 
 ---
@@ -253,6 +257,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 从文章里起草三条候选（A 金句 / B 核心比喻 / C 认知反差），让用户选一条
 - 用户确认后立刻真发（`xurl POST /2/tweets`），记录到 `state/history.jsonl` 防重复
 - 风格约束：王建硕语气，平实家常，不加 hashtag / emoji / mp.weixin 链接；中文 tweet ≤ 120 字
+- 支持**批量排期模式**：一次把多篇文章排进队列，按每 N 小时一条自动发。
 - 可选 `--dry-run` 预览不发；支持 `/schedule daily` 自动触发
 
 > 触发词：`今天的 tweet` / `从文章里发推` / `每天发一个 tweet` / `/wjs-tweeting-from-articles`
