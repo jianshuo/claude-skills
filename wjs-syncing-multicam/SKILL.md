@@ -28,7 +28,7 @@ Raw PCM cross-correlation gives weak peaks and false matches when the two mics h
 
 ## Algorithm
 
-1. **Extract mono PCM at 8 kHz, 16-bit** from each input.
+1. **Extract mono PCM at 8 kHz, 16-bit** from each input. The audio stream is **auto-selected by loudness** (`loudest_audio_stream`): probe each `0:a:N` over a 60 s mid-file window and pick the highest mean volume. Multi-track pro cameras break a naive `0:a:0` — Sony FX6 MXF clips carry 4 mono PCM tracks and routinely leave a:0 / a:1 **dead (~-90 dB)** with the room mic on a:2 / a:3; correlating the silent track fails to sync. Single-stream inputs (most MP4 cams) short-circuit to a:0.
 2. **Log-energy envelope** at 100 Hz (10 ms hop, 50 ms window). High-pass with a 2nd-order Butterworth, 0.05 Hz cutoff, filtfilt — removes slow drift and gain offsets.
 3. **FFT cross-correlate envelopes** end-to-end → coarse offset (~10 ms).
 4. **Refine at sample level** with a 60 s probe from B near the coarse-aligned position in A, ±2 s search window, parabolic peak interpolation.
