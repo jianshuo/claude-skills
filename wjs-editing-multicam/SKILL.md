@@ -28,8 +28,11 @@ Render flags for raw camera footage (see **Preflight** below for when to use eac
 polysync render-cuts edl.json --out out.mp4 \
     --log slog3 \           # S-Log3/S-Gamut3.Cine -> Rec.709 grade
     --rotate 1:90 --rotate 2:90 \   # rotate cam1,cam2 90° CW (FX6 with no flag)
-    --width 1080 --height 1920 --fill   # vertical, crop-to-fill (no black bars)
+    --width 1080 --height 1920 --fill \   # vertical, crop-to-fill (no black bars)
+    --duck-audio --audio-cams 0,1        # clean speaker-gated audio (cams 0,1 = the two lavs)
 ```
+
+`--duck-audio` replaces the single-cam soundtrack with a speaker-gated mix: each moment keeps the active speaker's close mic and ducks the rest (much cleaner than a constant 2-mic sum, which piles up bleed/room tone). `--audio-cams 0,1` restricts gating to the real speaker mics — **always exclude the wide/room cam**, whose mic sits at a similar level but is reverby and would otherwise get picked. (See the editing-quality note below for the why.)
 
 ## Preflight — ALWAYS check raw footage before rendering (hard-won)
 
