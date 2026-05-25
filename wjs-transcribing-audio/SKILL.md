@@ -164,6 +164,10 @@ python3 scripts/volc_asr_stream.py <clip.mp4|wav|mp3|pcm> <out.asr.json>
 
 # 2. Build a clean, word-timed SRT from the ASR JSON
 python3 scripts/build_srt_from_asr.py <out.asr.json> <out.srt> [max_chars=18]
+#    Segmentation knobs (optional):
+#      --max-chars N   raise to keep cues whole / break on punctuation, not mid-sentence
+#      --soft-min N    min chars before a ，、； flushes a cue (default 8)
+#      --strip-punct   remove ALL punctuation from displayed text (clean subtitle look)
 ```
 
 - **Endpoint:** `wss://openspeech.bytedance.com/api/v3/sauc/bigmodel`
