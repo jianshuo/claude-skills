@@ -28,7 +28,7 @@ Earlier versions of this skill produced `*_synced.MOV` files by trimming + re-en
 - **Disk** — a 75-min 4K shoot from 3 cameras is 60+ GB. Re-encoded synced copies double that for no information gain.
 - **Quality** — every re-encode is lossy. The originals are the source of truth; sidecars are reversible metadata.
 - **Speed** — `_synced.MOV` generation took 10+ min per file on Apple Silicon; sidecar emission takes seconds.
-- **Composability** — any downstream tool (autoedit.py, NLE import, ffmpeg one-liners) reads the sidecar and applies the offset itself. No tool-specific file format lock-in.
+- **Composability** — any downstream tool (`polysync edit`, NLE import, ffmpeg one-liners) reads the sidecar and applies the offset itself. No tool-specific file format lock-in.
 
 ## When NOT to use
 
