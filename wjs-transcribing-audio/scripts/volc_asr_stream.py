@@ -114,6 +114,11 @@ BYTES_PER_SEC = 16000 * 2          # 16k mono s16le
 CHUNK_SEC = 600                    # 10-min ASR chunks — the streaming session
                                    # times out ("waiting next packet") on long
                                    # (>~12 min) single connections, so split.
+MAX_WORKERS = int(os.environ.get("VOLC_ASR_WORKERS", "4"))  # chunks transcribed
+                                   # concurrently. The bigmodel streaming API runs
+                                   # at ~realtime per connection, so N parallel
+                                   # connections cut wall time ~Nx. Lower if the
+                                   # account hits a concurrency/QPS cap.
 
 
 def transcribe_pcm(pcm):
