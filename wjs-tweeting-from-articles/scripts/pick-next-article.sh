@@ -13,7 +13,11 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SKILL_DIR="$(cd "$HERE/.." && pwd)"
 HISTORY="$SKILL_DIR/state/history.jsonl"
-ARTICLES_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles"
+# Read from the LOCAL mirror (daily.sh refreshes it via mirror-articles.py),
+# NOT iCloud — launchd-spawned bash can't reliably read iCloud. Falls back to
+# the iCloud source if the mirror doesn't exist yet (e.g. interactive first run).
+ARTICLES_DIR="$HOME/.local/share/wjs-tweet-articles/articles"
+[[ -d "$ARTICLES_DIR" ]] || ARTICLES_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles"
 MAX_AGE_DAYS=14
 
 [[ -d "$ARTICLES_DIR" ]] || { echo "error: $ARTICLES_DIR not found" >&2; exit 2; }
