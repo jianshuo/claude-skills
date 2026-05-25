@@ -110,8 +110,8 @@ working_dir/
   cam_a.MOV.sync.json       # from wjs-syncing-multicam
   cam_b.MOV                 # ORIGINAL, untouched
   cam_b.MOV.sync.json
-  edl.json                  # from autoedit.py
-  multicam_render.mp4       # from render_cuts.py OR render_pip.py
+  edl.json                  # from `polysync edit`
+  multicam_render.mp4       # from `polysync render-cuts` OR `polysync render-pip`
 ```
 
 ## Common pitfalls
