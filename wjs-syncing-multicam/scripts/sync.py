@@ -232,13 +232,22 @@ def write_sidecar(media_path: Path, *, source: str, reference: str,
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("a", type=Path, help="Camera A (the reference; defines the timeline)")
-    ap.add_argument("b", type=Path, help="Camera B (will be aligned to A)")
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("a", type=Path,
+                    help="Reference recording — defines the common timeline. Usually a main camera.")
+    ap.add_argument("b", type=Path,
+                    help="Source to align to the reference.")
+    ap.add_argument("--partial", action="store_true",
+                    help="Lenient mode for a source that covers only PART of the "
+                         "reference's span (Riverside / phone / lavalier / late clip). "
+                         "Degrades gracefully on few probes instead of failing, and "
+                         "writes only the source sidecar (no reference sidecar).")
     args = ap.parse_args()
 
     A_dur = media_duration(args.a)
     B_dur = media_duration(args.b)
+    print(f"Mode: {'partial-coverage' if args.partial else 'full-overlap'}")
     print(f"A (reference): {args.a.name}  duration={A_dur:.3f}s")
     print(f"B (source):    {args.b.name}  duration={B_dur:.3f}s")
 
@@ -262,36 +271,45 @@ def main():
         print("Coarse cross-correlation...")
         coarse_d, coarse_v = coarse_offset(env_a, env_b, esr)
         print(f"  coarse delta = {coarse_d:+.4f}s (xc/N={coarse_v:.3f})")
+        if abs(coarse_v) < 0.3:
+            print("  WARNING: low coarse correlation; sync may be unreliable.",
+                  file=sys.stderr)
 
         print("Multi-probe sample-level refinement...")
         probes = multi_probe(a, b, coarse_d, B_dur, A_dur)
-        if not probes:
-            print("ERROR: could not find good probes; sync failed.", file=sys.stderr)
-            sys.exit(1)
-
-        bs_arr = np.array([p[0] for p in probes])
-        d_arr = np.array([p[1] for p in probes])
-        v_arr = np.array([p[2] for p in probes])
-        good = np.abs(v_arr) > 0.05
-        print(f"  good probes: {good.sum()} / {len(probes)}")
+        good = np.array([abs(p[2]) > 0.05 for p in probes], dtype=bool)
+        print(f"  good probes: {int(good.sum())} / {len(probes)}")
         for bs, d, v in probes:
             print(f"    B@{bs:7.1f}s  delta={d:+.4f}s  ncoef={v:+.3f}")
 
-        if good.sum() < 3:
-            print("ERROR: too few good probes; sync may be unreliable.", file=sys.stderr)
+        if good.sum() >= 3:
+            # Enough good matches → linear drift fit, canonical at B's midpoint
+            # so residual error is symmetric around zero.
+            bs_arr = np.array([p[0] for p in probes])
+            d_arr = np.array([p[1] for p in probes])
+            slope, intercept = np.polyfit(bs_arr[good], d_arr[good], 1)
+            delta = float(slope * (B_dur / 2) + intercept)
+            drift_slope = float(slope)
+            print(f"\n  delta(b_t) = {slope:+.3e} * b_t + {intercept:+.6f}s")
+            print(f"  drift over B's span: {slope * B_dur * 1000:+.2f} ms")
+            print(f"  canonical delta (at B midpoint): {delta:+.6f}s")
+        elif not args.partial:
+            # Full-overlap mode demands strong evidence. Fail loudly rather than
+            # emit a guessed offset from a likely-wrong pairing.
+            print("ERROR: too few good probes (<3); sync unreliable. If this is a "
+                  "short partial-coverage clip, re-run with --partial.",
+                  file=sys.stderr)
             sys.exit(1)
-
-        slope, intercept = np.polyfit(bs_arr[good], d_arr[good], 1)
-        # Canonical at midpoint of B — symmetric residual error.
-        midpoint_b = B_dur / 2
-        canonical = float(slope * midpoint_b + intercept)
-        drift_ms = float(slope * B_dur * 1000)
-        print(f"\n  delta(b_t) = {slope:+.3e} * b_t + {intercept:+.6f}s")
-        print(f"  drift over B's span: {drift_ms:+.2f} ms")
-        print(f"  canonical delta (at B midpoint): {canonical:+.6f}s")
-
-    delta = canonical  # B's t=0 in A's timeline
-    drift_slope = float(slope)
+        elif probes:
+            # Partial mode, a few probes: median is robust; skip drift fit.
+            delta = float(np.median([p[1] for p in probes]))
+            drift_slope = 0.0
+            print(f"\n  few probes — using median delta: {delta:+.4f}s (drift=0)")
+        else:
+            # Partial mode, no usable probes (very short clip): trust coarse.
+            delta = float(coarse_d)
+            drift_slope = 0.0
+            print(f"\n  no probes — falling back to coarse delta: {delta:+.4f}s (drift=0)")
 
     # Overlap window (A-timeline = reference timeline)
     overlap_ref_start = max(0.0, delta)
@@ -309,17 +327,6 @@ def main():
               file=sys.stderr)
         sys.exit(1)
 
-    # Reference sidecar — self-aligned, delta=0, drift=0. Same overlap window
-    # so downstream sees consistent coverage info per cam.
-    a_sc = write_sidecar(
-        args.a,
-        source=args.a.name,
-        reference=args.a.name,
-        delta_seconds=0.0,
-        drift_slope=0.0,
-        overlap_in_reference=(overlap_ref_start, overlap_ref_end),
-        overlap_in_source=(overlap_ref_start, overlap_ref_end),
-    )
     b_sc = write_sidecar(
         args.b,
         source=args.b.name,
@@ -329,9 +336,22 @@ def main():
         overlap_in_reference=(overlap_ref_start, overlap_ref_end),
         overlap_in_source=(overlap_src_start, overlap_src_end),
     )
+    print(f"\nWrote {b_sc}")
 
-    print(f"\nWrote {a_sc}")
-    print(f"Wrote {b_sc}")
+    # Reference sidecar (self-aligned, delta=0) only in full-overlap mode —
+    # partial mode assumes the reference already belongs to an established set.
+    if not args.partial:
+        a_sc = write_sidecar(
+            args.a,
+            source=args.a.name,
+            reference=args.a.name,
+            delta_seconds=0.0,
+            drift_slope=0.0,
+            overlap_in_reference=(overlap_ref_start, overlap_ref_end),
+            overlap_in_source=(overlap_ref_start, overlap_ref_end),
+        )
+        print(f"Wrote {a_sc}")
+
     print("\nNo video re-encoded. Originals untouched. Run verify.py next.")
 
 
