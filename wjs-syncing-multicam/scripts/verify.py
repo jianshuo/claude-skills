@@ -115,17 +115,17 @@ def main():
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
         ref_pcm, src_pcm = td / "ref.pcm", td / "src.pcm"
-        extract_with_offset(args.reference, ref_pcm)
-        # Apply the source's offset (so its audio aligns to reference timeline)
-        # plus, optionally, drift correction.
-        atempo = 1.0 + drift_slope if args.apply_drift else 1.0
-        extract_with_offset(args.source, src_pcm, itsoffset=delta, atempo=atempo)
+        # Extract both NATIVELY — the offset is applied by index arithmetic
+        # below, not by ffmpeg (-itsoffset is a no-op on headerless raw PCM).
+        extract_audio_pcm(args.reference, ref_pcm)
+        extract_audio_pcm(args.source, src_pcm)
         ref = np.fromfile(ref_pcm, dtype=np.int16).astype(np.float32)
         src = np.fromfile(src_pcm, dtype=np.int16).astype(np.float32)
 
-    # After -itsoffset, both PCM arrays start at reference t=0 in their own
-    # local frame indexing. The source PCM has leading zeros (silence) covering
-    # [0, delta) when delta > 0.
+    # Source-local time τ maps to reference time τ + delta (and, with drift
+    # applied, the source clock runs at 1+slope). So a probe at reference time
+    # `bs` is drawn from the source at local time (bs - delta), then sought
+    # near ref index bs; the peak offset is the residual sync error.
     pl = int(args.probe_len * SR)
     pad = int(0.5 * SR)
 
@@ -138,10 +138,15 @@ def main():
 
     rs = []
     for bs in np.arange(ovl_start, ovl_end, args.step):
+        # Source-local time corresponding to this reference time.
+        src_t = bs - delta
+        if args.apply_drift:
+            src_t = src_t / (1.0 + drift_slope)
+        si = int(src_t * SR)
         bsi = int(bs * SR)
-        if bsi + pl > len(src):
+        if si < 0 or si + pl > len(src):
             continue
-        probe = src[bsi:bsi + pl]
+        probe = src[si:si + pl]
         if np.abs(probe).mean() < 1.0:
             # Silence — no signal to correlate. Skip.
             continue
