@@ -112,7 +112,7 @@ Common case — main cams cover 75 min, a Riverside / phone / lavalier recorder 
 2. Finds where the new clip's `t=0` sits in the reference timeline (`delta_seconds` may be large, e.g. 1842.5).
 3. Writes ONLY the source sidecar — **no black padding, no audio padding, no re-encode.** `overlap_in_reference` tells consumers exactly when this input has coverage; outside that window, fall back to the main cams.
 
-The `--partial` flag changes only the failure philosophy: it degrades gracefully (median delta on few probes, coarse delta if none) instead of failing on <3 good probes, and skips the reference sidecar (the reference is assumed to already belong to an established sync set). Everything else is identical to the default mode — there is no separate `sync_partial.py` anymore.
+The `--partial` flag changes only the failure philosophy: it degrades gracefully (median delta on few probes, coarse delta if none) instead of failing on <3 good probes, and skips the reference sidecar (the reference is assumed to already belong to an established sync set). Everything else is identical to the default mode.
 
 ## When to skip drift correction
 
