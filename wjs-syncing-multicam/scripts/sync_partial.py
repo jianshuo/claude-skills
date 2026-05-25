@@ -20,9 +20,45 @@ SR = 8000
 SCHEMA_VERSION = 1
 
 
+def loudest_audio_stream(video_path):
+    """Index of the highest-mean-volume audio stream (`0:a:N`), 60 s mid probe.
+
+    Multi-track pro cameras (e.g. Sony FX6 MXF: 4 mono tracks, a:0/a:1 often
+    dead at ~-90 dB, mic on a:2/a:3) would make a:0-only extraction correlate
+    silence. Single-stream inputs short-circuit to a:0.
+    """
+    streams = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=index", "-of", "csv=p=0", str(video_path)],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip().splitlines()
+    if len(streams) <= 1:
+        return 0
+    best_idx, best_db = 0, -1e9
+    for ch in range(len(streams)):
+        err = subprocess.run(
+            ["ffmpeg", "-nostdin", "-hide_banner", "-ss", "300", "-t", "60",
+             "-i", str(video_path), "-map", f"0:a:{ch}",
+             "-af", "volumedetect", "-f", "null", "-"],
+            capture_output=True, text=True,
+        ).stderr
+        for line in err.splitlines():
+            if "mean_volume" in line:
+                try:
+                    db = float(line.split("mean_volume:")[1].strip().split()[0])
+                except (IndexError, ValueError):
+                    db = -1e9
+                if db > best_db:
+                    best_db, best_idx = db, ch
+                break
+    print(f"  [{video_path.name}] loudest audio stream: a:{best_idx} ({best_db:.1f} dB)")
+    return best_idx
+
+
 def extract(video, dst):
+    ch = loudest_audio_stream(video)
     subprocess.run(["ffmpeg", "-nostdin", "-y", "-i", str(video),
-                    "-map", "0:a:0", "-ac", "1", "-ar", str(SR),
+                    "-map", f"0:a:{ch}", "-ac", "1", "-ar", str(SR),
                     "-f", "s16le", str(dst)], check=True, stderr=subprocess.DEVNULL)
 
 
