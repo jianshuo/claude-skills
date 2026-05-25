@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """Verify a (reference, source, sidecar) tuple.
 
-Re-extract audio from BOTH originals — with `-itsoffset delta_seconds` applied
-to the source per its sidecar — and run multi-probe cross-correlation within
-the overlap window. Writes results back into the sidecar's `verification`
-field.
+Re-extract audio from BOTH originals NATIVELY (no offset baked into ffmpeg) and
+run multi-probe cross-correlation within the overlap window, applying the
+sidecar's `delta_seconds` (and optional drift) as index arithmetic in numpy.
+Writes results back into the sidecar's `verification` field.
+
+Why index arithmetic, not `ffmpeg -itsoffset`: `-itsoffset` shifts input
+timestamps, but when muxing to a headerless raw stream (`-f s16le`) there are
+no timestamps to carry the offset — it is silently dropped and NO leading
+silence is inserted. Relying on it makes the source's t=0 line up with the
+reference's t=0 regardless of delta, so every probe correlates the wrong
+region, peaks land in noise (ncoef ~0), and verification falsely FAILs. We
+extract both natively and shift indices ourselves, which matches exactly how
+sync.py computed the offset in the first place.
 
 PASS = `median_residual_ms < 15` AND `residual_spread_ms < 1 frame at target
 fps` (default 30 fps → 33.33 ms).
@@ -21,19 +30,48 @@ from scipy import signal
 SR = 8000
 
 
-def extract_with_offset(video: Path, dst: Path, *, itsoffset: float = 0.0,
-                        atempo: float = 1.0):
-    """Extract mono PCM @ 8 kHz. `itsoffset` shifts the input's t=0 forward
-    by N seconds (positive = source starts later in reference timeline)."""
-    cmd = ["ffmpeg", "-nostdin", "-y"]
-    if abs(itsoffset) > 1e-9:
-        cmd += ["-itsoffset", f"{itsoffset:.6f}"]
-    cmd += ["-i", str(video), "-map", "0:a:0", "-ac", "1", "-ar", str(SR)]
-    if abs(atempo - 1.0) > 1e-9:
-        # atempo only accepts factors in [0.5, 100]; for the tiny drift
-        # corrections we care about, one filter is enough.
-        cmd += ["-filter:a", f"atempo={atempo:.9f}"]
-    cmd += ["-f", "s16le", str(dst)]
+def loudest_audio_stream(video_path: Path) -> int:
+    """Index of the highest-mean-volume audio stream (`0:a:N`), 60 s mid probe.
+
+    Mirrors sync.py: FX6 MXF clips leave a:0 / a:1 dead (~-90 dB) with the room
+    mic on a:2 / a:3, so a:0-only extraction would correlate silence. Verify
+    must pick the SAME track sync picked, or residuals are meaningless.
+    """
+    streams = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=index", "-of", "csv=p=0", str(video_path)],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip().splitlines()
+    if len(streams) <= 1:
+        return 0
+    best_idx, best_db = 0, -1e9
+    for ch in range(len(streams)):
+        err = subprocess.run(
+            ["ffmpeg", "-nostdin", "-hide_banner", "-ss", "300", "-t", "60",
+             "-i", str(video_path), "-map", f"0:a:{ch}",
+             "-af", "volumedetect", "-f", "null", "-"],
+            capture_output=True, text=True,
+        ).stderr
+        for line in err.splitlines():
+            if "mean_volume" in line:
+                try:
+                    db = float(line.split("mean_volume:")[1].strip().split()[0])
+                except (IndexError, ValueError):
+                    db = -1e9
+                if db > best_db:
+                    best_db, best_idx = db, ch
+                break
+    return best_idx
+
+
+def extract_audio_pcm(video: Path, dst: Path):
+    """Extract the loudest audio stream as mono PCM @ 8 kHz, no offset applied."""
+    ch = loudest_audio_stream(video)
+    cmd = [
+        "ffmpeg", "-nostdin", "-y", "-i", str(video),
+        "-map", f"0:a:{ch}", "-ac", "1", "-ar", str(SR),
+        "-f", "s16le", str(dst),
+    ]
     subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL)
 
 
