@@ -119,7 +119,8 @@ If you write description footers, signatures, or "subscribe to me" lines into a 
 | `access_denied 403` on consent screen | Add user's Google account to the OAuth client's Test users list in Google Cloud Console |
 | `[Errno 65] No route to host` mid-upload | Almost always a proxy issue — verify `curl --max-time 10 https://upload.googleapis.com/upload/youtube/v3/videos` returns a 4xx (any 4xx = proxy reachable); if `000`, the proxy is down |
 | Upload stalls with no progress lines | The proxy is silently buffering. Lower `--chunk-mb 4` or restart the proxy daemon |
-| `quotaExceeded` | YouTube Data API default quota is 10,000 units/day, each upload is 1,600 units — so ~6 uploads/day. Request a quota bump in Google Cloud Console, or split uploads across days |
+| `quotaExceeded` (API units) | YouTube Data API default quota is 10,000 units/day, each upload is 1,600 units — so ~6 uploads/day. Request a quota bump in Google Cloud Console, or split uploads across days |
+| `429 rateLimitExceeded` · `Video Uploads per day` | **A DIFFERENT, separate limit** from API units — YouTube's per-project *daily video-upload count* (anti-abuse, tied to project verification status; can be very low). When hit, **every** upload in the batch fails `init session failed: 429`, none succeed. It is NOT a proxy/auth problem and can't be worked around. It resets at **midnight US Pacific Time** (not your local midnight). Options: wait for the PT reset and re-run (the results file was cleared so all retry); or **upload via the YouTube Studio web UI**, which does NOT consume this API limit; or get the GCP project verified to raise the cap. Earlier uploads the same PT-day (even manual API ones) eat into this count. |
 | Token refresh fails | Delete `~/.config/youtube/token.json` and re-run; OAuth browser flow restarts |
 
 ## After uploading
