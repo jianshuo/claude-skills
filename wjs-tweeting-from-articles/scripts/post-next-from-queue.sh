@@ -61,6 +61,9 @@ line=$(awk -F'\t' -v i="$idx" '$1==i{print;exit}' "$QUEUE_FILE")
 slug=$(printf '%s' "$line" | cut -f2)
 text=$(printf '%s' "$line" | cut -f3-)
 
+# Shared X daily budget (all X-posting tasks share it).
+if ! "$HOME/.claude/automation/x-budget.sh" can; then log "X daily budget full — skip"; exit 0; fi
+
 JSON=$(jq -nc --arg t "$text" '{text:$t}')
 resp=$(xurl -X POST -d "$JSON" /2/tweets 2>&1)
 tid=$(printf '%s' "$resp" | grep -oE '"id":"[0-9]+"' | head -1 | sed -E 's/.*"([0-9]+)".*/\1/')
