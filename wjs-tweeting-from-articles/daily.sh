@@ -146,8 +146,4 @@ echo "✓ Posted: $TWEET_URL"
 TEXT_JSON=$(printf '%s' "$TWEET_TEXT" | jq -Rs .)
 echo "{\"date\":\"${today}\",\"slug\":\"${SLUG}\",\"angle\":\"${ANGLE}\",\"chars\":${CHARS},\"tweet_id\":\"${TWEET_ID}\",\"tweet_url\":\"${TWEET_URL}\",\"text\":${TEXT_JSON},\"status\":\"posted\"}" >> "$HISTORY"
 
-# Mark cadence + consume one unit of the shared X daily budget.
-date +%s > "$GAP_FILE"
-"$HOME/.claude/automation/x-budget.sh" bump
-
 echo "=== done: $(date -Iseconds) ==="
