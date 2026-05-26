@@ -98,12 +98,39 @@ TONEMAP_VF = ("zscale=tin=arib-std-b67:min=bt2020nc:pin=bt2020:t=linear:npl=203,
               "zscale=t=bt709:m=bt709:p=bt709:r=tv,format=yuv420p,fps=30")
 
 
+def _is_hlg_hdr(src):
+    """True only for genuinely HLG/HDR sources (need tone-mapping). Clips that
+    are ALREADY Rec.709 SDR (e.g. graded multicam renders, polysync output) must
+    NOT be tone-mapped — running the HLG recipe on SDR washes/darkens the color.
+    Detect via the video stream's color_transfer."""
+    try:
+        out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+            "-show_entries", "stream=color_transfer", "-of", "csv=p=0", str(src)],
+            capture_output=True, text=True).stdout.strip().lower()
+    except Exception:
+        out = ""
+    return out in ("arib-std-b67", "smpte2084")   # HLG / PQ
+
+
 def tonemap_to_sdr(src, dst):
-    """HLG->SDR 30fps h264 with the locked recipe. Skips if dst is up-to-date."""
+    """Make a render-ready body clip with DENSE keyframes (-g 30) so HyperFrames
+    can seek every frame. HLG/HDR sources get the locked zscale tone-map; sources
+    that are already SDR just get a straight re-encode (NO tone-map — that would
+    ruin already-correct color). Skips if dst is up-to-date."""
     if dst.exists() and dst.stat().st_mtime >= src.stat().st_mtime:
         print(f"  [color] reuse {dst.name} (up-to-date)")
         return
-    print(f"  [color] tonemap {src.name} -> {dst.name} (zscale npl=203 hable)")
+    if not _is_hlg_hdr(src):
+        print(f"  [color] SDR re-encode (no tone-map) {src.name} -> {dst.name}")
+        subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+                        "-i", str(src), "-vf", "fps=30,format=yuv420p",
+                        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                        "-g", "30", "-keyint_min", "30", "-movflags", "+faststart",
+                        "-color_primaries", "bt709", "-color_trc", "bt709",
+                        "-colorspace", "bt709",
+                        "-c:a", "aac", "-b:a", "192k", str(dst)], check=True)
+        return
+    print(f"  [color] tonemap HLG->SDR {src.name} -> {dst.name} (zscale npl=203 hable)")
     subprocess.run([TM_FFMPEG, "-y", "-hide_banner", "-loglevel", "error",
                     "-i", str(src), "-vf", TONEMAP_VF,
                     "-c:v", "libx264", "-preset", "medium", "-crf", "18",
