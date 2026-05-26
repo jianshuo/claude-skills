@@ -65,6 +65,14 @@ A 2-minute vertical 1080×1920 composition renders in ~2-3 min on M-series Mac.
 
 ## Color: tone-map HLG/HDR source → SDR BEFORE compositing
 
+**Only tone-map genuinely HLG/HDR sources.** If the body clip is ALREADY Rec.709
+SDR — e.g. a graded multicam render, or polysync output where an S-Log3→709 LUT
+was already applied — running the HLG tone-map recipe on it washes/darkens the
+already-correct color. `build_hf_clips.py`'s `tonemap_to_sdr` now probes
+`color_transfer` (`_is_hlg_hdr`): HLG/PQ → tone-map; otherwise a straight
+re-encode with dense keyframes (no tone-map). Either way you still get the
+`-g 30` dense-keyframe encode HyperFrames needs.
+
 iPhone / modern-camera footage is often **HLG HDR (bt2020 / arib-std-b67)**.
 If you feed that straight into HyperFrames it either renders washed-out
 ("发白") or, with a naive `--sdr`, too dark ("发黑"); and the HDR x265
