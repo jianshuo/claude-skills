@@ -38,10 +38,14 @@ HISTORY="${STATE_DIR}/history.jsonl"
 mkdir -p "$STATE_DIR"
 touch "$HISTORY"
 
-# Hourly mode: NO per-day cap. pick-next-article.sh only ever returns an
-# un-tweeted article (dedup by slug in history.jsonl), so each hourly run posts
-# a DIFFERENT article — one new tweet per hour until the backlog is empty.
-# (To restore once-per-day, re-add a guard on "\"date\":\"${today}\"" + posted.)
+# --- Self-throttle (heartbeat fires every 2h). Post at most one tweet per
+# TWEETS_MIN_GAP; with 2h ticks + 5h gap → ~4/day, spread like old 00/06/12/18. ---
+GAP_FILE="${STATE_DIR}/tweets-last-epoch"; TWEETS_MIN_GAP="${TWEETS_MIN_GAP:-18000}"
+if [[ -f "$GAP_FILE" ]] && (( $(date +%s) - $(cat "$GAP_FILE" 2>/dev/null || echo 0) < TWEETS_MIN_GAP )); then
+  echo "tweets: too soon since last post — skip (self-gate)"; exit 0
+fi
+# --- Shared X daily budget (all X-posting tasks share it). ---
+"$HOME/.claude/automation/x-budget.sh" can || { echo "tweets: X daily budget full — skip"; exit 0; }
 
 # --- Step 0: refresh local mirror of iCloud articles (python3 reads iCloud
 # fine from launchd; bash doesn't). Picker then reads the local mirror. ---
