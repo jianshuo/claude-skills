@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-26]
+
+### Changed
+
+- **`wjs-tweeting-from-articles`** — continued iterative workflow refinements across the day: further updates to article-selection logic, scheduling, and tweet-generation flow. (7 commits, including a handful dated 2026-05-27 in UTC.)
+- **`wjs-editing-multicam`** — iterative update to the polysync-driven multicam edit pipeline.
+- **`wjs-overlaying-video`** — three iterative updates to the HyperFrames-based post-production overlay workflow.
+- **`wjs-uploading-video`** — minor update to the YouTube upload flow.
+
 ## [2026-05-25]
 
 ### Changed
