@@ -144,6 +144,8 @@ def tonemap_to_sdr(src, dst):
 
 
 def parse_ts(t):
+    if isinstance(t, (int, float)):   # segments.json may store float seconds
+        return float(t)
     h, m, s = t.split(":")
     return int(h)*3600 + int(m)*60 + float(s)
 
