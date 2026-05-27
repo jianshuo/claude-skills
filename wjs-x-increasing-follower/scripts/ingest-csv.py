@@ -90,11 +90,19 @@ def main():
     if not (visits_col and follows_col):
         sys.exit("Could not locate both visits & follows columns. Pass --visits-col / --follows-col.")
 
+    # the most recent date in THIS import is "today" — partial/incomplete, drop by default
+    parsed_dates = [d for d in (parse_date_cell(r.get(date_col, "")) for r in rows) if d]
+    latest_in_file = max(parsed_dates) if parsed_dates else None
+    skip_date = None if args.keep_latest else latest_in_file
+
     existing = {r["date"]: r for r in read_jsonl(DAILY)}
+    if skip_date:
+        existing.pop(skip_date, None)  # also purge any stale partial row already stored
+        print(f"  (ignoring latest day {skip_date} — incomplete; pass --keep-latest to override)")
     added = 0
     for row in rows:
         d = parse_date_cell(row.get(date_col, ""))
-        if not d:
+        if not d or d == skip_date:
             continue
         visits = to_int(row.get(visits_col))
         follows = to_int(row.get(follows_col))
