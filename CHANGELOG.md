@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-27]
+
+### Added
+
+- **`wjs-x-increasing-follower`** — new skill: treats X follower growth as an engineering discipline with numbered A/B experiments. Every profile change is tracked with a hypothesis, a before-state for rollback, and a verdict measured against a north-star metric of new followers ÷ profile visits (conversion ratio) — immune to one-off viral traffic spikes. `daily-check.sh` ingests the X Analytics CSV export, scores running experiments, and surfaces keep / rollback recommendations (rollback always requires explicit user confirmation; never silently mutates bio). Triggers: `涨粉` / `X 涨粉实验` / `A/B 测我的 profile` / `今天的涨粉检查` / `/wjs-x-increasing-follower`.
+- **`wjs-x-improving-content`** — new skill: treats X tweet quality as an engineering problem — iterates on `prompts/x/prompt.md`, attributes each tweet to the git-SHA-versioned prompt that generated it, and measures effectiveness by median impressions per mature tweet (≥3 days old). Content-feature analysis (angle / length / topic) is the most actionable signal for prompt edits; version comparisons give directional guidance only (≥5 mature tweets per version required before a verdict). Data comes from the X Analytics Content CSV export (`inbox/` directory). Paired companion to `wjs-x-increasing-follower`: that one optimises profile→follow conversion; this one optimises prompt→impression. Triggers: `改 X 的 prompt` / `X 内容改进` / `哪版 prompt 最好` / `/wjs-x-improving-content`.
+- **README** — added `wjs-x-increasing-follower` and `wjs-x-improving-content` to the skills summary table and as new section 10 "X 增长 / X Growth".
+
+### Changed
+
+- **`wjs-publishing-wechat`** — iterative content updates.
+- **`wjs-tweeting-from-articles`** — iterative workflow updates.
+- **`wjs-syndicating-articles`** — iterative update.
+
 ## [2026-05-26]
 
 ### Changed

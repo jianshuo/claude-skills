@@ -99,6 +99,8 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-tweeting-from-articles`](./wjs-tweeting-from-articles/) | 从最近公众号文章萃取每日 X tweet，人工挑角度后真发 | article.md → X / Twitter |
 | [`wjs-syndicating-articles`](./wjs-syndicating-articles/) | 把最新公众号文章一键扇出到 X / Bluesky / Threads / LinkedIn + 手动平台待发件箱 | article.md → API 平台直发 + outbox |
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
+| [`wjs-x-increasing-follower`](./wjs-x-increasing-follower/) | X 涨粉实验框架：带编号的 A/B 实验，以新增关注 ÷ 主页访问转化率为北极星 | X Analytics CSV → SCOREBOARD.md |
+| [`wjs-x-improving-content`](./wjs-x-improving-content/) | 迭代改 `prompt.md` 提升每条推的 impression：每版 prompt 是带假设的 git SHA 版本实验 | Content CSV → 版本对比 + 内容特征 |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
@@ -340,6 +342,32 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 还包含 `yuanqi-prompt.md` —— 为元器（Yuanqi）平台精简版的人设 prompt
 
 > 触发词：`用王建硕的视角` / `王建硕会怎么看` / `像王建硕一样写` / `Jian Shuo Wang perspective` / `切换到王建硕`
+
+---
+
+## 10. X 增长 / X Growth
+
+### [`wjs-x-increasing-follower`](./wjs-x-increasing-follower/)
+
+把「涨粉」当工程做：每个改动是带编号的实验，有假设、有目标指标、有 before 可回滚、有判决。不靠感觉，靠数。
+
+- **北极星指标**：新增关注 ÷ 主页访问（转化率 ratio）——对爆款流量免疫，bio 改好了才让每个来访的人更愿意关注。
+- **实验分层**：profile（转化）/ posting（触达）/ engagement（触达）/ timing（触达），每个 action 声明被哪个指标考核。
+- 数据来源：X Analytics CSV 导出（ratio 数据 API 拿不到），每日 `daily-check.sh` 自动 ingest + 算判决。
+- **判决规则**：中位数对比（抗均值被爆款骗）；Δ ≥ +10% keep / Δ ≤ -10% rollback / 之间 flat；回滚永远先问用户，绝不静默改 bio。
+
+> 触发词：`涨粉` / `X 涨粉实验` / `A/B 测我的 profile` / `今天的涨粉检查` / `/wjs-x-increasing-follower`
+
+### [`wjs-x-improving-content`](./wjs-x-improving-content/)
+
+把「写好推」当工程做：不断改 `prompts/x/prompt.md`，用 impression 数据看哪版最好，挖出内容特征反哺下一版。是 `wjs-x-increasing-follower` 的孪生——那个测 profile→关注转化，这个测 **prompt→每条推的 impression**。
+
+- **版本 = prompt.md 的 git short-SHA**：推发布时间对应当时 git 历史里的 prompt SHA，无需改 Action，历史推也能回填。
+- **内容特征分析**（最有用的部分）：按 angle/长度/话题拆 impression 中位数，告诉你 prompt 该往哪改。版本对比给方向，内容特征给抓手。
+- 数据来源：X Analytics Content CSV 导出（丢进 `inbox/` 目录）。
+- 判决用中位数，每版至少 5 条成熟推（发布满 3 天）才下版本级结论。
+
+> 触发词：`改 X 的 prompt` / `X 内容改进` / `哪版 prompt 最好` / `什么内容 impression 高` / `/wjs-x-improving-content`
 
 ---
 
