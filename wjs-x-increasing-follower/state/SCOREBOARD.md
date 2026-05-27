@@ -10,7 +10,7 @@ _generated 2026-05-27_
 
 | # | cat | experiment | metric | baseline | post | Δ | verdict | note |
 |---|-----|-----------|--------|----------|------|---|---------|------|
-| 1 | profile | Bio 重写：身份锚+硬证明+关注CTA | follows÷visits | 0.388 | — | — | ⏳ 8d left |  |
+| 1 | profile | Bio 重写：身份锚+硬证明+关注CTA | follows÷visits | 0.427 | — | — | ⏳ 8d left |  |
 
 ## ✅ To-do (backlog — proposed, not yet applied)
 

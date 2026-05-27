@@ -38,13 +38,17 @@ def headline(daily):
     if not daily:
         return ["_No daily data yet. Drop a dashboard CSV and run `ingest-csv.py`._"]
     latest = daily[-1]
-    last7 = daily[-7:]
-    ratios = [d["ratio"] for d in last7 if d.get("ratio") is not None]
-    m = med(ratios)
+
+    def agg(days):
+        tv = sum(d["profile_visits"] for d in days if d.get("profile_visits") is not None)
+        tf = sum((d.get("new_follows") or 0) for d in days if d.get("profile_visits") is not None)
+        return round(tf / tv, 4) if tv else None
+
     L = []
     L.append(f"- **Latest day ({latest['date']})**: {num(latest.get('profile_visits'))} visits, "
              f"{num(latest.get('new_follows'))} new follows → ratio **{num(latest.get('ratio'))}**")
-    L.append(f"- **7-day median ratio**: **{num(m)}**  (n={len(ratios)} days)")
+    L.append(f"- **Conversion (Σfollows÷Σvisits, traffic-weighted)** — "
+             f"7d **{num(agg(daily[-7:]))}** · 30d **{num(agg(daily[-30:]))}** · 90d **{num(agg(daily[-90:]))}**")
     if latest.get("followers_total") is not None:
         L.append(f"- **Followers total**: {num(latest['followers_total'])}")
     return L
