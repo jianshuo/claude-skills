@@ -78,11 +78,9 @@ def evaluate(threshold, min_post_days):
     active = [a for a in actions if a["status"] == "active" and a.get("applied")]
     results = []
     for a in active:
-        field = METRIC_FIELD[a["metric"]]
         applied, w, (bs, be), (ps, pe) = windows(a, latest)
-        base_vals = daterange_values(daily, field, bs, be)
-        post_vals = daterange_values(daily, field, ps, pe)
-        baseline, post = med(base_vals), med(post_vals)
+        baseline, n_base = metric_over(daily, a["metric"], bs, be)
+        post, n_post = metric_over(daily, a["metric"], ps, pe)
         days_elapsed = (latest - applied).days
         confounded = [b["id"] for b in active if b["id"] != a["id"] and overlaps(a, b, latest)]
 
@@ -91,10 +89,10 @@ def evaluate(threshold, min_post_days):
             "metric": a["metric"], "metric_label": METRIC_LABEL[a["metric"]],
             "applied": a["applied"], "window_days": w,
             "baseline": baseline, "post": post,
-            "n_baseline": len(base_vals), "n_post": len(post_vals),
+            "n_baseline": n_base, "n_post": n_post,
             "confounded_with": confounded,
         }
-        if len(post_vals) < min_post_days and days_elapsed < w:
+        if n_post < min_post_days and days_elapsed < w:
             r["state"] = "measuring"
             r["days_left"] = max(0, w - days_elapsed)
             r["delta"] = None
