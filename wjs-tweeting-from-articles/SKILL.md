@@ -162,4 +162,4 @@ FORCE=1 bash scripts/post-next-from-queue.sh
 
 - **xurl**：`xurl whoami` 能返回用户名（auth OK）
 - **jq**：解析 xurl 返回的 JSON
-- **存在 `~/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles/YYYY-MM-DD-*/article.md`**：源文章
+- **存在 `~/code/wechat-publish/articles/YYYY-MM-DD-*/article.md`**：源文章

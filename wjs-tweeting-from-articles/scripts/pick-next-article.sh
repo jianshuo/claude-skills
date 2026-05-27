@@ -17,7 +17,7 @@ HISTORY="$SKILL_DIR/state/history.jsonl"
 # NOT iCloud — launchd-spawned bash can't reliably read iCloud. Falls back to
 # the iCloud source if the mirror doesn't exist yet (e.g. interactive first run).
 ARTICLES_DIR="$HOME/.local/share/wjs-tweet-articles/articles"
-[[ -d "$ARTICLES_DIR" ]] || ARTICLES_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish/articles"
+[[ -d "$ARTICLES_DIR" ]] || ARTICLES_DIR="$HOME/code/wechat-publish/articles"
 MAX_AGE_DAYS=14
 
 [[ -d "$ARTICLES_DIR" ]] || { echo "error: $ARTICLES_DIR not found" >&2; exit 2; }

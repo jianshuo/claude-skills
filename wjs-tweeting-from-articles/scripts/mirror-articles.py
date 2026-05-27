@@ -10,8 +10,7 @@ mtime (the picker sorts by mtime). Tiny text files, fast.
 """
 import os, glob, sys
 
-SRC = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/"
-                         "my/我的项目/我的创作/wechat-publish/articles")
+SRC = os.path.expanduser("~/code/wechat-publish/articles")
 DST = os.path.expanduser("~/.local/share/wjs-tweet-articles/articles")
 
 
