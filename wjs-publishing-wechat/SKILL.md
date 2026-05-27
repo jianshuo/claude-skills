@@ -330,6 +330,10 @@ md2wechat preview article.md      # 生成本地 HTML 预览（degraded 模式�
 
 要禁用 auto-open（比如批量跑多篇时怕开一堆 tab）：`export WECHAT_PUBLISH_NO_OPEN=1`。
 
+**Step 6.4 — 自动 push 文章源到 git（默认开）**
+
+`upload-draft.sh` 成功更新草稿后，会自动把文章文件夹 commit 并 push 到它所在 git repo 的 `origin`（先 `commit` → `pull --rebase --autostash` → `push` 当前分支）。理由：发草稿就是把文章源同步到 GitHub 的自然时机。安全网：文章不在 git repo / 没有 `origin` remote → 静默跳过；push 失败只告警，绝不影响草稿发布。禁用：`export WECHAT_PUBLISH_NO_PUSH=1`。
+
 注：草稿的**精确编辑深链** URL 形如 `…appmsg_edit_v2?action=edit&appmsgid=XXX&token=YYY&…`，但 `appmsgid` 是后台数据库内部 ID（不等于 API 返回的 `media_id`），`token` 又是 session-bound，所以**没法**从 API 返回值拼出深链。打开草稿箱让用户选是当前能做的最稳的事。
 
 到草稿箱 → 找到刚上传的文章 → 手机预览 → 发布。
