@@ -35,8 +35,10 @@ def find_col(headers, *, must, must_not=()):
 
 
 def parse_date_cell(v):
-    v = v.strip()
-    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%b %d, %Y", "%b %d %Y", "%d %b %Y", "%Y/%m/%d"):
+    v = v.strip().strip('"')
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%b %d, %Y", "%b %d %Y",
+                "%d %b %Y", "%Y/%m/%d", "%a, %b %d, %Y", "%a %b %d, %Y",
+                "%A, %b %d, %Y", "%a, %d %b %Y"):
         try:
             return datetime.strptime(v, fmt).date().isoformat()
         except ValueError:
