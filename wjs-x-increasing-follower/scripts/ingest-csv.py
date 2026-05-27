@@ -66,6 +66,8 @@ def main():
     ap.add_argument("--follows-col")
     ap.add_argument("--impressions-col")
     ap.add_argument("--followers-col")
+    ap.add_argument("--keep-latest", action="store_true",
+                    help="keep the most recent day (default drops it — it's a partial/incomplete day)")
     args = ap.parse_args()
 
     rows = list(csv.DictReader(open(args.csv_path, newline="", encoding="utf-8-sig")))
