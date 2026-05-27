@@ -36,6 +36,22 @@ from _common import (ACTIONS, METRIC_FIELD, METRIC_LABEL, daterange_values,  # n
                      load_actions, load_daily, med, parse_date, write_jsonl)
 
 
+def metric_over(daily, metric, start, end):
+    """Window value + n. For 'ratio' use TRAFFIC-WEIGHTED aggregate (Σfollows/Σvisits)
+    so tiny-denominator days can't distort it; for count metrics use the median."""
+    if metric == "ratio":
+        v = daterange_values(daily, "profile_visits", start, end)
+        f = daterange_values(daily, "new_follows", start, end)
+        # count only days that have a visit number (the measurable days)
+        days = [r for r in daily if start <= parse_date(r["date"]) <= end
+                and r.get("profile_visits") is not None]
+        tv = sum(r["profile_visits"] for r in days)
+        tf = sum((r.get("new_follows") or 0) for r in days)
+        return (round(tf / tv, 4) if tv else None), len(days)
+    vals = daterange_values(daily, METRIC_FIELD[metric], start, end)
+    return med(vals), len(vals)
+
+
 def windows(a, latest):
     applied = parse_date(a["applied"])
     w = a.get("window_days", 7)

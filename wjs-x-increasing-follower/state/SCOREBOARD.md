@@ -3,15 +3,14 @@ _generated 2026-05-27_
 
 ## 📈 Where we stand
 
-- **Latest day (2026-05-27)**: 55 visits, 48 new follows → ratio **0.873**
-- **7-day median ratio**: **0.405**  (n=7 days)
-- **Followers total**: 8,120
+- **Latest day (2026-05-26)**: 180 visits, 73 new follows → ratio **0.406**
+- **7-day median ratio**: **0.388**  (n=6 days)
 
 ## 🧪 Active experiments
 
 | # | cat | experiment | metric | baseline | post | Δ | verdict | note |
 |---|-----|-----------|--------|----------|------|---|---------|------|
-| 1 | profile | Bio 重写：身份锚+硬证明+关注CTA | follows÷visits | 0.385 | — | — | ⏳ 7d left |  |
+| 1 | profile | Bio 重写：身份锚+硬证明+关注CTA | follows÷visits | 0.388 | — | — | ⏳ 8d left |  |
 
 ## ✅ To-do (backlog — proposed, not yet applied)
 
