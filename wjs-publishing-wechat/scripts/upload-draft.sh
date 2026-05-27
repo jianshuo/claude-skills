@@ -338,3 +338,32 @@ if [[ -z "${WECHAT_PUBLISH_NO_OPEN:-}" ]]; then
     echo "  (opened in browser)" >&2
   fi
 fi
+
+# Auto-sync the published article to its git remote (commit the article folder,
+# rebase on remote, push the current branch). Mirrors the WECHAT_PUBLISH_NO_OPEN
+# opt-out convention above: ON by default, since publishing a draft is the
+# natural moment to sync the source to GitHub. No-ops safely if the article
+# folder isn't in a git repo or has no remote; push failures only warn, never
+# break the publish. Disable with: export WECHAT_PUBLISH_NO_PUSH=1
+if [[ -z "${WECHAT_PUBLISH_NO_PUSH:-}" ]]; then
+  REPO_ROOT="$(git -C "$ARTICLE_DIR" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "$REPO_ROOT" ]] && git -C "$REPO_ROOT" remote get-url origin >/dev/null 2>&1; then
+    BR="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
+    echo "→ git sync ($REPO_ROOT @ $BR) ..." >&2
+    git -C "$REPO_ROOT" add "$ARTICLE_DIR" >/dev/null 2>&1 || true
+    if git -C "$REPO_ROOT" diff --cached --quiet 2>/dev/null; then
+      echo "  (no tracked file changes to commit)" >&2
+    else
+      git -C "$REPO_ROOT" commit -q -m "publish: $(basename "$ARTICLE_DIR")" >/dev/null 2>&1 || true
+    fi
+    # Integrate any remote commits first (tweet-bot / cloud auto-sync push here too).
+    if ! git -C "$REPO_ROOT" pull --rebase --autostash origin "$BR" >/dev/null 2>&1; then
+      echo "  ⚠ git pull --rebase failed — resolve, then push manually" >&2
+    fi
+    if git -C "$REPO_ROOT" push origin "$BR" >/dev/null 2>&1; then
+      echo "  ✓ pushed to GitHub ($BR)" >&2
+    else
+      echo "  ⚠ git push failed — push manually" >&2
+    fi
+  fi
+fi
