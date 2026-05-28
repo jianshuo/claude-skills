@@ -239,28 +239,7 @@ articles/2026-05-09-{slug}/
 
 改动 ≤ 3 处可以直接给完整结果。
 
-## File Layout (skill 自身)
-
-```
-~/.claude/skills/wjs-publishing-wechat/
-├── SKILL.md
-├── README.md
-├── prompts/
-│   ├── cover-prompt.md            # 题图 prompt 模板
-│   └── illustration-prompt.md     # 解释图 prompt 模板
-└── scripts/
-    ├── pangu.py                   # 盘古之白
-    ├── gen-cover-ai.sh            # 题图: 2.35:1, 自动裁 900×383
-    ├── gen-illustration.sh        # 解释图: 比例自适应
-    ├── upload-draft.sh            # 主路径：upload_image × 2 + create_draft + open + push
-    └── update-draft-via-api.py    # 复用 draft_media_id 原地更新
-```
-
-依赖外部 skill：
-- `gpt-image-2-skill`（github.com/Wangnov/gpt-image-2-skill）—— 走 `--provider codex`
-- `/md2wechat` —— upload-draft.sh 用它的 `upload_image` + `create_draft`
-
-> Auto-publish: 本 skill 由 `~/.claude/skills-publish-hook.sh` 自动同步到 [github.com/jianshuo/claude-skills](https://github.com/jianshuo/claude-skills)。
+依赖外部 skill：`gpt-image-2-skill`（cover/illustration 生成）+ `/md2wechat`（upload + draft）。
 
 ## Done When
 
