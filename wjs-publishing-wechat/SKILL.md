@@ -128,17 +128,9 @@ hermes skills install https://github.com/jianshuo/claude-skills/blob/main/<SKILL
 ~/.claude/skills/wjs-publishing-wechat/scripts/gen-illustration.sh <article-folder>
 ```
 
-- 不传第二个参数时，从 `meta.json` 取 `title` 当目标字词；建议挑核心概念字词（1–4 字）
-- 内部走 `gpt-image-2-skill` 的 `--provider codex`，需要 `~/.codex/auth.json`（ChatGPT Plus 即可，不需要组织验证）
-- 题图默认尺寸 `1536x1024`，自动 sips 居中裁到 900×383；解释图不裁
-- 可调环境变量：`WECHAT_PUBLISH_IMAGE_SIZE`、`WECHAT_PUBLISH_IMAGE_QUALITY`（默认 `high`）
-
-**前置依赖**：装好 `gpt-image-2-skill`：
-
-```bash
-git clone https://github.com/Wangnov/gpt-image-2-skill /tmp/g
-cp -r /tmp/g/skills/gpt-image-2-skill ~/.claude/skills/
-```
+- 不传第二个参数时从 `meta.json` 取 `title`；建议挑核心概念字词（1–4 字）
+- 内部走 `gpt-image-2-skill` 的 `--provider codex`，需要 `~/.codex/auth.json`
+- 题图自动裁到 900×383；解释图不裁
 
 **重要：解释图必须在 markdown 里被引用**——`article.md` 要有 `![](./illustration.png)` 一行，否则草稿里看不到。
 
