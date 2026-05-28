@@ -1,16 +1,16 @@
 # X Follower Growth — Scoreboard
-_generated 2026-05-27_
+_generated 2026-05-28_
 
 ## 📈 Where we stand
 
-- **Latest day (2026-05-26)**: 180 visits, 73 new follows → ratio **0.406**
-- **7-day median ratio**: **0.388**  (n=6 days)
+- **Latest day (2026-05-27)**: 840 visits, 102 new follows → ratio **0.121**
+- **Conversion (Σfollows÷Σvisits, traffic-weighted)** — 7d **0.324** · 30d **0.339** · 90d **0.347**
 
 ## 🧪 Active experiments
 
 | # | cat | experiment | metric | baseline | post | Δ | verdict | note |
 |---|-----|-----------|--------|----------|------|---|---------|------|
-| 1 | profile | Bio 重写：身份锚+硬证明+关注CTA | follows÷visits | 0.427 | — | — | ⏳ 8d left |  |
+| 1 | profile | Bio 重写：身份锚+硬证明+关注CTA | follows÷visits | 0.427 | — | — | ⏳ 7d left |  |
 
 ## ✅ To-do (backlog — proposed, not yet applied)
 
