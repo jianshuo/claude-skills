@@ -173,22 +173,12 @@ articles/2026-05-09-{slug}/
 6. macOS / Linux 自动打开 `mp.weixin.qq.com` 草稿箱
 7. 自动 `git add / commit / push` 文章目录到 origin
 
-**HTML 转换规则**（关键部分）：
+**article.md 写作约束**（影响 Claude 怎么写；其他 HTML 细节脚本自己处理）：
 
-- 去掉 frontmatter 和正文 H1（避免 DUPLICATE_H1）
 - 支持 `<p>` / `<h2>` / `<h3>` / `<img>` / `<strong>` / `<em>` / `<code>` / `<ul>` / `<ol>` / `<li>` / pipe table
-- **Raw HTML 块透传**：以 `<` 开头的块原样输出。整段必须是一个块，内部不能有空行
-- **段内多行 → `<br>` 分行**：一个 markdown 段落写多行（行间不留空行），每个 `\n` 替换成 `<br>`。给排比 / 并列短句用
-  - **硬规则：行尾绝不能是逗号「，」**。段内分行的边界只能落在句末标点（。？！）之后；逗号说明这句话没说完，必须接在同一行
-- **段落之间用 `<p><br></p>` 作为间距块**（不能省，否则相邻 `<p>` 会贴在一起；也不能用 `<br><br>` 或空 `<p></p>`）
-- **结构性 inline style（必须加）**：
-  - `<h2>`：`font-size:1.4em; font-weight:bold;`
-  - `<h3>`：`font-size:1.2em; font-weight:bold;`
-  - `<strong>`：`color:#ff0000;`（红色粗体——作者刻意要的视觉点）
-  - `<table>`：`border-collapse:collapse; width:100%;`
-  - `<th>/<td>`：`border:1px solid #d9d9d9; padding:6px 10px;`
-  - `<code>`：`font-family:Menlo,Consolas,monospace; background:#f4f4f4; padding:1px 6px; border-radius:3px; font-size:0.92em;`
-- **装饰性样式**（行高、颜色、字体）让微信编辑器接管，不写 inline CSS
+- **Raw HTML 块透传**：以 `<` 开头的块原样输出。整段必须是一个块，**内部不能有空行**
+- **段内多行 → `<br>` 分行**：段内不留空行的多行用于排比 / 并列短句
+  - **硬规则：行尾绝不能是逗号「，」**。分行边界只能落在句末标点（。？！）之后
 
 **环境变量**：
 - `WECHAT_PUBLISH_FORCE_NEW=1` —— 强制建新草稿（不复用 `draft_media_id`）
