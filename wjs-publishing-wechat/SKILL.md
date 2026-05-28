@@ -47,15 +47,9 @@ python3 -c "import re; t=open('article.md').read(); t=re.sub(r'\!\[.*?\]\(.*?\)'
 - 不要加在：整段、过渡句、罗列项；命令用 `` `code` ``
 - 标题（H2/H3）已有字号字重，不再 `**` 包
 
-## 盘古之白（中英之间留空格）
+## 盘古之白
 
-中文里所有英文单词前后留一个空格——「用 AI 写 skill」「Claude Code 是车」。机械活，**别手敲，跑脚本**（幂等，自动跳过代码块 / URL）：
-
-```bash
-python3 ~/.claude/skills/wjs-publishing-wechat/scripts/pangu.py <folder>/article.md
-```
-
-`upload-draft.sh` 建草稿时会先跑一遍，所以走完整发布流程的文章自动带盘古之白。
+中英之间留空格——「用 AI 写 skill」。`upload-draft.sh` 会自动跑 `scripts/pangu.py`，Claude 不需要手动。
 
 ## 命令 / 代码：独立成段，用代码样式
 
