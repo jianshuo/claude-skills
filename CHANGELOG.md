@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-28]
+
+### Changed
+
+- **`wjs-publishing-wechat`** — SKILL.md significantly condensed and streamlined across five iterative commits: verbose multi-bullet "不要做的事" list collapsed to a single inline rule; 盘古之白 section shortened (noting that `upload-draft.sh` already runs `pangu.py` automatically, so Claude doesn't need to); word-count script reformatted as a proper fenced code block; "介绍 skill 的文章：末尾必须附安装方法" section simplified from a per-platform table to a single agent-invocation instruction ("tell your AI agent to install the SKILL.md URL"); wording tightened throughout without changing any underlying capabilities or workflow steps.
+- **`wjs-x-increasing-follower`** — daily analytics data ingested: `daily.jsonl` now includes 2026-05-27 (840 profile visits, 102 new follows, ratio 0.121). Experiment #1 (Bio rewrite) state updated with a note flagging the 2026-05-27 spike as an outlier viral day (a quoted-tweet drove anomalous curiosity traffic — ratio 0.121 is not a representative conversion signal; evaluation window extended by one day). After-value for Experiment #1 updated to the current live bio text. SCOREBOARD.md regenerated.
+
 ## [2026-05-27]
 
 ### Added
