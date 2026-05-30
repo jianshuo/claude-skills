@@ -9,6 +9,7 @@ wp-json-data/
 # The raw export folder contains wordpress_db.sql (a full DB dump) — never commit it.
 # Root-anchored so it does NOT match static/wp-content/uploads/ (the served copy).
 /uploads/
-*.WordPress.*.xml
+*.WordPress*.xml
+*wordpress*.sql
 *.zip
 .gstack/
