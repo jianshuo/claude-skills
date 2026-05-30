@@ -104,6 +104,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
+| [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/) | WordPress → Hugo 静态站迁移，老链接不断 | WXR .xml + uploads/ → Hugo + GitHub Pages |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
 
 ---
@@ -368,6 +369,22 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 判决用中位数，每版至少 5 条成熟推（发布满 3 天）才下版本级结论。
 
 > 触发词：`改 X 的 prompt` / `X 内容改进` / `哪版 prompt 最好` / `什么内容 impression 高` / `/wjs-x-improving-content`
+
+---
+
+## 11. 博客迁移 / Blog Migration
+
+### [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/)
+
+把任意 WordPress 站迁成 **Hugo + Markdown + git** 静态站，部署到 **GitHub Pages**。全程离线、零第三方依赖。
+
+- **输入**：WordPress 后台导出的 WXR `.xml` + 站点 `wp-content/uploads/` 文件夹。
+- **产出**：`content/*.md` + `static/wp-content/uploads/` + 手写极简主题，Hugo 构建，GitHub Actions 自动发布。
+- **老链接 100% 不断**：全站 URL 保持 `/archives/<数字>/` 格式，SEO 和外部引用不受影响。
+- **安全优先**：WXR 含密码文章正文和作者邮箱，`gitignore` 已根锚定，绝不进 git 历史。密码保护文章和脚手架页的处理方式必须由用户决定，不静默发布。
+- **TDD 转换器**：`wxr_to_hugo.py` 是纯函数，`test_wxr.py` 先跑测试再全量转换；`verify_build.py` 断言每个老链接都命中。
+
+> 触发词：`把 WordPress 迁成 Hugo` / `wordpress 转静态站` / `migrate WordPress to Hugo` / `WXR to Hugo` / `/wjs-converting-wp-to-hugo`
 
 ---
 

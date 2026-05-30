@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-30]
+
+### Added
+
+- **`wjs-converting-wp-to-hugo`** — new skill: migrates any WordPress site to a Hugo + Markdown + git static site deployed on GitHub Pages. Inputs are the WXR export (`.xml`) and the `wp-content/uploads/` folder — fully offline, zero third-party dependencies. Preserves `/archives/<id>/` URLs 100% so old links never break. Ships a TDD converter (`wxr_to_hugo.py` + `test_wxr.py`), a `verify_build.py` that asserts every old URL is present in the build, a hand-written minimal Hugo theme (CJK-friendly, zero submodules), and a GitHub Actions workflow. Security-first: WXR contains password-protected post bodies and author emails — `.gitignore` uses root-anchored patterns so sensitive files are never committed. Password-protected posts and scaffold pages always require explicit user decision before publishing. Triggers: `把 WordPress 迁成 Hugo` / `wordpress 转静态站` / `migrate WordPress to Hugo` / `WXR to Hugo` / `/wjs-converting-wp-to-hugo`.
+- **README** — added `wjs-converting-wp-to-hugo` to the skills summary table and as new section 11 "博客迁移 / Blog Migration".
+
+### Changed
+
+- **`wjs-x-improving-content`** — state data refreshed: `state/tweets.jsonl` and `state/versions.jsonl` updated with latest tweet impression records; `state/SCOREBOARD.md` regenerated.
+
 ## [2026-05-28]
 
 ### Changed
