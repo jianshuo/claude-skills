@@ -61,9 +61,18 @@ cp -R /path/to/uploads ./uploads
 mkdir -p scripts tests content/posts layouts/_default layouts/partials static
 ```
 
-拷入本 skill 的资产：`scripts/wxr_to_hugo.py`、`scripts/verify_build.py`、`tests/test_wxr.py`、
-`assets/layouts/*`（手写主题）、`assets/hugo.toml`（改 title/baseURL/菜单）、
-`assets/workflow-hugo.yml` → `.github/workflows/hugo.yml`、`assets/gitignore` → `.gitignore`。
+拷入本 skill 的资产（保持目录对应）：
+
+```bash
+SK="$HOME/.claude/skills/wjs-converting-wp-to-hugo"
+cp "$SK"/scripts/*.py scripts/                       # wxr_to_hugo.py, verify_build.py
+cp "$SK"/tests/test_wxr.py tests/                     # 单元测试（须放 tests/，与 scripts/ 同级）
+cp -R "$SK"/assets/layouts/. layouts/                 # 手写主题
+cp "$SK"/assets/hugo.toml .                           # 改 title / baseURL / 菜单
+mkdir -p .github/workflows && cp "$SK"/assets/workflow-hugo.yml .github/workflows/hugo.yml
+cp "$SK"/assets/gitignore .gitignore
+printf '%s' '<你的域名，如 huixianju.cn>' > static/CNAME   # 自定义域名
+```
 
 ### 2. 先跑测试（转换器是 TDD 的）
 
