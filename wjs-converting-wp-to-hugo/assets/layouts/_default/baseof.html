@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+  {{ with .OutputFormats.Get "RSS" }}<link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ site.Title }}">{{ end }}
+  {{ partialCached "style.html" "style" }}
+</head>
+<body>
+<header class="site-header">
+  <a class="site-title" href="/">{{ site.Title }}</a>
+  <nav>
+    {{ range site.Menus.main }}<a href="{{ .URL }}">{{ .Name }}</a>{{ end }}
+  </nav>
+</header>
+<main>
+  {{ block "main" . }}{{ end }}
+</main>
+<footer class="site-footer">
+  <p>© {{ now.Year }} {{ site.Title }} · 业主委员会 · <a href="/index.xml">RSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{{ define "main" }}
+{{ $pages := .Paginate (where site.RegularPages "Type" "posts") }}
+<ul class="post-list">
+  {{ range $pages.Pages }}
+  <li><a href="{{ .RelPermalink }}">{{ .Title }}</a><time>{{ .Date.Format "2006-01-02" }}</time></li>
+  {{ end }}
+</ul>
+{{ template "_internal/pagination.html" . }}
+{{ end }}

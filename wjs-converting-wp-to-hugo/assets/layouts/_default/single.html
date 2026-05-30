@@ -1,0 +1,15 @@
+{{ define "main" }}
+<article>
+  <h1 class="post-title">{{ .Title }}</h1>
+  <div class="post-meta">
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006年1月2日" }}</time>
+    {{ with .Params.categories }} · {{ range . }}<a href="/categories/{{ . | urlize }}/">{{ . }}</a> {{ end }}{{ end }}
+  </div>
+  {{ .Content }}
+  {{ with .Params.tags }}<div class="post-meta" style="margin-top:32px">标签：{{ range . }}<a href="/tags/{{ . | urlize }}/">#{{ . }}</a> {{ end }}</div>{{ end }}
+</article>
+<nav class="pagination">
+  {{ with .PrevInSection }}<a href="{{ .RelPermalink }}">← {{ .Title }}</a>{{ end }}
+  {{ with .NextInSection }}<a href="{{ .RelPermalink }}">{{ .Title }} →</a>{{ end }}
+</nav>
+{{ end }}

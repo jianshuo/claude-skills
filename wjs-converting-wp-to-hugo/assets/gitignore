@@ -1,0 +1,14 @@
+.DS_Store
+._*
+public/
+resources/
+.hugo_build.lock
+wp-json-data/
+
+# WordPress migration inputs (one-time, local only — re-derivable, may hold secrets).
+# The raw export folder contains wordpress_db.sql (a full DB dump) — never commit it.
+# Root-anchored so it does NOT match static/wp-content/uploads/ (the served copy).
+/uploads/
+*.WordPress.*.xml
+*.zip
+.gstack/
