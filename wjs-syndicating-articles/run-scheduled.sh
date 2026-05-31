@@ -7,7 +7,7 @@ export HTTPS_PROXY="http://127.0.0.1:1087" HTTP_PROXY="http://127.0.0.1:1087"
 export https_proxy="http://127.0.0.1:1087" http_proxy="http://127.0.0.1:1087"
 export ALL_PROXY="socks5://127.0.0.1:1087" NO_PROXY="localhost,127.0.0.1,::1"
 
-WORKDIR="/Users/jianshuo/Library/Mobile Documents/com~apple~CloudDocs/my/我的项目/我的创作/wechat-publish"
+WORKDIR="/Users/jianshuo/code/wechat-publish"
 LOG="$HOME/.claude/skills/wjs-syndicating-articles/state/scheduled.log"
 mkdir -p "$(dirname "$LOG")"
 cd "$WORKDIR" || { echo "$(date '+%F %T') cd failed" >> "$LOG"; exit 1; }

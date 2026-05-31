@@ -19,9 +19,12 @@ echo "syndicate: slug=$SLUG dry=${DRY:-no}"
 for P in $(enabled_platforms); do
   [[ "$(platform_mode "$P")" == "api" ]] || continue
 
-  if [[ "$P" == "x" && -f "$TW_HIST" ]] && jq -e --arg s "$SLUG" 'select(.slug==$s and .status=="posted")' "$TW_HIST" >/dev/null 2>&1; then
-    [[ "$DRY" == "--dry-run" ]] || bash "$SCRIPTS/history.sh" record "$SLUG" x skipped
-    echo "  x: skipped (already posted via tweeting skill)"; continue
+  # X is owned exclusively by wjs-tweeting-from-articles. This skill must NEVER post to X
+  # (posting here double-posts). Always skip X structurally, regardless of tweeting history.
+  if [[ "$P" == "x" ]]; then
+    [[ "$DRY" == "--dry-run" ]] || bash "$SCRIPTS/history.sh" has "$SLUG" x || \
+      bash "$SCRIPTS/history.sh" record "$SLUG" x skipped "" "" "owned_by_tweeting_skill"
+    echo "  x: skipped (owned by wjs-tweeting-from-articles)"; continue
   fi
   if bash "$SCRIPTS/history.sh" has "$SLUG" "$P"; then echo "  $P: skipped (already done)"; continue; fi
 
