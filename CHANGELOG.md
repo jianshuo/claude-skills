@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-05-31]
+
+### Changed
+
+- **`wjs-syndicating-articles`** — X (Twitter) posting is now structurally skipped rather than conditionally skipped based on tweeting history. `syndicate.sh` always bypasses X, with an explicit comment noting it is "owned exclusively by `wjs-tweeting-from-articles`" — this prevents any risk of double-posting regardless of history state. Also migrated the `articles_dir` path and scheduler `WORKDIR` from the iCloud Documents location to `~/code/wechat-publish/`, and removed the now-obsolete `run-scheduled.sh.retired` file.
+
 ## [2026-05-30]
 
 ### Added
