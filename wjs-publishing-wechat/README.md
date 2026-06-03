@@ -80,8 +80,8 @@ Each script is idempotent — re-run it to get a different result (image generat
 
 Both image generators read prompt templates that you can edit:
 
-- **`cover-prompt.md`** — the cover (题图) design philosophy, with `[目标字词]` placeholder. Locked to 2.35:1.
-- **`illustration-prompt.md`** — the illustration (解释图) style guide, with `[文章内容]` placeholder. Aspect ratio chosen by the model based on content.
+- **`prompts/cover-prompt.md`** — the cover (题图) design philosophy, with `[目标字词]` placeholder. Locked to 2.35:1.
+- **`prompts/illustration-prompt.md`** — the illustration (解释图) style guide, with `[文章内容]` placeholder. Aspect ratio chosen by the model based on content.
 
 Environment variables (optional):
 - `WECHAT_PUBLISH_IMAGE_SIZE` — default `1536x1024`
