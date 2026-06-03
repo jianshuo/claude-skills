@@ -339,6 +339,9 @@ if [[ -z "${WECHAT_PUBLISH_NO_OPEN:-}" ]]; then
     xdg-open "https://mp.weixin.qq.com/" >/dev/null 2>&1 || true
     echo "  (opened in browser)" >&2
   fi
+  # 留言已由 need_open_comment 自动开。原创+赞赏是不可逆动作、且不在 API 内，
+  # 故保留为手动——在已打开的编辑页点一次即可。
+  echo "  ⟶ 手动两步：① 声明原创  ② 打开赞赏（在编辑页右侧，原创点了赞赏才出现）" >&2
 fi
 
 # Auto-sync the published article to its git remote (commit the article folder,
