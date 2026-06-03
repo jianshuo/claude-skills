@@ -40,7 +40,8 @@ fallback() {
 # AppleScript only returns "<Browser>\t<full-url>"; token is parsed in bash to
 # keep apostrophes out of this $()-wrapped heredoc (macOS bash 3.2 mis-parses
 # a "'" inside command substitution).
-DETECT=$(osascript <<'OSA' 2>/dev/null
+detect_tab() {
+  osascript <<'OSA' 2>/dev/null
 try
   tell application "Safari"
     repeat with w in windows
@@ -67,7 +68,15 @@ try
 end try
 return ""
 OSA
-)
+}
+
+# Apple Events can transiently return empty right after a heavy upload; retry.
+DETECT=""
+for _ in 1 2 3; do
+  DETECT=$(detect_tab)
+  [ -n "$DETECT" ] && break
+  sleep 0.6
+done
 
 BROWSER=$(printf '%s' "$DETECT" | cut -f1)
 DETECT_URL=$(printf '%s' "$DETECT" | cut -f2-)
