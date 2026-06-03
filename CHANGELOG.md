@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-03]
+
+### Changed
+
+- **`wjs-publishing-wechat`** — major structural refactor across 19 commits: (1) a new **`STYLE.md`** file extracted as the dedicated style-authority document for 王建硕's WeChat writing voice — covers the first principle (light polish, <5% edits), voice DNA (assertive conclusions, oral register preserved, AI referred to as "他" not "它", human-subject sentence preference), length constraints (800–1000 characters default, hard cap 1500), bold-red rules (2–4 `**...**` per article on key conclusions and concepts, never on whole paragraphs or headings), full typography guide (盘古之白, raw-HTML blockquote, fenced code blocks), paragraph-break rules, title/summary guidelines, and a 10-row "never do" red-line checklist; (2) **SKILL.md** restructured to focus exclusively on workflow and mechanism (scripts, image generation, HTML conversion, publishing steps) — all style decisions now delegate to STYLE.md, which wins in any conflict; (3) new **`scripts/open-draft-edit.sh`** script for opening a WeChat draft directly for editing; (4) iterative updates to `scripts/upload-draft.sh` and `scripts/publish.sh`; (5) skill-level README.md rewritten in Chinese.
+
 ## [2026-05-31]
 
 ### Changed
