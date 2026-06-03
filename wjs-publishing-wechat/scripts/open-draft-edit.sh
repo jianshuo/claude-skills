@@ -37,26 +37,17 @@ fallback() {
 [ -z "${TITLE:-}" ] && fallback "no title"
 
 # --- 1. token + which browser holds the logged-in session -------------------
+# AppleScript only returns "<Browser>\t<full-url>"; token is parsed in bash to
+# keep apostrophes out of this $()-wrapped heredoc (macOS bash 3.2 mis-parses
+# a "'" inside command substitution).
 DETECT=$(osascript <<'OSA' 2>/dev/null
-on tokenFrom(theURL)
-  if theURL contains "token=" then
-    set AppleScript's text item delimiters to "token="
-    set tail to text item 2 of theURL
-    set AppleScript's text item delimiters to {"&", "#"}
-    set tok to text item 1 of tail
-    set AppleScript's text item delimiters to ""
-    return tok
-  end if
-  return ""
-end tokenFrom
-
 try
   tell application "Safari"
     repeat with w in windows
       repeat with t in tabs of w
         set u to URL of t
         if u contains "mp.weixin.qq.com" and u contains "token=" then
-          return "Safari	" & my tokenFrom(u)
+          return "Safari	" & u
         end if
       end repeat
     end repeat
@@ -68,7 +59,7 @@ try
       repeat with t in tabs of w
         set u to URL of t
         if u contains "mp.weixin.qq.com" and u contains "token=" then
-          return "Chrome	" & my tokenFrom(u)
+          return "Chrome	" & u
         end if
       end repeat
     end repeat
@@ -79,7 +70,9 @@ OSA
 )
 
 BROWSER=$(printf '%s' "$DETECT" | cut -f1)
-TOKEN=$(printf '%s' "$DETECT" | cut -f2)
+DETECT_URL=$(printf '%s' "$DETECT" | cut -f2-)
+# token=<digits> from the url
+TOKEN=$(printf '%s' "$DETECT_URL" | sed -n 's/.*[?&]token=\([0-9][0-9]*\).*/\1/p')
 [ -z "${TOKEN:-}" ] && fallback "no logged-in mp tab"
 
 LIST_URL="https://mp.weixin.qq.com/cgi-bin/appmsg?begin=0&count=20&type=77&action=list_ex&token=${TOKEN}&lang=zh_CN&f=json"
