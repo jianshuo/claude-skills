@@ -65,13 +65,13 @@ The skill does most of the work for you. After it asks 1–2 clarifying question
 DIR=articles/YYYY-MM-DD-slug
 
 # Generate the typographic cover (2.35:1, auto-cropped to 900×383)
-~/.claude/skills/wjs-publishing-wechat/gen-cover-ai.sh "$DIR" "目标字词"
+~/.claude/skills/wjs-publishing-wechat/scripts/gen-cover-ai.sh "$DIR" "目标字词"
 
 # Generate the cartoon explanation image (any aspect ratio)
-~/.claude/skills/wjs-publishing-wechat/gen-illustration.sh "$DIR"
+~/.claude/skills/wjs-publishing-wechat/scripts/gen-illustration.sh "$DIR"
 
 # Open browser, reveal cover, push HTML to clipboard
-~/.claude/skills/wjs-publishing-wechat/publish.sh "$DIR"
+~/.claude/skills/wjs-publishing-wechat/scripts/publish.sh "$DIR"
 ```
 
 Each script is idempotent — re-run it to get a different result (image generations are stochastic).
