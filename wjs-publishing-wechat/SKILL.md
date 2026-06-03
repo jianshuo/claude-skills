@@ -7,59 +7,28 @@ description: 当用户想写或发布微信公众号文章时使用——他们�
 
 帮用户写微信公众号文章。**轻润色，不重写。** 自动生成题图和解释图，一行命令推草稿。
 
-## 核心原则
+## ⚠️ 风格唯一权威：STYLE.md（写作 / 润色前必读）
 
-**保留作者的语气和节奏。** 你只做四件事：
+**写或润色每一篇文章前，先读同目录的 [`STYLE.md`](./STYLE.md)，并严格遵循。** 那是王建硕本人维护的风格定义文件——语气 DNA、长度、加粗、排版、红线清单全在那里。本 SKILL.md 只管**机制与工作流**（脚本、配图、HTML 转换、发布）。
 
-1. 修明显错字和重复字
-2. 调整段落（每段 1–3 句）
-3. 抚平特别拗口的句子（保守，能不动就不动）
-4. 准备配套素材（题图、标题候选、摘要）
+风格上 STYLE.md 与本文件冲突时，**以 STYLE.md 为准**。要调风格 = 改 STYLE.md，不在这里改、更不在草稿里改。
 
-**不要做**：改用词偏好；加 AI 味连接词（"首先 / 其次 / 综上所述 / 值得注意的是"）；把口语改书面；加 emoji；重组段落顺序；"提升"作者表达。
+下面只保留机制相关的写作约束：
 
-**改动尺度**：改的字数超过原文 5% 就是改太多了，退回去。
-
-## 长度与例子（硬约束）
-
-**默认 800–1000 字。** 第一稿就按预算写，不要写完再砍——砍出来的文章会残留拼接感。超 1200 回去再砍一轮。
-
-写例子段时过这把尺：**这个例子是真具体（真事 / 真人 / 真数字），还是为演示框架编的？** 后者直接删，让 `illustration.png` 承担"演示结构"。
-
-- **优先保留**：开头钩子 + 核心框架 + 1 句点睛 + 软着陆结尾
-- **优先砍掉**：演示性例子、重复阐释、"怎么用 / 入口在哪"这类 instructional 段落
-
-**默认不写 `## 后注`**，除非真有必要的致谢或来源标注，否则正文最后落点收束即可。
-
-数字数：
+- **字数**（STYLE.md 定预算，这里给计数命令）：
 
 ```bash
 python3 -c "import re; t=open('article.md').read(); t=re.sub(r'\!\[.*?\]\(.*?\)','',t); print(len(re.findall(r'[一-鿿]',t)) + len(re.findall(r'[A-Za-z]+',t)))"
 ```
 
-## 加粗加红（每篇必须有）
-
-`upload-draft.sh` 把 `**...**` 渲染成**红色粗体**——作者刻意要的视觉重点。**每篇正文都必须有合理加粗，一处都没有 = 没写完。**
-
-- **2–4 处**，打在点睛句、关键结论、核心概念词上
-- 优先加：每节一句话结论、全文情绪落点、读者最该记住的那句
-- 不要加：整段、过渡句、罗列项（命令用 `` `code` ``）；标题（H2/H3）已有字重，不再 `**` 包
-
-## 盘古之白
-
-中英之间留空格——「用 AI 写 skill」。`upload-draft.sh` 自动跑 `scripts/pangu.py`，Claude 不用手动。
-
-## 命令 / 代码：独立成段，用代码样式
-
-正文出现安装 / 运行命令时**默认拉出来单独成段**，别混在叙述句里写成 inline。两种写法：
-
-- **首选**——淡底色代码块（raw HTML 块，整段一行，内部不能有空行）：
-  ```
-  <section style="background:#f6f8fa;border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:Menlo,Consolas,monospace;font-size:14px;line-height:1.8;color:#24292e;">npm install -g xxx<br>xxx run</section>
-  ```
-- 或 fenced ```` ```bash ```` 块，脚本转成独立 `<p><code>…</code></p>`
-
-句中只提命令名 → inline `` `code` `` 即可。
+- **加粗加红的机制**：`upload-draft.sh` 把 `**...**` 渲染成红色粗体（用法见 STYLE.md「加粗加红」）。
+- **盘古之白的机制**：`upload-draft.sh` 自动跑 `scripts/pangu.py`，Claude 不用手动加空格。
+- **命令 / 代码独立成段的写法**（规则见 STYLE.md，这里给可复制的样式）：
+  - **首选**——淡底色代码块（raw HTML 块，整段一行，内部不能有空行）：
+    ```
+    <section style="background:#f6f8fa;border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:Menlo,Consolas,monospace;font-size:14px;line-height:1.8;color:#24292e;">npm install -g xxx<br>xxx run</section>
+    ```
+  - 或 fenced ```` ```bash ```` 块，脚本转成独立 `<p><code>…</code></p>`。
 
 ## 介绍 skill 的文章：末尾必须附安装方法
 
