@@ -137,7 +137,7 @@ articles/2026-05-09-{slug}/
 3. `illustration.png` 存在但没引用时自动插入并 upload 拿 CDN URL（幂等安全网）
 4. 从 `article.md` 生成 `content.html`（转换规则见下）
 5. 装 `draft.json`，调 `create_draft` 或（`publish.json` 有 `draft_media_id` 时）`draft/update` 原地更新
-6. macOS / Linux 自动打开 `mp.weixin.qq.com` 草稿箱
+6. 自动打开草稿：macOS 走 `scripts/open-draft-edit.sh`——读已登录浏览器的 session token、按标题查出 `appmsgid`、**直达这一篇的编辑页**（没登录则回退开首页）；Linux 开 `mp.weixin.qq.com` 首页。`WECHAT_PUBLISH_NO_OPEN=1` 关掉
 7. 自动 `git add / commit / push` 文章目录到 origin
 
 **article.md 写作约束**（影响 Claude 怎么写；其他 HTML 细节脚本自理）：
