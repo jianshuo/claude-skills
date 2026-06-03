@@ -108,22 +108,22 @@ OSA
 )
 
 # --- 3. match draft by exact title → appmsgid -------------------------------
-APPMSGID=$(printf '%s' "$SRC" | TITLE="$TITLE" python3 -c '
-import json, os, re, sys
-src = sys.stdin.read()
+APPMSGID=$(SRC="$SRC" TITLE="$TITLE" python3 <<'PY'
+import json, os, re
+src = os.environ.get("SRC", "")
 m = re.search(r"\{.*\}", src, re.S)
-if not m:
-    sys.exit(0)
-try:
-    data = json.loads(m.group(0))
-except Exception:
-    sys.exit(0)
-want = os.environ["TITLE"].strip()
-for it in data.get("app_msg_list", []):
-    if it.get("title", "").strip() == want:
-        print(it.get("appmsgid", ""))
-        break
-')
+if m:
+    try:
+        data = json.loads(m.group(0))
+        want = os.environ["TITLE"].strip()
+        for it in data.get("app_msg_list", []):
+            if it.get("title", "").strip() == want:
+                print(it.get("appmsgid", ""))
+                break
+    except Exception:
+        pass
+PY
+)
 
 if [ -z "${APPMSGID:-}" ]; then
   # close the list tab we opened, then fall back
