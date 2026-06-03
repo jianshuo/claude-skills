@@ -92,13 +92,16 @@ Environment variables (optional):
 ```
 .
 ├── SKILL.md                    # how the skill behaves (its prompt)
-├── cover-prompt.md             # AI cover prompt template
-├── cover-template.html         # HTML/CSS fallback cover (no AI)
-├── render-cover.sh             # render the HTML/CSS cover
-├── gen-cover-ai.sh             # AI cover via gpt-image-2 → 900×383
-├── illustration-prompt.md      # AI illustration prompt template
-├── gen-illustration.sh         # AI illustration, no crop
-└── publish.sh                  # Tier-1 publish helper
+├── prompts/
+│   ├── cover-prompt.md         # AI cover prompt template
+│   └── illustration-prompt.md  # AI illustration prompt template
+└── scripts/
+    ├── gen-cover-ai.sh         # AI cover via gpt-image-2 → 900×383
+    ├── gen-illustration.sh     # AI illustration, no crop
+    ├── upload-draft.sh         # build content.html + create/update draft via md2wechat API
+    ├── publish.sh              # browser + clipboard publish helper
+    ├── pangu.py                # 盘古之白 spacing
+    └── …                       # comment-fetch / mass-send helpers
 ```
 
 ## Why two images?
