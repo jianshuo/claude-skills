@@ -323,18 +323,20 @@ open('publish.json', 'w').write(json.dumps(pub, ensure_ascii=False, indent=2))
 PYEOF
 echo "  (publish.json updated)" >&2
 
-# Auto-open the WeChat MP draft box in the default browser. The actual
-# per-draft edit URL requires a session token + internal appmsgid that we
-# can't construct from the API-returned media_id, so we open the home page —
-# if the user is logged in, the browser lands at 草稿箱 in 1 click.
+# Auto-open the draft. On macOS, open-draft-edit.sh reads the logged-in browser
+# session token + resolves this draft's internal appmsgid and opens the actual
+# edit page directly (falls back to the home page if not logged in). Elsewhere,
+# open the home page — logged-in users land at 草稿箱 in 1 click.
 # Disable with: export WECHAT_PUBLISH_NO_OPEN=1
 if [[ -z "${WECHAT_PUBLISH_NO_OPEN:-}" ]]; then
-  WECHAT_HOME="https://mp.weixin.qq.com/"
-  if command -v open >/dev/null 2>&1; then
-    open "$WECHAT_HOME" >/dev/null 2>&1 || true
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ "$(uname)" == "Darwin" ]] && [[ -x "$SCRIPT_DIR/open-draft-edit.sh" ]]; then
+    "$SCRIPT_DIR/open-draft-edit.sh" "$ARTICLE_DIR" >&2 || true
+  elif command -v open >/dev/null 2>&1; then
+    open "https://mp.weixin.qq.com/" >/dev/null 2>&1 || true
     echo "  (opened in browser)" >&2
   elif command -v xdg-open >/dev/null 2>&1; then
-    xdg-open "$WECHAT_HOME" >/dev/null 2>&1 || true
+    xdg-open "https://mp.weixin.qq.com/" >/dev/null 2>&1 || true
     echo "  (opened in browser)" >&2
   fi
 fi
