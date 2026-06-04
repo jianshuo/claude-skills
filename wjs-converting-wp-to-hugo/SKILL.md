@@ -43,6 +43,7 @@ WordPress 里有两类内容静态站处理不了，**必须问用户**，别擅
 
 1. **密码保护文章**（`<wp:post_password>` 非空）。静态站无密码门 → 发布就是公开。
    选项：**排除**（默认，最安全，URL 会 404）/ 公开发布 / 转成 `draft`。
+   **核对计数务必用 ElementTree（即 `parse_items`），别用裸 grep**：`<wp:post_password>` 的值是 CDATA 包裹的（`<![CDATA[secret]]>`），`grep '<wp:post_password>[^<]*</...>'` 会把每条都当空 → 误报「0 篇密码文章」漏掉真有密码的文章（maggiacito.com 实战，差点漏发 1 篇）。
 2. **WordPress 脚手架页**（`sample-page`、`login`/`register`/`findpassword` 等插件短代码页、空页、登录设计器预览页）。
    默认**排除**——它们不是内容。`is_real_page()` 已按「空正文 / 单条短代码 / 默认 slug 黑名单」过滤。
 
