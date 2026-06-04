@@ -1,0 +1,42 @@
+<!-- wjs-looping-feedback widget -->
+<style>
+#wjs-fb-btn{position:fixed;right:20px;bottom:20px;z-index:9999;border:0;border-radius:999px;
+padding:12px 18px;background:#111;color:#fff;font:14px system-ui,sans-serif;cursor:pointer;
+box-shadow:0 2px 8px rgba(0,0,0,.2)}
+#wjs-fb-panel{position:fixed;right:20px;bottom:72px;z-index:9999;width:300px;background:#fff;
+border:1px solid #ddd;border-radius:12px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.15);
+display:none;font:14px/1.5 system-ui,sans-serif}
+#wjs-fb-panel textarea{width:100%;height:90px;box-sizing:border-box;margin:8px 0;font:14px system-ui,sans-serif}
+#wjs-fb-panel button{width:100%;padding:10px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer}
+</style>
+<button id="wjs-fb-btn">💬 提个建议</button>
+<div id="wjs-fb-panel">
+  <div>对这个页面有什么想改的？提交后会自动处理并上线。</div>
+  <textarea id="wjs-fb-text" placeholder="例如：把首页标题改大一点"></textarea>
+  <button id="wjs-fb-send">提交到 GitHub →</button>
+</div>
+<script>
+(function () {
+  var REPO = "{{REPO}}";
+  function buildIssueUrl(o) {
+    var p = new URLSearchParams();
+    if (o.label) p.set("labels", o.label);
+    if (o.title) p.set("title", o.title);
+    if (o.body) p.set("body", o.body);
+    return "https://github.com/" + o.repo + "/issues/new?" + p.toString();
+  }
+  var btn = document.getElementById("wjs-fb-btn");
+  var panel = document.getElementById("wjs-fb-panel");
+  var send = document.getElementById("wjs-fb-send");
+  btn.onclick = function () {
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+  };
+  send.onclick = function () {
+    var t = document.getElementById("wjs-fb-text").value.trim();
+    if (!t) return;
+    var title = t.length > 50 ? t.slice(0, 50) + "…" : t;
+    var body = t + "\n\n---\n来自页面: " + location.href;
+    window.open(buildIssueUrl({ repo: REPO, label: "feedback", title: title, body: body }), "_blank");
+  };
+})();
+</script>

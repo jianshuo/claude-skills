@@ -1,0 +1,129 @@
+name: feedback-loop
+# Auth: set EITHER secret CLAUDE_CODE_OAUTH_TOKEN (Pro/Max, via `claude setup-token`)
+#       OR secret ANTHROPIC_API_KEY. Set exactly one; the other resolves to an empty
+#       string and is ignored by the action.
+#
+# claude-code-action interface VERIFIED against anthropics/claude-code-action@v1
+# (action.yml inputs list + docs/usage.md, fetched Unit 4):
+#   - anthropic_api_key        -> Anthropic API key
+#   - claude_code_oauth_token  -> Claude Pro/Max OAuth token (from `claude setup-token`)
+#   - prompt                   -> headless / non-interactive instructions for Claude
+# The action edits the workspace in headless mode; it does NOT commit/push for us.
+# Our own "Commit, finalize ledger, push to main" step handles git + ledger + deploy.
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: feedback-loop
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write   # required by claude-code-action to mint its OIDC token
+
+jobs:
+  feedback:
+    if: contains(github.event.issue.labels.*.name, 'feedback') || contains(github.event.issue.labels.*.name, 'revert')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Allowlist gate
+        id: gate
+        env:
+          ALLOWLIST: ${{ vars.FEEDBACK_ALLOWLIST }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUM: ${{ github.event.issue.number }}
+        run: |
+          ALLOWLIST=$(printf '%s' "$ALLOWLIST" | tr -d '[:space:]')
+          if echo ",${ALLOWLIST}," | grep -qiF ",${AUTHOR},"; then
+            echo "allowed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "allowed=false" >> "$GITHUB_OUTPUT"
+            gh issue close "$NUM" -R "$REPO" --reason "not planned" \
+              --comment "抱歉，本站反馈仅对已授权用户开放。"
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.allowed == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        if: steps.gate.outputs.allowed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Claude Code
+        if: steps.gate.outputs.allowed == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Use the workflow's own token so the action does NOT require the
+          # Claude GitHub App to be installed (app-token exchange is skipped).
+          github_token: ${{ github.token }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Non-interactive runs deny any tool not listed here, so Claude could not
+          # edit the site. Allow the tools needed to read, edit, and (for revert) git.
+          claude_args: |
+            --allowedTools "Read,Glob,Grep,Edit,Write,Bash"
+          prompt: |
+            You are handling website feedback issue #${{ github.event.issue.number }}.
+            Title: ${{ github.event.issue.title }}
+            Body:
+            ${{ github.event.issue.body }}
+
+            Read .feedback/INSTRUCTIONS.md and follow it exactly.
+
+      - name: Commit, finalize ledger, push to main
+        if: steps.gate.outputs.allowed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUM: ${{ github.event.issue.number }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          TITLE: ${{ github.event.issue.title }}
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          git config user.name "feedback-bot"
+          git config user.email "feedback-bot@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain)" ]; then
+            gh issue comment "$NUM" -R "$REPO" \
+              --body "我看了这条反馈，但没有做改动（可能需要更多信息或无法自动处理）。"
+            exit 0
+          fi
+
+          OUT=$(node -e "process.stdout.write(require('./.feedback/config.json').out)")
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          git add -A
+          git commit -m "feedback: resolve #${NUM}"
+          SHA=$(git rev-parse --short HEAD)
+
+          if printf '%s' "$TITLE" | grep -qiE '^revert: #[0-9]+'; then
+            TARGET=$(printf '%s' "$TITLE" | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+            node .feedback/feedback-finalize.mjs revert \
+              --repo "$REPO" --issue "$TARGET" \
+              --ledger .feedback/feedback-ledger.json --out "$OUT" --now "$NOW"
+          else
+            [ -f .feedback/last-summary.txt ] || echo "自动处理完成。" > .feedback/last-summary.txt
+            node .feedback/feedback-finalize.mjs record \
+              --repo "$REPO" --issue "$NUM" --author "$AUTHOR" \
+              --suggestion "$BODY" --summary-file .feedback/last-summary.txt \
+              --commit "$SHA" --ledger .feedback/feedback-ledger.json --out "$OUT" --now "$NOW"
+          fi
+          rm -f .feedback/last-summary.txt
+
+          git add -A
+          git commit -m "feedback: update ledger for #${NUM}"
+          git push origin HEAD:main
+
+          gh issue comment "$NUM" -R "$REPO" \
+            --body "已处理并合并到 main（commit ${SHA}），即将自动部署上线。可在 /_feedback 查看与回滚。"
+          gh issue close "$NUM" -R "$REPO" --reason completed
