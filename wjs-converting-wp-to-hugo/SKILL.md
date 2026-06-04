@@ -136,7 +136,9 @@ gh run watch <run-id> --repo <owner>/<site> --exit-status
 | 坑 | 现象 | 修法 |
 |---|---|---|
 | 超链接丢 href | `<a href>` 只剩文字，URL 丢了 | `<a>` 内攒文字，闭合时输出 `[文字](href)` |
-| 相册多余 `-` | 图片帖每张图前一个空列表符 | `figure` 栈识别 `wp-block-gallery`，相册内 `<li>` 不输出 `- ` |
+| 相册多余 `-`（figure 版） | 图片帖每张图前一个空列表符 | `figure` 栈识别 `wp-block-gallery`，相册内 `<li>` 不输出 `- ` |
+| 相册多余 `-`（ul 版） | 早期 Gutenberg 把 `wp-block-gallery` 放 `<ul>`（无 `<figure>` 包裹），上一行的 figure 判定漏掉，每图前留孤立 `-` | `_ul_stack` 同样识别 `<ul class=wp-block-gallery>`，相册内 `<li>` 不输出 `- `（maggiacito.com 实战） |
+| CJK permalink 编码 | permalink 是 URL 编码的中文（`/sculpting-in-time/%e4%ba%8c…/`）。原样保留会让 Hugo 建字面 `%e4%..` 目录，服务器把请求里的 `%xx` 解码后对不上 → 老链接全断 | `_norm_url()` 用 `unquote()` 把路径解码成中文，Hugo 建 UTF-8 目录；静态主机对入站 `%xx` 解码即命中，**编码/解码两种老链接都活**。数字 `/archives/<id>/` 不受影响（maggiacito.com 实战） |
 | 图片从线上加载 | 正文图是绝对 `https://站点/wp-content/...` | `_root_relative()` 把自托管图改成 `/wp-content/...`；外链图保持绝对 |
 | 视频/嵌入丢失 | `<video>`/`<iframe>` 正文变空 | 原样透传为 HTML（`hugo.toml` 开 `goldmark unsafe=true`） |
 | lastmod 空 | 有的 WXR 无 `wp:post_modified` | 缺失时回退到 `wp:post_date` |

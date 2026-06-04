@@ -69,6 +69,17 @@ def test_gallery_no_stray_bullets():
     assert '- ' not in md, repr(md)
     assert ('uploads/a.jpg)' in md and 'uploads/b.jpg)' in md), repr(md)
 
+def test_ul_gallery_no_stray_bullets():
+    # Earlier Gutenberg galleries put wp-block-gallery on the <ul>, not a <figure>.
+    # Its <li> items must NOT emit list bullets (would leave a stray '-' per image).
+    item = ('<li class="blocks-gallery-item"><figure>'
+            '<img src="https://maggiacito.com/wp-content/uploads/%s.jpg"/></figure></li>')
+    htmls = ('<ul class="wp-block-gallery columns-2 is-cropped">'
+             + (item % 'a') + (item % 'b') + '</ul>')
+    md, _ = w.html_to_markdown(htmls)
+    assert '- ' not in md and '\n-\n' not in ('\n' + md.strip() + '\n'), repr(md)
+    assert ('uploads/a.jpg)' in md and 'uploads/b.jpg)' in md), repr(md)
+
 # ---- front matter ----
 def test_front_matter():
     post = {'id': 1488, 'title': '关于&门的动议', 'slug': 'x',
@@ -171,6 +182,25 @@ PW_WXR = '''<?xml version="1.0" encoding="UTF-8"?>
 
 def test_password_protected_excluded():
     assert w.parse_items(PW_WXR, 'post') == []
+
+CJK_WXR = '''<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:wp="http://wordpress.org/export/1.2/">
+<channel><item>
+  <title>二刷</title>
+  <link>https://maggiacito.com/sculpting-in-time/%e4%ba%8c%e5%88%b7%e5%93%aa%e5%90%92/</link>
+  <wp:post_id>30</wp:post_id><wp:post_date><![CDATA[2019-08-05 00:00:00]]></wp:post_date>
+  <wp:post_name><![CDATA[x]]></wp:post_name><wp:status><![CDATA[publish]]></wp:status>
+  <wp:post_type><![CDATA[post]]></wp:post_type>
+  <content:encoded><![CDATA[<p>正文</p>]]></content:encoded>
+</item></channel></rss>'''
+
+def test_cjk_permalink_is_decoded():
+    # WordPress percent-encodes CJK slugs in <link>. A static host decodes %xx
+    # when matching the on-disk dir, so the url MUST be stored decoded (中文),
+    # else Hugo makes a literal "%e4%.." dir that no decoded request can hit.
+    p = w.parse_items(CJK_WXR, 'post')[0]
+    assert p['url'] == '/sculpting-in-time/二刷哪吒/', repr(p['url'])
 
 def test_modified_falls_back_to_date():
     posts = w.parse_items(SAMPLE_WXR, 'post')

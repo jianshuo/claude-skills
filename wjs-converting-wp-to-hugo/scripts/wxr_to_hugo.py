@@ -13,6 +13,7 @@ build_front_matter, next_archive_id.  See tests/test_wxr.py.
 import re, html, os, json
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
+from urllib.parse import unquote
 
 NS = {
     'wp': 'http://wordpress.org/export/1.2/',
@@ -43,6 +44,7 @@ class _MD(HTMLParser):
         self._link_text = []
         self._in_gallery = 0
         self._fig_stack = []
+        self._ul_stack = []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -50,6 +52,13 @@ class _MD(HTMLParser):
             self.parts.append('\n\n')
         elif tag in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'):
             self.parts.append('\n\n' + '#' * int(tag[1]) + ' ')
+        elif tag == 'ul':
+            # Earlier Gutenberg galleries carry wp-block-gallery on the <ul>
+            # itself (no wrapping <figure>); its <li> must not become bullets.
+            is_gallery = 'wp-block-gallery' in a.get('class', '')
+            self._ul_stack.append(is_gallery)
+            if is_gallery:
+                self._in_gallery += 1
         elif tag == 'li':
             if not self._in_gallery:
                 self.parts.append('\n- ')
@@ -110,6 +119,9 @@ class _MD(HTMLParser):
             self._raw_media = False
         elif tag == 'figure' and self._fig_stack:
             if self._fig_stack.pop():
+                self._in_gallery -= 1
+        elif tag == 'ul' and self._ul_stack:
+            if self._ul_stack.pop():
                 self._in_gallery -= 1
         elif tag in ('p', 'div', 'blockquote'):
             self.parts.append('\n\n')
@@ -188,9 +200,15 @@ def next_archive_id(content_dir):
 # WXR parsing
 # --------------------------------------------------------------------------
 def _norm_url(link, post_id, post_type):
-    """Preserve the original permalink path with a trailing slash."""
+    """Preserve the original permalink path with a trailing slash.
+
+    WordPress percent-encodes CJK slugs in <link> (e.g. /生活调香室/ shows up as
+    /%e7%94%9f.../). We decode them so Hugo writes a UTF-8 directory on disk; a
+    static host then decodes incoming %xx requests to match it, keeping BOTH the
+    old encoded links and the human-readable form alive. (Numeric /archives/<id>/
+    URLs are unaffected — unquote is a no-op on them.)"""
     if link:
-        path = re.sub(r'^https?://[^/]+', '', link).strip()
+        path = unquote(re.sub(r'^https?://[^/]+', '', link).strip())
         if not path:
             path = '/'
         if not path.endswith('/'):
