@@ -122,6 +122,11 @@ jobs:
 
           git add -A
           git commit -m "feedback: update ledger for #${NUM}"
+          # NOTE: this push uses GITHUB_TOKEN. External push-deploy hosts (Cloudflare
+          # Pages git-connect, Vercel, Netlify) deploy from it automatically. But a
+          # GitHub Actions deploy workflow in THIS repo (e.g. GitHub Pages) will NOT be
+          # triggered by a GITHUB_TOKEN push (recursion prevention) — give that deploy
+          # workflow a `workflow_run` trigger on "feedback-loop". See install.md step 4.5.
           git push origin HEAD:main
 
           gh issue comment "$NUM" -R "$REPO" \
