@@ -57,6 +57,40 @@ Copy the workflow:
 - Ensure Actions can push to `main`:
   `gh api -X PUT repos/<REPO>/actions/permissions/workflow -f default_workflow_permissions=write`
 
+## 4.5 Wire up deploy triggering (DON'T SKIP — site won't go live otherwise)
+The feedback workflow pushes the change to `main` with the built-in `GITHUB_TOKEN`. Whether
+that push actually deploys depends on how the site ships. Determine the deploy mechanism and
+act accordingly:
+
+- **External push-deploy host** — Cloudflare Pages (git-connected), Vercel, Netlify, etc.
+  Their integration webhook fires on every push, including `GITHUB_TOKEN` pushes, so the
+  bot's commit deploys with no extra wiring. **Nothing to do.**
+
+- **Deploy is a GitHub Actions workflow in THIS repo** — most commonly **GitHub Pages via
+  Actions** (`actions/deploy-pages`), or any custom `on: push` build-and-deploy workflow.
+  GitHub's recursion-prevention rule means a push made with `GITHUB_TOKEN` will **not**
+  trigger another workflow, so that deploy workflow's `on: push` never fires and the change
+  lands on `main` but never goes live. **Fix:** add a `workflow_run` trigger to the deploy
+  workflow so it runs after the feedback loop completes:
+  ```yaml
+  on:
+    push:
+      branches: [main]
+    workflow_dispatch:
+    workflow_run:
+      workflows: ["feedback-loop"]   # must match `name:` in feedback.yml
+      types: [completed]
+  ```
+  (`feedback-loop` is the `name:` of the workflow in `feedback.yml`.) If the repo has no
+  deploy workflow yet (fresh GitHub Pages site), create one — a standard Hugo/Next/Astro →
+  Pages build workflow with the three triggers above — and set Pages source to "GitHub
+  Actions" (`gh api -X POST repos/<REPO>/pages -f build_type=workflow`).
+
+- **Manual / local deploy** (e.g. local `wrangler`): the loop still lands changes on `main`,
+  but they won't auto-deploy. Tell the user this explicitly so they know to deploy.
+
+Verify after the first real feedback run that a deploy actually fired and the change is live.
+
 ## 5. Commit and push
 ```bash
 git add .feedback .github/workflows/feedback.yml <widget-target-files>
