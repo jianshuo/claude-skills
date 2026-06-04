@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-04]
+
+### Added
+
+- **`wjs-publishing-hugo`** — new skill: conversational Hugo blog backend. No CMS, no `/admin` page — tell Claude what to post and it edits `content/`, adds images, commits, pushes, and auto-deploys via the repo's existing CI. Ships `scripts/new-post.py` (generates correct front matter with timezone-aware dates, URL, and categories), `scripts/categories.sh` (lists existing categories to avoid duplicates and supports bulk rename/merge), `scripts/add-image.py` (places images under `static/uploads/<year>/`, auto-resizes above 2000 px), and `scripts/publish.sh`. Adapts to any Hugo repo's existing front matter conventions — reads a sample post before writing. Triggers: `发一篇博客` / `给 Hugo 加文章` / `博客后台` / `/wjs-publishing-hugo`.
+- **`wjs-looping-feedback`** — new skill: installs a self-driving feedback loop into any website repo using only the repo owner's own GitHub Actions and auth (Pro/Max OAuth token or `ANTHROPIC_API_KEY` — no hosted service, no extra billing). A floating "提个建议" button lets allowlisted visitors submit suggestions as prefilled GitHub Issues; the `feedback.yml` workflow gates on the allowlist, invokes Claude Code to make the requested change per `.feedback/INSTRUCTIONS.md`, auto-commits to `main`, updates a `/_feedback` dashboard with every suggestion and its commit, and closes the issue. One-click revert via a `revert: #N` issue. Supports Hugo, Next.js, Astro, and static sites. Includes a note on the GitHub Pages `workflow_run` bridge needed when the deploy itself is a GitHub Actions workflow. Triggers: `给网站加个反馈对话框` / `提一句话就自动改网站` / `feedback loop` / `/wjs-looping-feedback`.
+- **README** — added `wjs-publishing-hugo` and `wjs-looping-feedback` to the skills summary table; added dedicated sections (section 11 expanded to cover both Hugo blog skills, new section 12 for the feedback loop skill); section 11 renamed from "博客迁移 / Blog Migration" to "Hugo 博客 / Hugo Blog".
+
+### Changed
+
+- **`wjs-converting-wp-to-hugo`** — iterative refinements to the WordPress → Hugo migration pipeline (2 commits).
+
 ## [2026-06-03]
 
 ### Changed

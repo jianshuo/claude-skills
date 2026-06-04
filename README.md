@@ -105,6 +105,8 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
 | [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/) | WordPress → Hugo 静态站迁移，老链接不断 | WXR .xml + uploads/ → Hugo + GitHub Pages |
+| [`wjs-publishing-hugo`](./wjs-publishing-hugo/) | Hugo 博客的对话式后台：说一句就发文/改文件/管类目，无需 CMS 或服务器 | `发一篇博客` / `博客后台` / `/wjs-publishing-hugo` |
+| [`wjs-looping-feedback`](./wjs-looping-feedback/) | 给任意网站装「提个建议→Issue→Claude 自动改代码→部署」反馈闭环 | `给网站加个反馈对话框` / `feedback loop` / `/wjs-looping-feedback` |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
 
 ---
@@ -372,7 +374,18 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ---
 
-## 11. 博客迁移 / Blog Migration
+## 11. Hugo 博客 / Hugo Blog
+
+### [`wjs-publishing-hugo`](./wjs-publishing-hugo/)
+
+Hugo 博客的对话式后台。没有 CMS，没有 /admin 页面——说要发什么，Claude 就改 `content/`、放图、commit、push，走仓库现有部署流自动上线。先做前置检测（确认 `hugo.toml` 和现有帖子 front matter 格式），再动手，格式不漂。
+
+- 新增帖子：`scripts/new-post.py`（生成标准 front matter，日期/URL/类目一次到位）
+- 管理类目：`scripts/categories.sh` 列现有类目，防止造重复；批量改名/合并类目也支持
+- 上传图片：`scripts/add-image.py`，新图进 `static/uploads/<年>/`，超 2000px 宽自动缩小
+- 发布：`scripts/publish.sh` commit + push，触发 GitHub Actions 自动部署
+
+> 触发词：`发一篇博客` / `给 Hugo 加文章` / `写篇帖子到博客` / `博客后台` / `/wjs-publishing-hugo`
 
 ### [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/)
 
@@ -385,6 +398,20 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - **TDD 转换器**：`wxr_to_hugo.py` 是纯函数，`test_wxr.py` 先跑测试再全量转换；`verify_build.py` 断言每个老链接都命中。
 
 > 触发词：`把 WordPress 迁成 Hugo` / `wordpress 转静态站` / `migrate WordPress to Hugo` / `WXR to Hugo` / `/wjs-converting-wp-to-hugo`
+
+---
+
+## 12. 网站反馈闭环 / Website Feedback Loop
+
+### [`wjs-looping-feedback`](./wjs-looping-feedback/)
+
+给任意网站装「提一句话就自动改代码」的反馈闭环。完全跑在仓库所有者自己的 GitHub Actions 上，用自己的 Pro/Max OAuth token 或 `ANTHROPIC_API_KEY`，无需任何第三方服务或后端。
+
+工作流：访客点浮动「提个建议」按钮 → 填建议 → 变成 GitHub Issue（`feedback` 标签）→ allowlist 检查（只有白名单用户能触发）→ Claude Code 按 `.feedback/INSTRUCTIONS.md` 改网站 → 自动 commit 到 `main` → 触发部署上线 → `/_feedback` 仪表板记录每条建议的处理状态 + issue 回复 commit 链接。Revert：发一条 `revert: #N` issue 即可。
+
+支持 Hugo / Next.js / Astro / 静态站。
+
+> 触发词：`给网站加个反馈对话框` / `提一句话就自动改网站` / `装上反馈闭环` / `feedback loop` / `/wjs-looping-feedback`
 
 ---
 
