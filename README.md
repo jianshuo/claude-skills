@@ -101,6 +101,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
 | [`wjs-x-increasing-follower`](./wjs-x-increasing-follower/) | X 涨粉实验框架：带编号的 A/B 实验，以新增关注 ÷ 主页访问转化率为北极星 | X Analytics CSV → SCOREBOARD.md |
 | [`wjs-x-improving-content`](./wjs-x-improving-content/) | 迭代改 `prompt.md` 提升每条推的 impression：每版 prompt 是带假设的 git SHA 版本实验 | Content CSV → 版本对比 + 内容特征 |
+| [`wjs-polishing-x-engagement`](./wjs-polishing-x-engagement/) | 把平淡中文 tweet 改写成"真事实 + 钩子"的高互动版本，每次给 2–3 个不同钩子的候选 | 一条中文推文 → 2–3 个改写版本 + 事实来源 |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
@@ -371,6 +372,17 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 判决用中位数，每版至少 5 条成熟推（发布满 3 天）才下版本级结论。
 
 > 触发词：`改 X 的 prompt` / `X 内容改进` / `哪版 prompt 最好` / `什么内容 impression 高` / `/wjs-x-improving-content`
+
+### [`wjs-polishing-x-engagement`](./wjs-polishing-x-engagement/)
+
+把一条平淡的中文推文改写成"有真实事实支撑 + 带互动钩子"的高参与度版本，每次给 2–3 个钩子不同的候选。核心是两件事叠加：**一个真事实**（用 `web_search` 现查，绝不编造）+ **一个钩子**（留缺口让读者忍不住接话）。
+
+- **风格铁律**：短、白、口语——能删的字全删，日常说话的调子，不煽情不堆形容词。
+- **五种钩子**：历史规律外推（最强）/ 提问 / 填空 / 反常识 / 二选一站队。
+- 每版末尾附事实来源，方便用户核实后再发。
+- 有合适老照片或对比图时顺手用 `image_search` 找出来给用户。
+
+> 触发词：`润色这条推` / `改写这条推文` / `让它更有互动` / `涨互动` / `帮我把这条发得更好` / `/wjs-polishing-x-engagement`
 
 ---
 

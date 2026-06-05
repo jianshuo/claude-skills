@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-05]
+
+### Added
+
+- **`wjs-polishing-x-engagement`** — new skill: rewrites a plain Chinese tweet into 2–3 high-engagement versions, each built on two building blocks — a **verified real fact** (looked up live via `web_search`, never fabricated) + an **engagement hook** (leaves a gap readers instinctively want to fill). Five hook types in the rotation: historical-pattern extrapolation (strongest), question, fill-in-the-blank, counter-intuitive reveal, and binary-choice. Style rules are strict: short, plain, conversational — no literary flourish, no filler adjectives. Every output includes a fact source line for the user to verify before posting; when a strong archival image exists `image_search` surfaces it. Triggers: `润色这条推` / `改写这条推文` / `让它更有互动` / `帮我把这条发得更好` / `/wjs-polishing-x-engagement`.
+- **README** — added `wjs-polishing-x-engagement` to the skills summary table and as a new subsection in section 10 "X 增长 / X Growth".
+
 ## [2026-06-04]
 
 ### Added
