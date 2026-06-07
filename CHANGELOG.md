@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-07]
+
+### Changed
+
+- **`wjs-publishing-wechat` (STYLE.md)** — replaced the `**加粗**` (bold + red) emphasis convention with plain inline red: key conclusions and concept words are now marked with `<span style="color:#c0392b;">…</span>` (colour only, no bold). The section heading was renamed from "加粗加红" to "标红" to match. The 2–4 highlights-per-article rule and placement guidance (key conclusions, core concepts — not whole paragraphs or headings) are unchanged.
+
 ## [2026-06-05]
 
 ### Added
