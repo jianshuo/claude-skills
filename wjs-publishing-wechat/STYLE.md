@@ -59,6 +59,7 @@
 - **解释图不写引导语**：绝不写「整件事画起来是这样」「如图所示」之类，图自己说话。
 - **引用他人的话 → 真 blockquote**：`upload-draft.sh` 不支持 markdown 的 `> ` 语法（会把 `>` 当字面量显示）。引用别人的话用 raw HTML 块（整段一行、内部无空行）：`<blockquote style="border-left:3px solid #d0d0d0;padding:8px 14px;margin:0;color:#666;background:#f7f7f7;font-size:0.95em;line-height:1.8;">…</blockquote>`。
 - **并列 / 排比短句 → markdown 列表**：一串并列句用 `- ` 开头连成 `<ul>`，每句独立成项，别用 `<br>` 挤在一段里。
+- **有序列表 ≥10 条 → 用 `<p>` 块**：`md2wechat` 的 `<ol>` 用 CSS counter，微信只显示个位数（10 显示成 0）。超过 9 条的有序列表，每条写成 `<p>N. 内容</p>`（整段一行），数字作为普通文字输出。
 - **手打省略号「。。。」原样保留**，不要规整成「……」——那是有意为之的味道。
 
 ## 5. 分段规则
