@@ -68,6 +68,10 @@ if [[ ! -s "$OUT" ]]; then
   exit 1
 fi
 
+# Resize to 1024 wide (proportional), then center-crop to 576 tall → 1024×576 (16:9)
+sips --resampleWidth 1024 "$OUT" --out "$OUT" >/dev/null 2>&1
+sips -c 576 1024 "$OUT" --out "$OUT" >/dev/null 2>&1
+
 # Read actual dimensions for the report
 DIMS=$(sips -g pixelWidth -g pixelHeight "$OUT" | grep -E "pixel" | awk '{print $2}' | paste -sd "x" -)
 echo "illustration ready: $OUT ($DIMS)" >&2
