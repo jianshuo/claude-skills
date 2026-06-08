@@ -42,7 +42,7 @@ print(template.replace('[文章内容]', article))
 GEN_PROMPT="根据 instructions 中的文章内容,生成一张扁平卡通风格的解释图。画幅比例由内容决定 (双行对照用 3:2 / 4:3, 单行流程用横长条, 层级深度用竖版), 选最易读的版本。把文章的核心层级 / 对比 / 递进结构可视化,让读者一眼看懂。中文标签必须准确无伪字。"
 
 OUT="${ARTICLE_DIR}/illustration.png"
-SIZE="${WECHAT_PUBLISH_IMAGE_SIZE:-1536x1024}"
+SIZE="${WECHAT_PUBLISH_IMAGE_SIZE:-1024x1024}"
 QUALITY="${WECHAT_PUBLISH_IMAGE_QUALITY:-high}"
 
 echo "calling gpt-image-2-skill (illustration, size: $SIZE, quality: $QUALITY)" >&2
