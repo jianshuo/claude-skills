@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-08]
+
+### Changed
+
+- **`wjs-publishing-wechat` (scripts/gen-illustration.sh)** — illustration output is now always post-processed to a fixed 1024×576 (16:9) size: the image is first resampled to 1024 px wide (proportional), then center-cropped to 576 px tall. Previously the aspect ratio was model-chosen; now it is consistently 16:9.
+- **`wjs-publishing-wechat` (STYLE.md)** — added a formatting rule for ordered lists with 10 or more items: use `<p>N. 内容</p>` instead of `<ol>`, because WeChat renders `<ol>` via CSS counters that only show single digits (10 appears as 0).
+
 ## [2026-06-07]
 
 ### Changed
