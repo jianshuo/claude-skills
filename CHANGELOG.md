@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-09]
+
+### Changed
+
+- **`wjs-publishing-wechat` (STYLE.md)** — added three new formatting rules: (1) technical expressions and pseudocode (non-command forms such as `输出 = 函数（输入）` or `while true`) must use inline `` `code` `` — triple-backtick single-line wraps are explicitly banned because `md2wechat` renders them as empty `<code></code>` and the content is lost; (2) two or more parallel rhetorical questions inside a paragraph (e.g. "有什么工具？有什么 skill？") should be split into a `- ` bullet list, one question per item; (3) a rhetorical lead-in sentence that opens a new section (e.g. "那 Harness 是什么？") should stand alone as its own paragraph and be wrapped in `**bold**` to give readers a visible structural cue.
+
 ## [2026-06-08]
 
 ### Changed
