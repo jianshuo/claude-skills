@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-10]
+
+### Added
+
+- **`wjs-cleaning-spam`** — new skill: cleans up 同城引流 spam replies (emoji-chain drain-account type) from 王建硕's X/Twitter posts. Because the X API block endpoint was removed (v2 returns code 34), the only programmatic weapons are **hide reply** (removes the reply from the thread for all non-author viewers) and **mute account** (suppresses future notifications). Workflow: (1) dry-run — outputs `flagged` and `borderline` JSON lists; (2) Claude manually reviews borderline entries to distinguish real comments from spam variants hiding invisible Unicode characters (U+034F, zero-width chars); (3) apply — hides + mutes the final confirmed set. State is stored in `state/cleaned.jsonl` so reruns are idempotent and rate-limit pauses (≈50 hides per 15 min) resume automatically. Covers the past 7 days only (X recent-search window limit). Ships a `scripts/clean_spam.py` with `--apply` and `--ids` flags. Triggers: `把这些spam删掉` / `清理X垃圾回复` / `推文下面好多引流号` / `clean spam replies` / `/wjs-cleaning-spam`.
+- **README** — added `wjs-cleaning-spam` to the skills summary table and as a new subsection in section 10 "X 增长 / X Growth".
+
 ## [2026-06-09]
 
 ### Changed

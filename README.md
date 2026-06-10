@@ -102,6 +102,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-x-increasing-follower`](./wjs-x-increasing-follower/) | X 涨粉实验框架：带编号的 A/B 实验，以新增关注 ÷ 主页访问转化率为北极星 | X Analytics CSV → SCOREBOARD.md |
 | [`wjs-x-improving-content`](./wjs-x-improving-content/) | 迭代改 `prompt.md` 提升每条推的 impression：每版 prompt 是带假设的 git SHA 版本实验 | Content CSV → 版本对比 + 内容特征 |
 | [`wjs-polishing-x-engagement`](./wjs-polishing-x-engagement/) | 把平淡中文 tweet 改写成"真事实 + 钩子"的高互动版本，每次给 2–3 个不同钩子的候选 | 一条中文推文 → 2–3 个改写版本 + 事实来源 |
+| [`wjs-cleaning-spam`](./wjs-cleaning-spam/) | 清理 X 推文下的同城引流 spam 回复：dry-run 预览 → 人工审 borderline → 隐藏 + 静音 | spam 回复列表 → 隐藏条数 + 静音账号数（7 天窗口内） |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
@@ -383,6 +384,17 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 有合适老照片或对比图时顺手用 `image_search` 找出来给用户。
 
 > 触发词：`润色这条推` / `改写这条推文` / `让它更有互动` / `涨互动` / `帮我把这条发得更好` / `/wjs-polishing-x-engagement`
+
+### [`wjs-cleaning-spam`](./wjs-cleaning-spam/)
+
+清理挂在王建硕 X/Twitter 推文下的同城引流 spam 回复。X API 只允许串主 **隐藏回复**（访客不可见）和 **静音账号**（通知静音），block 端点已从 API 下线，拉黑只能网页手动。
+
+- **三步走**：先 dry-run 输出 flagged + borderline 名单 → Claude 逐条审 borderline（区分真人评论和变体 spam）→ apply（隐藏 + 静音）
+- **自动幂等**：`state/cleaned.jsonl` 记录已处理 id，重跑自动跳过；撞 429 限流（约 50 次/15 分钟）脚本自动停，等窗口刷新后续跑
+- **只覆盖 7 天内**：X recent-search 接口上限；更早的 spam 需网页手动处理
+- **block 做不到**：如需拉黑，提示用户到账号主页手动操作
+
+> 触发词：`把这些spam删掉` / `清理X垃圾回复` / `推文下面好多引流号` / `clean spam replies` / `/wjs-cleaning-spam`
 
 ---
 
