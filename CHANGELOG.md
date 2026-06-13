@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-13]
+
+### Changed
+
+- **`wjs-x-increasing-follower`** — daily analytics ingested covering 2026-05-28 through 2026-06-12 (16 new days added to `state/daily.jsonl`). Experiment #1 (Bio 重写: 身份锚+硬证明+关注CTA) formally settled as **kept**: clean-traffic-day analysis (excluding the 2026-05-27 viral outlier and the 2026-05-23–26 impressions spike that inflated the baseline) shows conversion holding healthy at 36–48% on normal days, making the earlier -17% signal an artefact of baseline contamination rather than a real regression. Experiment #4 (置顶一条最强 thread) activated with an 8-day measurement window. `SCOREBOARD.md` regenerated: latest 7-day median conversion ratio 0.274, 90-day 0.333.
+
 ## [2026-06-10]
 
 ### Added
