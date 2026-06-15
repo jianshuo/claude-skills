@@ -135,10 +135,32 @@ articles/2026-05-09-{slug}/
 1. 跑 `pangu.py` 加盘古之白
 2. `md2wechat upload_image cover.png` → 拿 `thumb_media_id`
 3. `illustration.png` 存在但没引用时自动插入并 upload 拿 CDN URL（幂等安全网）
-4. 从 `article.md` 生成 `content.html`（转换规则见下）
-5. 装 `draft.json`，调 `create_draft` 或（`publish.json` 有 `draft_media_id` 时）`draft/update` 原地更新
-6. 自动打开草稿：macOS 走 `scripts/open-draft-edit.sh`——读已登录浏览器的 session token、按标题查出 `appmsgid`、**直达这一篇的编辑页**（没登录则回退开首页）；Linux 开 `mp.weixin.qq.com` 首页。`WECHAT_PUBLISH_NO_OPEN=1` 关掉
-7. 自动 `git add / commit / push` 文章目录到 origin
+4. **注入「最近文章」链接列表**（`build-recent-articles.py`，默认开，见下节）
+5. 从 `article.md` 生成 `content.html`（转换规则见下）
+6. 装 `draft.json`，调 `create_draft` 或（`publish.json` 有 `draft_media_id` 时）`draft/update` 原地更新
+7. 自动打开草稿：macOS 走 `scripts/open-draft-edit.sh`——读已登录浏览器的 session token、按标题查出 `appmsgid`、**直达这一篇的编辑页**（没登录则回退开首页）；Linux 开 `mp.weixin.qq.com` 首页。`WECHAT_PUBLISH_NO_OPEN=1` 关掉
+8. 自动 `git add / commit / push` 文章目录到 origin
+
+### 文末「最近文章」列表（自动）
+
+每次发布，`upload-draft.sh` 会在文末自动挂一个**最近已发布文章**的链接列表（默认 5 篇），用微信编辑器原生的文章超链接格式（`mp_article_text_link` + `data-linktype="2"`，同账号 `/s/` 链接才点得动）。
+
+机制 = **本地账本 + 离线渲染**，发布步骤零网络、确定性、离线可跑：
+
+- **账本**：每篇 `publish.json` 里的 `permalink`（`https://mp.weixin.qq.com/s/…`）+ `published_at`。
+- **渲染**：`build-recent-articles.py <article-folder>` 扫同级 `*/publish.json` 里有 `permalink` 的文章，按 `published_at` 倒序取最近 N 篇（排除本篇），在 `article.md` 的 `<!--RECENT_ARTICLES_START/END-->` 标记区内**幂等重写**一个 raw-HTML 块（`content.html` 构建器原样透传，微信忽略注释）。账本为空就不挂，从不报错、从不阻断发布。
+- 单独跑/预览：`build-recent-articles.py <folder> --print`（只打印不写）；`--count N` 改数量。
+- 关掉：`WECHAT_PUBLISH_NO_RECENT=1`；改数量：`WECHAT_RECENT_COUNT=8`。
+
+**账本怎么来 — `backfill-permalinks.py`（偶尔跑一次）**：`permalink` 只有文章正式发布后、从公众号后台才拿得到（草稿→发布是手动点的，不回流）。这个脚本调网页后台 `appmsgpublish`（已发布列表）拉全账号，**按标题精确匹配**把 `permalink`/`published_at` 写回各 `publish.json`。只精确匹配——发布标题常和 `meta.title` 不一样，模糊匹配会写错链接，对不上的会列出来留你手动处理。
+
+```bash
+~/.claude/skills/wjs-publishing-wechat/scripts/backfill-permalinks.py [articles根目录] [--dry-run]
+```
+
+鉴权走**网页 session**（不是发布 API 的 access_token），cookie 几小时过期，所以是「偶尔维护」不是每次发布都跑。三个值任选其一给：① 环境变量 `WECHAT_MP_COOKIE` / `WECHAT_MP_TOKEN` / `WECHAT_MP_FAKEID`；② 会话文件（默认 `~/.config/wjs-wechat/mp-session.env`，里面 `export` 同名三个变量）。抓法：登录 mp.weixin.qq.com → 内容管理 → 已发布 → DevTools Network 找 `appmsgpublish` 请求 → Copy as cURL，`token`/`fakeid` 在 URL 里，`Cookie` 在请求头。
+
+> `upload-draft.sh` 发布时若检测到上述凭据/会话文件，会**先尽力刷新账本**再注入（非致命，过期就跳过）；没配就直接用现有本地账本。配好会话文件后，发布即「自动回填 + 自动挂最近文章」一步到位。
 
 **article.md 写作约束**（影响 Claude 怎么写；其他 HTML 细节脚本自理）：
 
