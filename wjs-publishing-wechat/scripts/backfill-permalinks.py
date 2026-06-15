@@ -201,6 +201,11 @@ def main():
             elif summ and norm(summ) in ndmap:
                 hit = ndmap[norm(summ)]; by_digest += 1
         if not hit:
+            # Last tier: published title extends the meta title with a subtitle.
+            pm = prefix_match(meta.get("title", ""))
+            if pm:
+                hit = pm; by_prefix += 1
+        if not hit:
             unmatched.append((os.path.basename(folder), meta.get("title", "")))
             continue
         link, iso = hit
