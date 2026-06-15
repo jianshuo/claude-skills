@@ -82,9 +82,14 @@ def fetch_page(token, fakeid, cookie, begin):
         return json.loads(r.read().decode("utf-8", "replace"))
 
 
-def build_title_map(token, fakeid, cookie):
-    """title -> (permalink, published_at_iso). Newest wins on duplicate titles."""
-    tmap = {}
+def build_maps(token, fakeid, cookie):
+    """Return (title_map, digest_map), each key -> (permalink, published_at_iso).
+
+    Two independent indexes so we can match by exact published title first, then
+    fall back to exact author-written summary (the `digest`), which survives a
+    title rewrite. Newest entry wins on duplicate keys.
+    """
+    tmap, dmap = {}, {}
     begin = 0
     while True:
         data = fetch_page(token, fakeid, cookie, begin)
@@ -95,7 +100,6 @@ def build_title_map(token, fakeid, cookie):
             break
         pp = json.loads(pp)
         plist = pp.get("publish_list", [])
-        added = 0
         for it in plist:
             info = it.get("publish_info")
             if not info:
@@ -105,17 +109,21 @@ def build_title_map(token, fakeid, cookie):
             iso = (datetime.datetime.utcfromtimestamp(ts).strftime("%Y-%m-%dT%H:%M:%SZ")
                    if ts else "")
             for a in info.get("appmsgex", []):
-                t = (a.get("title") or "").strip()
                 link = a.get("link")
-                if t and link and t not in tmap:
+                if not link:
+                    continue
+                t = (a.get("title") or "").strip()
+                if t and t not in tmap:
                     tmap[t] = (link, iso)
-                    added += 1
+                dg = (a.get("digest") or "").strip()
+                if dg and dg not in dmap:
+                    dmap[dg] = (link, iso)
         total = pp.get("total_count", 0)
         begin += 20
         if not plist or begin >= total:
             break
         time.sleep(0.6)
-    return tmap
+    return tmap, dmap
 
 
 def norm(s):
