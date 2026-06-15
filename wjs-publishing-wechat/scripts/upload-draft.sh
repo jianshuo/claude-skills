@@ -95,6 +95,24 @@ PYEOF
   echo "   url: ${ILLUSTRATION_URL:0:64}..." >&2
 fi
 
+# 最近文章: refresh the tail link-list from the LOCAL permalink ledger
+# (articles/*/publish.json `permalink`). Offline + idempotent: rewrites a managed
+# block in article.md so content.html below picks it up as a raw-HTML pass-through.
+# If a logged-in MP web session is available (WECHAT_MP_* env or a session file),
+# best-effort refresh the ledger from appmsgpublish first. Both steps are
+# non-fatal. Disable the whole thing with WECHAT_PUBLISH_NO_RECENT=1.
+if [[ -z "${WECHAT_PUBLISH_NO_RECENT:-}" ]]; then
+  SCRIPT_DIR_R="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  MP_SESSION="${WECHAT_MP_SESSION:-$HOME/.config/wjs-wechat/mp-session.env}"
+  if { [[ -n "${WECHAT_MP_COOKIE:-}" && -n "${WECHAT_MP_TOKEN:-}" && -n "${WECHAT_MP_FAKEID:-}" ]] || [[ -f "$MP_SESSION" ]]; }; then
+    echo "→ refreshing permalink ledger (appmsgpublish) ..." >&2
+    "$SCRIPT_DIR_R/backfill-permalinks.py" "$(dirname "$ARTICLE_DIR")" --session "$MP_SESSION" >&2 2>&1 \
+      || echo "  (ledger refresh skipped — session missing/expired)" >&2
+  fi
+  echo "→ injecting 最近文章 list ..." >&2
+  "$SCRIPT_DIR_R/build-recent-articles.py" "$ARTICLE_DIR" >&2 2>&1 || true
+fi
+
 echo "→ building content.html + draft.json ..." >&2
 ILLUSTRATION_URL="$ILLUSTRATION_URL" THUMB_MEDIA_ID="$THUMB_MEDIA_ID" python3 <<'PYEOF'
 import os, re, json
