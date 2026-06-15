@@ -162,11 +162,12 @@ def main():
     root = os.path.abspath(root)
 
     sys.stderr.write("→ fetching published list from appmsgpublish ...\n")
-    tmap = build_title_map(token, fakeid, cookie)
+    tmap, dmap = build_maps(token, fakeid, cookie)
     nmap = {norm(t): v for t, v in tmap.items()}
+    ndmap = {norm(d): v for d, v in dmap.items()}
     sys.stderr.write(f"  {len(tmap)} published titles fetched\n")
 
-    wrote, unmatched = 0, []
+    wrote, by_digest, unmatched = 0, 0, []
     for mf in sorted(glob.glob(os.path.join(root, "*", "meta.json"))):
         folder = os.path.dirname(mf)
         meta = json.load(open(mf, encoding="utf-8"))
@@ -178,6 +179,14 @@ def main():
                 hit = tmap[c]; break
             if norm(c) in nmap:
                 hit = nmap[norm(c)]; break
+        if not hit:
+            # Fallback: exact author-written summary == published digest. The
+            # summary is stable across a title rewrite, so this is high-confidence.
+            summ = (meta.get("summary") or "").strip()
+            if summ and summ in dmap:
+                hit = dmap[summ]; by_digest += 1
+            elif summ and norm(summ) in ndmap:
+                hit = ndmap[norm(summ)]; by_digest += 1
         if not hit:
             unmatched.append((os.path.basename(folder), meta.get("title", "")))
             continue
