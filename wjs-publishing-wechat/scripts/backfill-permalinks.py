@@ -209,9 +209,10 @@ def main():
             json.dump(pub, open(pj, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
         wrote += 1
 
-    sys.stderr.write(f"{'[dry-run] would write' if dry else '✓ wrote'} permalink to {wrote} publish.json\n")
+    sys.stderr.write(f"{'[dry-run] would write' if dry else '✓ wrote'} permalink to {wrote} publish.json "
+                     f"({by_digest} via summary→digest)\n")
     if unmatched:
-        sys.stderr.write(f"  {len(unmatched)} unmatched (unpublished, or published title ≠ meta title):\n")
+        sys.stderr.write(f"  {len(unmatched)} unmatched (unpublished, or both title & summary differ):\n")
         for slug, t in unmatched:
             sys.stderr.write(f"    - {slug} :: {t}\n")
 
