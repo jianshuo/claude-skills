@@ -172,6 +172,9 @@ articles/2026-05-09-{slug}/
 - `WECHAT_PUBLISH_FORCE_NEW=1` — 强制建新草稿（不复用 `draft_media_id`）
 - `WECHAT_PUBLISH_NO_OPEN=1` — 不自动打开浏览器
 - `WECHAT_PUBLISH_NO_PUSH=1` — 不自动 push
+- `WECHAT_PUBLISH_NO_RECENT=1` — 不注入文末「最近文章」列表
+- `WECHAT_RECENT_COUNT=N` — 「最近文章」列出几篇（默认 5）
+- `WECHAT_MP_COOKIE` / `WECHAT_MP_TOKEN` / `WECHAT_MP_FAKEID` 或 `WECHAT_MP_SESSION`（会话文件路径，默认 `~/.config/wjs-wechat/mp-session.env`）— 配上则发布时自动刷新 permalink 账本
 
 **前置依赖**：
 - `md2wechat` CLI 装好且 `WECHAT_APPID` + `WECHAT_SECRET` 配好（`md2wechat config show`）
