@@ -228,7 +228,7 @@ def main():
         wrote += 1
 
     sys.stderr.write(f"{'[dry-run] would write' if dry else '✓ wrote'} permalink to {wrote} publish.json "
-                     f"({by_digest} via summary→digest)\n")
+                     f"({by_digest} via summary→digest, {by_prefix} via title-prefix)\n")
     if unmatched:
         sys.stderr.write(f"  {len(unmatched)} unmatched (unpublished, or both title & summary differ):\n")
         for slug, t in unmatched:
