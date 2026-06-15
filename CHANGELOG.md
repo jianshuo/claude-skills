@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-15]
+
+### Changed
+
+- **`wjs-publishing-wechat` — auto-injected "最近文章" link list**: `upload-draft.sh` now automatically appends a list of recently published articles to the end of each new post. Links use WeChat's native `mp_article_text_link` format (`data-linktype="2"`) so they are clickable in-app. The feature is driven by a new `scripts/build-recent-articles.py` helper that reads `publish.json` permalink ledgers from sibling article folders and writes an idempotent `<!--RECENT_ARTICLES_START/END-->` block into `article.md`. Defaults to 5 links; controlled by `WECHAT_RECENT_COUNT=N`. Disable with `WECHAT_PUBLISH_NO_RECENT=1`.
+- **`wjs-publishing-wechat` — new `scripts/backfill-permalinks.py`**: One-time maintenance script that pulls the full published-article list from the WeChat MP web backend (`appmsgpublish` API, gated by browser session cookie) and backfills `permalink` + `published_at` into each local `publish.json` by exact title match. Auth via `WECHAT_MP_COOKIE`/`WECHAT_MP_TOKEN`/`WECHAT_MP_FAKEID` env vars or a session file at `~/.config/wjs-wechat/mp-session.env`. When credentials are configured, `upload-draft.sh` also calls this on each publish run to keep the ledger current. Supports `--dry-run`.
+- **`wjs-publishing-wechat` (`scripts/gen-illustration.sh`)**: Removed the fixed center-crop to 1024×576 (16:9). The script now only resamples to 1024 px wide (proportional) and lets the model pick the aspect ratio that fits the content (3:2 / 4:3 for two-column comparisons, wide strip for single-row flows, portrait for deep hierarchies). This fixes labels being clipped at the top and bottom of tall illustrations.
+- **`wjs-publishing-wechat` (STYLE.md)**: Added new "核心表达" section at the top: when writing about code or technical topics, explain every paragraph as if talking to a 5-year-old — no jargon, no showboating, and each small section should be self-contained enough to screenshot and discuss. Added an anti-pattern example: terse phrasing like "鸟晕了，矿工撤" reads as AI-generated and should be expanded into natural speech ("鸟如果晕了，矿工就需要撤了。"). Updated 摘要 (article summary) guidance: the goal is to hook readers using the "curiosity gap" model — surface the most counter-intuitive or highest-tension point in the article, then withhold the answer to pull readers in; plain-summary style is no longer the target.
+
 ## [2026-06-13]
 
 ### Changed
