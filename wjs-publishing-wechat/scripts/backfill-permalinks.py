@@ -165,9 +165,22 @@ def main():
     tmap, dmap = build_maps(token, fakeid, cookie)
     nmap = {norm(t): v for t, v in tmap.items()}
     ndmap = {norm(d): v for d, v in dmap.items()}
+    ntitles = list(nmap.items())  # [(norm_title, (link, iso))]
     sys.stderr.write(f"  {len(tmap)} published titles fetched\n")
 
-    wrote, by_digest, unmatched = 0, 0, []
+    def prefix_match(meta_title):
+        """High-precision: published title is meta title + a subtitle (or vice
+        versa). Guarded by length so short titles can't collide. Returns
+        (link, iso) or None; ambiguous (>1 candidate) returns None."""
+        mt = norm(meta_title)
+        if len(mt) < 8:
+            return None
+        hits = [v for nt, v in ntitles
+                if nt != mt and (nt.startswith(mt) or mt.startswith(nt))
+                and min(len(nt), len(mt)) >= 8 and abs(len(nt) - len(mt)) <= 40]
+        return hits[0] if len(hits) == 1 else None
+
+    wrote, by_digest, by_prefix, unmatched = 0, 0, 0, []
     for mf in sorted(glob.glob(os.path.join(root, "*", "meta.json"))):
         folder = os.path.dirname(mf)
         meta = json.load(open(mf, encoding="utf-8"))
