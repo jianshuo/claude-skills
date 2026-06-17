@@ -113,7 +113,7 @@ if [[ -z "${WECHAT_PUBLISH_NO_RECENT:-}" ]]; then
     "$SCRIPT_DIR_R/backfill-permalinks.py" "$(dirname "$ARTICLE_DIR")" --session "$MP_SESSION" >&2 2>&1 \
       || echo "  (ledger refresh skipped — session missing/expired)" >&2
   fi
-  echo "→ injecting 最近文章 list ..." >&2
+  echo "→ injecting 扩展阅读 list ..." >&2
   "$SCRIPT_DIR_R/build-recent-articles.py" "$ARTICLE_DIR" >&2 2>&1 || true
 fi
 
