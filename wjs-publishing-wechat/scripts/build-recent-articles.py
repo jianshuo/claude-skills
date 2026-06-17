@@ -96,7 +96,7 @@ def render_block(rows):
     section = (
         '<section style="margin-top:28px;padding-top:16px;border-top:1px solid #e5e5e5;'
         'line-height:2.2;font-size:0.95em;">'
-        '<strong style="color:#ff0000;">最近文章</strong><br>'
+        '<strong style="color:#ff0000;">扩展阅读</strong><br>'
         + body
         + "</section>"
     )
