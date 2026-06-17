@@ -32,6 +32,7 @@ import sys
 import json
 import html
 import glob
+import random
 
 START = "<!--RECENT_ARTICLES_START-->"
 END = "<!--RECENT_ARTICLES_END-->"
