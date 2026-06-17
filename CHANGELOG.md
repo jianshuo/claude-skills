@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-17]
+
+### Added
+
+- **`wjs-publishing-testflight`** — new skill: sets up fastlane + GitHub Actions CI/CD for any iOS project, using the Cathier project as the reference implementation. Every push to `main` triggers a build on `macos-15` (Xcode 26.2): queries App Store Connect for the latest build number, increments it, runs `match` in readonly mode for code signing, builds an `app-store` IPA, and uploads to TestFlight. Auto-release logic fires on every 10th build (`build_num % 10 == 0`), bumping the minor marketing version and submitting to App Store review automatically; the developer can also trigger a release manually by changing `MARKETING_VERSION` in `pbxproj` and pushing. Ships three lanes (`beta`, `bump`, `release`), a complete `Appfile` / `Matchfile` / `Fastfile` / `Gemfile`, a ready-to-paste `build.yml` GitHub Actions workflow, and a step-by-step secrets setup guide. Triggers: `testflight` / `fastlane` / `自动构建` / `CI TestFlight` / `/wjs-publishing-testflight`.
+- **README** — added `wjs-publishing-testflight` to the skills summary table and as new section 13 "iOS 持续集成 / iOS CI".
+
+### Changed
+
+- **`wjs-publishing-wechat` (`scripts/build-recent-articles.py`)**: The end-of-article related-reading block is now randomly shuffled (was newest-first), so every past article gets equal exposure rather than always surfacing the same recent ones. The section heading was also renamed from "最近文章" to "扩展阅读" to better reflect its purpose as a discovery aid rather than a chronological feed.
+- **`wjs-publishing-wechat` (`scripts/upload-draft.sh`)**: Added a fixed Tokyo VPS proxy (`66.42.45.128:8888`) as the HTTPS/HTTP proxy for all outbound API traffic. This keeps the WeChat API exit IP stable and whitelisted, preventing intermittent `40164` (IP not in whitelist) errors that occurred when the local machine's IP changed.
+
 ## [2026-06-15]
 
 ### Changed

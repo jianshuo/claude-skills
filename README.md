@@ -109,6 +109,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/) | WordPress → Hugo 静态站迁移，老链接不断 | WXR .xml + uploads/ → Hugo + GitHub Pages |
 | [`wjs-publishing-hugo`](./wjs-publishing-hugo/) | Hugo 博客的对话式后台：说一句就发文/改文件/管类目，无需 CMS 或服务器 | `发一篇博客` / `博客后台` / `/wjs-publishing-hugo` |
 | [`wjs-looping-feedback`](./wjs-looping-feedback/) | 给任意网站装「提个建议→Issue→Claude 自动改代码→部署」反馈闭环 | `给网站加个反馈对话框` / `feedback loop` / `/wjs-looping-feedback` |
+| [`wjs-publishing-testflight`](./wjs-publishing-testflight/) | 配置 fastlane + GitHub Actions，推 main 自动构建上传 TestFlight，每第 10 个 build 自动提审 App Store | iOS 项目 → Fastfile + build.yml + 自动 TestFlight / App Store |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
 
 ---
@@ -436,6 +437,23 @@ Hugo 博客的对话式后台。没有 CMS，没有 /admin 页面——说要发
 支持 Hugo / Next.js / Astro / 静态站。
 
 > 触发词：`给网站加个反馈对话框` / `提一句话就自动改网站` / `装上反馈闭环` / `feedback loop` / `/wjs-looping-feedback`
+
+---
+
+## 13. iOS 持续集成 / iOS CI
+
+### [`wjs-publishing-testflight`](./wjs-publishing-testflight/)
+
+为任意 iOS 项目配置 **fastlane + GitHub Actions** CI/CD，基于 Cathier 项目的实战模板。
+
+- 推送 `main` 分支 → GitHub Actions 在 `macos-15` (Xcode 26.2) 上自动构建
+- 查询 App Store Connect 最新 build number、自动加 1，运行 `match`（只读）签名，导出 app-store IPA
+- **TestFlight**：每次 push 都上传，打 `testflight/<build_num>` tag
+- **自动提审规则**：每第 10 个 build（`build_num % 10 == 0`）自动 bump minor 版本并提审 App Store；或开发者手动改 `MARKETING_VERSION` 触发；CI 永不静默 commit pbxproj
+- 三条 lane：`beta`（日常 CI）/ `bump`（本地版本升级）/ `release`（强制立即提审）
+- 配套完整的 `Appfile` / `Matchfile` / `Fastfile` / `Gemfile` 模板和 `build.yml` workflow，只需全局替换三个占位符（bundle ID、repo 名、Xcode scheme）
+
+> 触发词：`testflight` / `fastlane` / `自动构建` / `CI TestFlight` / `/wjs-publishing-testflight`
 
 ---
 
