@@ -27,6 +27,10 @@
 
 set -euo pipefail
 
+# Fixed proxy via Tokyo VPS — keeps WeChat API exit IP stable (66.42.45.128)
+export HTTPS_PROXY="http://66.42.45.128:8888"
+export HTTP_PROXY="http://66.42.45.128:8888"
+
 ARTICLE_DIR="${1:-$(pwd)}"
 [[ -d "$ARTICLE_DIR" ]] || { echo "error: not a directory: $ARTICLE_DIR" >&2; exit 1; }
 ARTICLE_DIR="$(cd "$ARTICLE_DIR" && pwd)"
