@@ -74,8 +74,7 @@ def collect(articles_root, exclude_slug):
             continue
         sort_key = (pub.get("published_at") or "").strip() or folder_date(folder)
         rows.append((sort_key, title, link))
-    # newest first; stable on title to keep ties deterministic
-    rows.sort(key=lambda r: (r[0], r[1]), reverse=True)
+    random.shuffle(rows)
     return rows
 
 
