@@ -77,7 +77,7 @@ download(存档) → transcribe → mine → 出了草稿 → 才 delete
 | `wjs-transcribing-audio` | 每条音频 → SRT（中文火山豆包，含润色改错别字） |
 | `wjs-mining-articles` | 每个 SRT → 选题清单 → 成文 → 微信草稿（含它自己的人工闸） |
 | `~/code/.env` | `FILES_TOKEN` + 火山 ASR creds |
-| VoiceDrop app | 上游：`VoiceDrop-<时间戳>.m4a` 文件名前缀就是它定的，本 skill 靠这个前缀认领 |
+| VoiceDrop app | 上游：文件名形如 `VoiceDrop-<时间戳>-<时长>-<星期>-<时段>[-<城市-城区>].m4a`（全 ASCII）。本 skill 靠 `VoiceDrop-` 前缀 + `.m4a` 后缀认领；中间的时长/星期/时段/地点是上下文，成文时可借来判断这条录音是何时何地的口述 |
 
 **本 skill 唯一新增代码**：`scripts/voicedrop-inbox.sh`。
 
