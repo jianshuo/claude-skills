@@ -27,9 +27,14 @@
 
 set -euo pipefail
 
-# Fixed proxy via Tokyo VPS — keeps WeChat API exit IP stable (66.42.45.128)
-export HTTPS_PROXY="http://66.42.45.128:8888"
-export HTTP_PROXY="http://66.42.45.128:8888"
+# Fixed proxy via Tokyo VPS — keeps WeChat API exit IP stable (66.42.45.128).
+# Pin ALL six upper/lower-case vars: the ambient env sets lowercase https_proxy
+# and ALL_PROXY to a different (non-whitelisted) egress, and requests/urllib
+# honor ALL_PROXY and the lowercase names over the uppercase HTTPS_PROXY —
+# leaving them unset lets the request leak out the wrong IP and hit 40164.
+_WECHAT_PROXY="http://66.42.45.128:8888"
+export HTTPS_PROXY="$_WECHAT_PROXY" HTTP_PROXY="$_WECHAT_PROXY" ALL_PROXY="$_WECHAT_PROXY"
+export https_proxy="$_WECHAT_PROXY" http_proxy="$_WECHAT_PROXY" all_proxy="$_WECHAT_PROXY"
 
 ARTICLE_DIR="${1:-$(pwd)}"
 [[ -d "$ARTICLE_DIR" ]] || { echo "error: not a directory: $ARTICLE_DIR" >&2; exit 1; }
