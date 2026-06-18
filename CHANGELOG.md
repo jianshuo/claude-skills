@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-18]
+
+### Added
+
+- **`wjs-mining-voicedrop`** — new skill: closes the VoiceDrop loop on the Mac side. The VoiceDrop iOS app records a voice memo the moment you start speaking and uploads it to R2 as soon as you stop; this skill pulls every unprocessed `VoiceDrop-*.m4a` from the R2 inbox at `jianshuo.dev/files`, transcribes each one via `wjs-transcribing-audio` (Chinese: Volcano/豆包 ASR with AI typo correction), and passes the resulting SRT to `wjs-mining-articles` to produce WeChat public-account article drafts. The only new code is `scripts/voicedrop-inbox.sh` (`list` / `download` / `delete`, credentials read from `~/code/.env` at runtime and never written to code); everything else delegates to existing skills. Safety rule: R2 deletion only happens after a fully successful run (download to archive → transcribe → mine → user confirms at least one draft); on any failure — or if the user doesn't pick a topic — the file stays in the inbox for the next run. Short/zero-length files are detected via `ffprobe` and skipped without deletion. Triggers: `处理 VoiceDrop 录音` / `把新录音挖成文章` / `口述备忘变文章` / `处理一下我的录音` / `/wjs-mining-voicedrop`.
+- **README** — added `wjs-mining-voicedrop` to the skills summary table and as a new subsection in section 1 "公众号 / WeChat".
+
+### Changed
+
+- **`wjs-publishing-wechat`** — two new mandatory workflow gates added (iterative updates across 7 commits):
+  - **Step 1.5: 隐私扫描 (privacy scan)** — a hard gate inserted between polishing (Step 1) and title generation (Step 2): Claude scans every sentence for personal information — specific names, restaurant/venue names, precise locations/addresses, phone numbers, email addresses, WeChat IDs — and redacts or generalises any it finds before text is finalised. Uncertain items are surfaced to the user rather than silently deleted. Result is always reported: "隐私扫描：无" when nothing is found, otherwise each hit is added to the change log tagged "隐私". Detailed redaction rules and substitution examples live in `STYLE.md` section 10 (城市-level place names are kept; exact addresses and venue names are not).
+  - **Step 5.5: 发布前选标题 (title selection gate)** — a hard gate inserted between file-pack creation (Step 5) and `upload-draft.sh` (Step 6): Claude must stop and present four title candidates — A (the current `meta.json` title, so "keep as-is" is explicit) plus B/C/D (three punchier alternatives grounded in real facts, concrete numbers, or counter-intuitive contrasts — never clickbait or marketing copy) — and wait for the user to pick one before uploading. The selected title is written back to `meta.json`; cover image is not regenerated unless the user asks.
+  - Both gates appear as new items in the skill's Done Criteria checklist.
+
 ## [2026-06-17]
 
 ### Added

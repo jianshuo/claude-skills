@@ -84,6 +84,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 |---|---|---|
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
 | [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
+| [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -137,6 +138,16 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 生成每篇文章的微信草稿（对接 `wjs-publishing-wechat` 上传），可选再排期发到 X。
 
 > 触发词：`把这个视频写成文章` / `从字幕里挖文章` / `这个 SRT 能写几篇` / `把对谈写成文章` / `/wjs-mining-articles <srt>`
+
+### [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/)
+
+把 VoiceDrop iOS app 上传到 R2 收件箱（`jianshuo.dev/files`）的语音备忘，自动转写并挖掘成公众号文章草稿。这是 VoiceDrop 的 Mac 端闭环：开口即录、停即上传，回到桌面就有草稿等着。
+
+- **不重写任何流程**：收件箱进出（列 / 下载 / 删）和逐条编排由本 skill 负责，转写交 `wjs-transcribing-audio`，成文交 `wjs-mining-articles`。
+- **R2 当收件箱**：处理完成才从 R2 删，失败 / 未出草稿 / 用户未勾选 → 保留在 R2，下次再来。串行处理，一条彻底跑完再下一条，避免收件箱状态混乱。
+- 唯一新增代码：`scripts/voicedrop-inbox.sh`（`list` / `download` / `delete`）。
+
+> 触发词：`处理 VoiceDrop 录音` / `把新录音挖成文章` / `口述备忘变文章` / `处理一下我的录音` / `/wjs-mining-voicedrop`
 
 ---
 
