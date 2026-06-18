@@ -49,9 +49,12 @@ cmd_download() {
   load_token
   local name="$1" outdir="$2"
   mkdir -p "$outdir"
+  # <name> may be a per-user key with slashes ("users/<sub>/VoiceDrop-x.m4a");
+  # the URL keeps the full key, but the local file is just the basename.
+  local base="${name##*/}"
   curl -fsS -H "Authorization: Bearer $FILES_TOKEN" \
-    "$BASE/download/$name" -o "$outdir/$name"
-  echo "$outdir/$name"
+    "$BASE/download/$name" -o "$outdir/$base"
+  echo "$outdir/$base"
 }
 
 cmd_delete() {
