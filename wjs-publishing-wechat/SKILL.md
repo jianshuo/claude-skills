@@ -217,6 +217,7 @@ articles/2026-05-09-{slug}/
 - [ ] `articles/YYYY-MM-DD-{slug}/` 文件夹存在
 - [ ] 含 article.md、cover.png、illustration.png、meta.json、original.md
 - [ ] meta.json 字段齐全
+- [ ] **定稿前已做隐私扫描**（Step 1.5）——人名 / 餐厅 / 地点等个人隐私信息已泛化或删除，命中项进了改动清单
 - [ ] **发布前已给 A（原标题）+ 3 个更有冲击力的候选，并按用户选择定标题**（Step 5.5）
 - [ ] 草稿在 mp.weixin.qq.com 后台可见
 - [ ] 用户没说"再改改"
