@@ -15,11 +15,15 @@ BASE="https://jianshuo.dev/files/api"
 PREFIX="VoiceDrop-"
 
 load_token() {
+  # Prefer the env var if already exported; else read ~/code/.env.
+  # Accept either JIANSHUO_DEV_FILES_TOKEN (namespaced) or FILES_TOKEN.
+  : "${FILES_TOKEN:=${JIANSHUO_DEV_FILES_TOKEN:-}}"
   if [ -z "${FILES_TOKEN:-}" ] && [ -f "$HOME/code/.env" ]; then
-    FILES_TOKEN=$(grep -E '^FILES_TOKEN=' "$HOME/code/.env" | head -1 | cut -d= -f2- | tr -d '"'"'"' \r\n')
+    FILES_TOKEN=$(grep -hE '^(export +)?(JIANSHUO_DEV_FILES_TOKEN|FILES_TOKEN)=' "$HOME/code/.env" \
+      | head -1 | cut -d= -f2- | tr -d '"'"'"' \r\n')
   fi
   if [ -z "${FILES_TOKEN:-}" ]; then
-    echo "FILES_TOKEN not set (export it or put FILES_TOKEN=... in ~/code/.env)" >&2
+    echo "FILES_TOKEN not set (export JIANSHUO_DEV_FILES_TOKEN/FILES_TOKEN or add to ~/code/.env)" >&2
     exit 1
   fi
 }
