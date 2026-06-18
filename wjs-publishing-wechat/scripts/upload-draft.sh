@@ -27,14 +27,27 @@
 
 set -euo pipefail
 
-# Fixed proxy via Tokyo VPS — keeps WeChat API exit IP stable (66.42.45.128).
-# Pin ALL six upper/lower-case vars: the ambient env sets lowercase https_proxy
-# and ALL_PROXY to a different (non-whitelisted) egress, and requests/urllib
-# honor ALL_PROXY and the lowercase names over the uppercase HTTPS_PROXY —
-# leaving them unset lets the request leak out the wrong IP and hit 40164.
-_WECHAT_PROXY="http://66.42.45.128:8888"
-export HTTPS_PROXY="$_WECHAT_PROXY" HTTP_PROXY="$_WECHAT_PROXY" ALL_PROXY="$_WECHAT_PROXY"
-export https_proxy="$_WECHAT_PROXY" http_proxy="$_WECHAT_PROXY" all_proxy="$_WECHAT_PROXY"
+# WeChat API egress proxy — the value is NOT hardcoded here. Single source of
+# truth is the infra memory file (so swapping VPS = edit one line of memory):
+#   jianshuo-memory/08-infrastructure/wechat-publish-proxy.md  →  WECHAT_PUBLISH_PROXY=...
+# Only this egress IP is in the 公众号 IP whitelist; wrong egress => errcode 40164.
+# Pin ALL six upper/lower-case vars: the ambient env may set lowercase https_proxy
+# and ALL_PROXY to a different (non-whitelisted) egress, and requests/urllib honor
+# ALL_PROXY and the lowercase names over uppercase HTTPS_PROXY — only setting the
+# uppercase ones lets the request leak out the wrong IP and hit 40164.
+_PROXY_MEMORY="${WJS_MEMORY_DIR:-$HOME/code/jianshuo-memory}/08-infrastructure/wechat-publish-proxy.md"
+_WECHAT_PROXY="${WECHAT_PUBLISH_PROXY:-}"
+if [[ -z "$_WECHAT_PROXY" && -f "$_PROXY_MEMORY" ]]; then
+  _WECHAT_PROXY="$(grep -oE 'WECHAT_PUBLISH_PROXY=[^[:space:]"`]+' "$_PROXY_MEMORY" | head -1 | cut -d= -f2-)"
+fi
+if [[ -n "$_WECHAT_PROXY" ]]; then
+  export HTTPS_PROXY="$_WECHAT_PROXY" HTTP_PROXY="$_WECHAT_PROXY" ALL_PROXY="$_WECHAT_PROXY"
+  export https_proxy="$_WECHAT_PROXY" http_proxy="$_WECHAT_PROXY" all_proxy="$_WECHAT_PROXY"
+  echo "→ WeChat egress proxy: $_WECHAT_PROXY (from ${WECHAT_PUBLISH_PROXY:+env}${WECHAT_PUBLISH_PROXY:-memory})"
+else
+  echo "⚠ no WeChat egress proxy resolved (looked in $_PROXY_MEMORY and \$WECHAT_PUBLISH_PROXY)." >&2
+  echo "  WeChat API needs a whitelisted exit IP — request will likely hit errcode 40164." >&2
+fi
 
 ARTICLE_DIR="${1:-$(pwd)}"
 [[ -d "$ARTICLE_DIR" ]] || { echo "error: not a directory: $ARTICLE_DIR" >&2; exit 1; }
