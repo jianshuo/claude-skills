@@ -37,7 +37,11 @@ prefix = os.environ["PREFIX"]
 files = json.load(sys.stdin).get("files", [])
 for f in sorted(files, key=lambda x: x["name"]):
     n = f["name"]
-    if n.startswith(prefix) and n.endswith(".m4a"):
+    # admin (master token) sees per-user keys "users/<sub>/VoiceDrop-*.m4a"
+    # as well as legacy flat "VoiceDrop-*.m4a" — match on the basename, print
+    # the full key so download/delete address the right object.
+    base = n.rsplit("/", 1)[-1]
+    if base.startswith(prefix) and base.endswith(".m4a"):
         print(n)'
 }
 
