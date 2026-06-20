@@ -71,7 +71,7 @@ set -a; source ~/code/.env; set +a    # FILES_TOKEN + 火山 ASR creds
 4. **挖文章**：把这个 SRT 交给 **`wjs-mining-articles`** 跑它的完整流程——出选题清单（**它的人工闸，照走别跳**）、成文、建微信草稿。语音备忘多是短独白单主题，清单常只有 1 条，照常让用户确认。
 5. **只有上面都成功**（出了至少一篇草稿、用户没中止）**才删 R2**：
    ```bash
-   scripts/voicedrop-inbox.sh delete <name>
+   "$INBOX" delete <name>
    ```
    转写失败 / 用户没勾任何选题 / 挖不出文章 → **不删**，留收件箱，报告原因。
 
