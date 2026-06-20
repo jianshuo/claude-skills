@@ -32,15 +32,26 @@ VoiceDrop 收件箱（`jianshuo.dev/files` 上的 `VoiceDrop-*.m4a`）→ 逐条
 
 ## Workflow
 
-唯一的新增代码：`scripts/voicedrop-inbox.sh`（`list` / `download` / `delete`，token 运行时从 `~/code/.env` 读，绝不落代码）。从 skill 根目录跑。
+唯一的新增代码：`scripts/voicedrop-inbox.sh`（`list` / `download` / `delete`，token 运行时从 `~/code/.env` 读，绝不落代码）。
+
+### Step 0 · 定位脚本 + 载入环境（不依赖当前目录）
+
+```bash
+INBOX=~/.claude/skills/wjs-mining-voicedrop/scripts/voicedrop-inbox.sh
+set -a; source ~/code/.env; set +a    # FILES_TOKEN + 火山 ASR creds
+```
+
+用绝对路径 `$INBOX` 调脚本——**不要**写成 `scripts/voicedrop-inbox.sh`，那依赖「人恰好在 skill 根目录」这个隐藏假设，换目录就崩。
 
 ### Step 1 · 列收件箱
 
 ```bash
-scripts/voicedrop-inbox.sh list      # 打印未处理的 VoiceDrop-*.m4a，一行一个
+"$INBOX" list      # 打印未处理的 VoiceDrop-*.m4a，一行一个
 ```
 
-空 → 报「收件箱没有新录音」结束。非空 → 拿到这一批文件名。
+- 命令**非零退出**（网络不通 / token 失效）→ 报「收件箱连不上或 FILES_TOKEN 失效，检查 `~/code/.env`」并停，**不进入循环**。
+- 输出为空 → 报「收件箱没有新录音」结束。
+- 非空 → 拿到这一批文件名。
 
 ### Step 2 · 逐条闭环（串行，一条跑完再下一条）
 
