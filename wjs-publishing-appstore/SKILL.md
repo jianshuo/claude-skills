@@ -51,6 +51,14 @@ Edit every `.txt`. Watch the limits: **name 30 · subtitle 30 · keywords 100
 `review_information/` (phone, and a demo account only if login is required) and
 the privacy URL.
 
+**The App Store `name` is globally unique.** A short common name ("VoiceDrop")
+is almost certainly already taken by another account — the submit then dies at
+`upload_to_app_store` with *"The app name you entered is already being used."*
+This is the **display name only**; the home-screen name (`CFBundleDisplayName`)
+is separate and can stay whatever you like. Pick a distinct string (e.g. add a
+word or a Chinese suffix — "VoiceDrop 口述"); longer = safer. It's per-locale and
+changeable in a later version, so it's not permanent.
+
 ### 3. Shoot screenshots
 ```bash
 scripts/shoot.sh                    # default: iPhone 16 Pro Max (6.9"), zh-Hans
