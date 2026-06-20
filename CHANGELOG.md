@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-20]
+
+### Added
+
+- **`wjs-distilling-style`** — new skill: captures any writer's voice from a handful of sample articles and rewrites target text to match. Uses a 9-axis Style Fingerprint (sentence rhythm, paragraph length, vocabulary, tone, argument structure, metaphor use, emotional intensity, opening/closing conventions, author red lines) where each axis must be anchored with 2–3 verbatim sample sentences — abstract rules without real examples don't transfer. An independent "judge" subagent blind-tests every rewrite (only sees the Style Card anchors and the rewritten draft, never the original), scores each axis 1–5, and lists specific out-of-voice sentences; self-assessment is explicitly banned as the single biggest failure mode. A fact-skeleton discipline (list the source text's information points before rewriting, change only how things are said, never add or remove facts) prevents style transfer from becoming content editing. Style Cards are stored in a local `~/code/style-cards/<author-slug>/` library and never synced to the public repo, so others' drafts don't leak. Two modes: **distilling** (samples → `style-card.md`) and **rewriting** (target + Style Card → rewritten draft, up to 2–3 judge rounds). Triggers: `蒸馏文风` / `提炼XX的风格` / `把这篇改成XX的味儿` / `mimic this writer` / `match this author's style` / `/wjs-distilling-style`.
+- **`wjs-publishing-appstore`** — new skill: companion to `wjs-publishing-testflight` covering the App Store submission step. Assumes the TestFlight CI pipeline is already in place and adds three scripts: `scaffold-metadata.sh` (creates the `fastlane deliver` metadata tree seeded from VoiceDrop copy), `shoot.sh` (scripted `simctl` screenshot capture — iPhone 6.9" is the only mandatory size for iPhone-only apps, one locale per run), and `release_lane.rb` (the `release` fastlane lane to paste into the existing Fastfile, with `submit_for_review: true` and encryption/IDFA compliance answers). Documents first-submission App Store Connect console prerequisites (age rating questionnaire expanded in 2025 with fields fastlane doesn't cover, pricing = Free, content rights, App Privacy nutrition label), iOS 26 Simulator quirks (mic-permission dialog cannot be suppressed via `simctl privacy grant`; ghost Liquid Glass tab labels are sim-only), the globally-unique `name` field trap, and the robust two-step ship pattern (let `beta` lane finish processing before dispatching `release skip_build:true`). Reference implementations: VoiceDrop and Cathier. Triggers: `提交 App Store` / `上架` / `app store 审核` / `准备截图和文案` / `submit for review` / `/wjs-publishing-appstore`.
+- **README** — added `wjs-distilling-style` and `wjs-publishing-appstore` to the skills summary table; added `wjs-distilling-style` as a new subsection in section 9 "思维框架 / Perspective" and `wjs-publishing-appstore` as a new subsection in section 13 "iOS 持续集成 / iOS CI".
+
+### Changed
+
+- **`wjs-mining-voicedrop`** — safety change: R2 audio files are now **never deleted**. Previously the inbox entry was deleted from R2 after a confirmed successful run; now the skill marks processed files by creating sidecar marker files (`.processed` for completed items, `.empty` for short/silent files) in R2 instead of deleting them. This makes repeated runs idempotent without risking data loss if a step fails after the file has been downloaded but before the user confirms a draft.
+
 ## [2026-06-18]
 
 ### Added

@@ -111,7 +111,9 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-hugo`](./wjs-publishing-hugo/) | Hugo 博客的对话式后台：说一句就发文/改文件/管类目，无需 CMS 或服务器 | `发一篇博客` / `博客后台` / `/wjs-publishing-hugo` |
 | [`wjs-looping-feedback`](./wjs-looping-feedback/) | 给任意网站装「提个建议→Issue→Claude 自动改代码→部署」反馈闭环 | `给网站加个反馈对话框` / `feedback loop` / `/wjs-looping-feedback` |
 | [`wjs-publishing-testflight`](./wjs-publishing-testflight/) | 配置 fastlane + GitHub Actions，推 main 自动构建上传 TestFlight，每第 10 个 build 自动提审 App Store | iOS 项目 → Fastfile + build.yml + 自动 TestFlight / App Store |
+| [`wjs-publishing-appstore`](./wjs-publishing-appstore/) | iOS TestFlight build → App Store：截图 + 元数据文案 + 提审（fastlane deliver + release lane） | `提交 App Store` / `准备截图和文案` / `/wjs-publishing-appstore` |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
+| [`wjs-distilling-style`](./wjs-distilling-style/) | 从少量样文提炼任意作者写作指纹，再把目标文本改写成那种味道（9 轴指纹 + 盲测判官闭环） | `蒸馏文风` / `把这篇改成XX的味儿` / `/wjs-distilling-style` |
 
 ---
 
@@ -360,6 +362,18 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 > 触发词：`用王建硕的视角` / `王建硕会怎么看` / `像王建硕一样写` / `Jian Shuo Wang perspective` / `切换到王建硕`
 
+### [`wjs-distilling-style`](./wjs-distilling-style/)
+
+从少量样文提炼任意作者的写作指纹，再把目标文本改写成那种味道——任何作者都适用，不限于王建硕。
+
+- **9 轴结构化指纹**：句子节奏、段落长度、词汇签名、语气腔调、论证结构、比喻运用、情绪强度、开头收尾、雷区——每轴必须摘 2–3 句真实锚点原句（没有锚点的轴等于没蒸馏）。
+- **事实骨架纪律**：先把原文信息点列成 bullet，改写只换「怎么说」，不增不减事实——改风格不是改内容。
+- **独立判官盲测（必做）**：起一个 subagent，只给它 Style Card + 改写稿，不告诉它是 AI 改的，逐轴评分（1–5），列出具体出戏句；自评不算数，盲测才算。
+- **两种模式**：蒸馏（样本 → `~/code/style-cards/<author>/style-card.md`）/ 改写（目标文本 + Style Card → 改写稿，不达标最多 2–3 轮回炉）。样本 < 3 篇会明确提示用户指纹会不稳。
+- Style Cards 存在本地独立库（`~/code/style-cards/`），不同步到公开 repo，防止他人稿件外泄。
+
+> 触发词：`蒸馏文风` / `提炼XX的风格` / `把这篇改成XX的味儿` / `mimic this writer` / `match this author's style` / `/wjs-distilling-style`
+
 ---
 
 ## 10. X 增长 / X Growth
@@ -465,6 +479,18 @@ Hugo 博客的对话式后台。没有 CMS，没有 /admin 页面——说要发
 - 配套完整的 `Appfile` / `Matchfile` / `Fastfile` / `Gemfile` 模板和 `build.yml` workflow，只需全局替换三个占位符（bundle ID、repo 名、Xcode scheme）
 
 > 触发词：`testflight` / `fastlane` / `自动构建` / `CI TestFlight` / `/wjs-publishing-testflight`
+
+### [`wjs-publishing-appstore`](./wjs-publishing-appstore/)
+
+`wjs-publishing-testflight` 的配套技能——接过 CI/CD 之后的那一步：把 TestFlight 上已有 build 的 iOS app 正式提交 App Store。
+
+- **流程**：`scripts/scaffold-metadata.sh` 搭 `deliver` 元数据骨架（VoiceDrop 模板起步）→ `scripts/shoot.sh` 用 `simctl` 截图（iPhone 6.9" 为唯一必要尺寸，每 locale 一轮）→ `scripts/release_lane.rb` 粘入 Fastfile 加 `release` lane → `fastlane release` 提审。
+- **全局唯一名陷阱**：App Store 的 `name` 字段全局唯一（显示名，非 bundle ID）——短常用名几乎必然被占，要加词或中文后缀；是可改的，不是永久锁死的。
+- **首次提审前置清单**：年龄评级问卷（2025 年 Apple 新增了若干字段，fastlane 未覆盖，需在 ASC 网页完成）、定价（Free）、内容版权声明、App 隐私「营养标签」——四项在 ASC 网页控制台配置一次，之后不需要再动；提审失败时 Apple 会列出所有缺项，一并修好再重触发即可。
+- **iOS 26 Simulator 已知坑**：麦克风权限弹框 `simctl privacy grant` 无法抑制（手动点一次 Allow，之后重跑截图脚本即是干净画面）；TabView 标签栏附近会出现 Liquid Glass 幻影（device only 没有，不必追查）。
+- **稳妥两步发布**：`beta` lane 上传并等 Apple 处理完毕 → 再触发 `fastlane release skip_build:true` 复用已处理的 build，避免提审时 build 还在 processing 的竞争条件。
+
+> 触发词：`提交 App Store` / `上架` / `app store 审核` / `准备截图和文案` / `submit for review` / `/wjs-publishing-appstore`
 
 ---
 
