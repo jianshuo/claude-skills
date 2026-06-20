@@ -99,18 +99,41 @@ Run locally, or via the CI `workflow_dispatch` if your `build.yml` routes a
 
 ## App Store Connect one-time gotchas (first submission)
 
-These live in the ASC web console, **not** in fastlane metadata — fastlane will
-refuse the submit until they're set:
+These live in the ASC web console, **not** in fastlane metadata, and fastlane
+will refuse the submit until they're set. **Do all of them once before the first
+`fastlane release`** — they're sticky (later versions don't need them redone).
+A submit that hits these fails at the *very last step*: the metadata + screenshots
+have already uploaded, so just fix the console items and re-dispatch — nothing is
+re-uploaded. The real error block lists all the missing attributes at once
+(`violenceCartoonOrFantasy`, `ageAssurance`, `contentRightsDeclaration`, *"App is
+not eligible for submission until pricing has been set"* …).
 
+- **Age rating** questionnaire — answer all None/No for a utility. Apple
+  **expanded this in 2025** (new fields: `ageAssurance`, `parentalControls`,
+  `messagingAndChat`, `healthOrWellnessTopics`, …) that fastlane's rating config
+  does **not** fully cover — so do it in the **web console**, not via fastlane.
+- **Pricing & Availability** — set Price = **Free** + territories. Until set:
+  *"App is not eligible for submission until pricing has been set."*
+- **Content Rights** declaration (App Information) — "does not use third-party
+  content" for most apps.
 - **App Privacy** "nutrition label" — declare data collection. VoiceDrop: audio
-  is user content uploaded to the user's own store; location is optional and used
-  only for the filename; Sign in with Apple is an anonymous identifier. Fill the
-  questionnaire accordingly.
-- **Age rating** questionnaire.
-- **Export compliance** — set to "no encryption / exempt"; the lane already sends
-  `export_compliance_uses_encryption: false`.
-- **Pricing & Availability** — set to Free + territories.
-- A **build** must be attached to the version (the lane does this) before review.
+  is user content to the user's own store; location is optional/coarse (filename
+  only); Sign in with Apple is an anonymous identifier; no tracking.
+- **Export compliance** — handled by the lane (`export_compliance_uses_encryption:
+  false`); no console action.
+- A **build** must be attached (the lane does this) before review.
+
+## Updating a version that's already in review
+
+`guard_not_in_review` (and Apple) will block a re-submit while the version is
+**Waiting for Review**. To swap in a newer build, fix copy, or add a screenshot:
+in ASC open the version → **"Remove this version from review"** (back to editable)
+→ then re-dispatch `fastlane release skip_build:true`. The new build is selected,
+metadata + screenshots re-upload, and it resubmits.
+
+**Screenshots must match the binary (guideline 2.3.3).** Don't put a screenshot
+of a feature the in-review build lacks — either ship that feature in the build
+you're submitting, or hold the screenshot for the version that has it.
 
 ## Verification checklist
 
