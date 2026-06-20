@@ -88,8 +88,11 @@ launch() {
   xcrun simctl launch "$UDID" "$BUNDLE_ID" \
     -AppleLanguages "($APPLE_LANG)" -AppleLocale "$LOCALE" "$@" >/dev/null
 }
-tap()  { xcrun simctl io "$UDID" tap "$1" "$2"; }   # x y in points (needs newer Xcode)
 term() { xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true; }
+# NOTE: there is NO `simctl io tap`. simctl cannot synthesize touches. To reach a
+# screen, prefer launch arguments / a debug deep link your app reads. If you must
+# tap (e.g. to dismiss the one unavoidable mic prompt), open Simulator.app and
+# tap by hand once — the grant persists for the install, so later runs are clean.
 
 # ===== EDIT THIS for your app =================================================
 # Each numbered screen = one App Store screenshot. Keep 3–6. Filenames sort
