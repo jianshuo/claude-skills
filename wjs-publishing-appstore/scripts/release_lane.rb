@@ -68,7 +68,7 @@
     upload_to_app_store(
       api_key:                    api_key,
       app_version:                app_version,
-      skip_binary_upload:         options[:skip_build] ? false : false, # binary already attached above
+      skip_binary_upload:         options[:skip_build] ? true : false, # skip_build → reuse TestFlight build; else upload the ipa just built
       skip_metadata:              false,
       skip_screenshots:           false,
       overwrite_screenshots:      true,
