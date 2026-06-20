@@ -3,9 +3,21 @@
 # this skill — transcription and article-writing are reused skills.
 #
 # Subcommands:
-#   list                      -> print unprocessed VoiceDrop-*.m4a names, one per line
-#   download <name> <outdir>  -> download to <outdir>/<name>, print the local path
-#   delete   <name>           -> remove from R2 (call ONLY after successful mining)
+#   list                       -> print UNPROCESSED VoiceDrop-*.m4a keys, one per line
+#                                 (a recording is processed once an
+#                                  articles/<stem>.json OR articles/<stem>.empty
+#                                  marker exists — see below)
+#   download   <key> <outdir>  -> download to <outdir>/<basename>, print the local path
+#   mark-done  <key> <jsonfile>-> PUT a v2 article JSON to articles/<stem>.json
+#                                 (marks the recording processed + surfaces it in the app)
+#   mark-empty <key> <reason>  -> PUT an articles/<stem>.empty marker
+#                                 (reason ∈ corrupt|silent|no-speech) — processed,
+#                                  no usable speech; shows as 无语音 in the app
+#   delete     <key>           -> remove a key from R2 (manual cleanup only;
+#                                 the mining flow NEVER deletes — it marks instead)
+#
+# Processing state is represented entirely by sidecar files, never by deletion:
+# the audio always stays in R2 until the user deletes it themselves (in the app).
 #
 # Token: read from $FILES_TOKEN, else from ~/code/.env (FILES_TOKEN=...).
 # The base URL is public; the token is NEVER hardcoded (this skill is public).
@@ -28,21 +40,41 @@ load_token() {
   fi
 }
 
+# <prefix>articles/<stem>.<ext> for an audio key. Echoes the marker key.
+# e.g. users/anon-x/VoiceDrop-Y.m4a  json -> users/anon-x/articles/VoiceDrop-Y.json
+marker_key() {
+  local key="$1" ext="$2"
+  local base="${key##*/}"; local stem="${base%.m4a}"
+  local dir="${key%/*}"; local kp=""
+  [ "$dir" != "$key" ] && kp="$dir/"
+  echo "${kp}articles/${stem}.${ext}"
+}
+
 cmd_list() {
   load_token
+  # Print only VoiceDrop-*.m4a that have NO articles/<stem>.json and NO
+  # articles/<stem>.empty marker yet — i.e. genuinely unprocessed.
   curl -fsS -H "Authorization: Bearer $FILES_TOKEN" "$BASE/list" \
     | PREFIX="$PREFIX" python3 -c '
 import os, sys, json
 prefix = os.environ["PREFIX"]
 files = json.load(sys.stdin).get("files", [])
+names = {f["name"] for f in files}
+
+def marker(key, ext):
+    parts = key.rsplit("/", 1)
+    stem = parts[-1][:-4]                      # strip .m4a
+    kp = parts[0] + "/" if len(parts) == 2 else ""
+    return f"{kp}articles/{stem}.{ext}"
+
 for f in sorted(files, key=lambda x: x["name"]):
     n = f["name"]
-    # admin (master token) sees per-user keys "users/<sub>/VoiceDrop-*.m4a"
-    # as well as legacy flat "VoiceDrop-*.m4a" — match on the basename, print
-    # the full key so download/delete address the right object.
     base = n.rsplit("/", 1)[-1]
-    if base.startswith(prefix) and base.endswith(".m4a"):
-        print(n)'
+    if not (base.startswith(prefix) and base.endswith(".m4a")):
+        continue
+    if marker(n, "json") in names or marker(n, "empty") in names:
+        continue                               # already processed — skip
+    print(n)'
 }
 
 cmd_download() {
@@ -57,6 +89,28 @@ cmd_download() {
   echo "$outdir/$base"
 }
 
+cmd_mark_done() {
+  load_token
+  local key="$1" jsonfile="$2"
+  local art; art=$(marker_key "$key" json)
+  curl -fsS -X PUT -H "Authorization: Bearer $FILES_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data-binary @"$jsonfile" "$BASE/upload/$art" >/dev/null
+  echo "marked done: $art"
+}
+
+cmd_mark_empty() {
+  load_token
+  local key="$1" reason="$2"
+  local base="${key##*/}"
+  local emp; emp=$(marker_key "$key" empty)
+  local body="{\"schema\":2,\"status\":\"empty\",\"reason\":\"$reason\",\"sourceAudio\":\"$base\"}"
+  curl -fsS -X PUT -H "Authorization: Bearer $FILES_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data "$body" "$BASE/upload/$emp" >/dev/null
+  echo "marked empty ($reason): $emp"
+}
+
 cmd_delete() {
   load_token
   local name="$1"
@@ -65,8 +119,10 @@ cmd_delete() {
 }
 
 case "${1:-}" in
-  list)     cmd_list ;;
-  download) shift; [ $# -eq 2 ] || { echo "usage: $0 download <name> <outdir>" >&2; exit 2; }; cmd_download "$@" ;;
-  delete)   shift; [ $# -eq 1 ] || { echo "usage: $0 delete <name>" >&2; exit 2; }; cmd_delete "$@" ;;
-  *) echo "usage: $0 {list | download <name> <outdir> | delete <name>}" >&2; exit 2 ;;
+  list)       cmd_list ;;
+  download)   shift; [ $# -eq 2 ] || { echo "usage: $0 download <key> <outdir>" >&2; exit 2; }; cmd_download "$@" ;;
+  mark-done)  shift; [ $# -eq 2 ] || { echo "usage: $0 mark-done <key> <jsonfile>" >&2; exit 2; }; cmd_mark_done "$@" ;;
+  mark-empty) shift; [ $# -eq 2 ] || { echo "usage: $0 mark-empty <key> <reason>" >&2; exit 2; }; cmd_mark_empty "$@" ;;
+  delete)     shift; [ $# -eq 1 ] || { echo "usage: $0 delete <key>" >&2; exit 2; }; cmd_delete "$@" ;;
+  *) echo "usage: $0 {list | download <key> <outdir> | mark-done <key> <jsonfile> | mark-empty <key> <reason> | delete <key>}" >&2; exit 2 ;;
 esac

@@ -2,7 +2,7 @@
 # Archetype: Production (单用户 + 确定性脚本 + 清晰复用边界)；非 Library/Governed，
 # 故不带 manifest.json / evals / trust report —— 这是有意为之的「最轻可用」。
 name: wjs-mining-voicedrop
-owns: VoiceDrop R2 收件箱的进出（列/下载/删）+ 逐条串行编排；转写与成文一行不重写。
+owns: VoiceDrop R2 收件箱的进出（列未处理/下载/标记处理状态）+ 逐条串行编排；转写与成文一行不重写。
 
 inputs:
   r2_inbox:
@@ -17,7 +17,10 @@ outputs:
   archive:                              # 本 skill 自身的持久产出
     - ~/code/voicedrop/archive/<name>.m4a
     - ~/code/voicedrop/archive/<stem>.srt
-  report: 批次汇报（处理 N 条 / 各出几篇草稿 / 跳过哪些及原因 / 收件箱剩余）
+  r2_markers:                           # 处理状态写回 R2，永不删音频
+    - articles/<stem>.json   (mark-done：成文，app 可读)
+    - articles/<stem>.empty  (mark-empty：无语音，reason ∈ corrupt|silent|no-speech)
+  report: 批次汇报（处理 N 条 / 各出几篇草稿 / 哪些标无语音及原因 / 还剩几条未处理）
 
 exclusions:        # 这些近邻不该路由到这里
   - 已有 SRT → 直接 wjs-mining-articles
@@ -29,11 +32,12 @@ reuses:
   wjs-mining-articles: 每个 SRT → 选题清单 → 成文 → 微信草稿（含其自有人工闸）
 
 rollback_boundary: |
-  R2 delete 不可逆，但仅在「成文成功」后执行，且音频已先落本地存档 ——
-  存档先、删除后，音频永不丢。delete 是「这一条彻底处理完」的最后一步，非中途动作。
+  成文流程绝不 delete 音频 —— 音频永远留在 R2，删除只属于用户在 app 里的手动操作。
+  处理状态用标记文件表示：成文 → mark-done，无语音/损坏 → mark-empty（带 reason）。
+  每条都必须落终态；真失败（转写报错/用户中止/没挖出文章）就不标，留未处理下次再试。
 
 preconditions:    # 受检前置，非散落备注
   - 通过 $INBOX（绝对路径）调用脚本，不依赖当前工作目录
   - list 非零退出（网络不通 / token 失效）→ 报错停，不进入处理循环
 
-failure_policy: 单条任何一步失败 → 记录原因、跳到下一条、不中止整批、绝不删那条
+failure_policy: 单条任何一步失败 → 记录原因、跳到下一条、不中止整批、不标记（留未处理）；绝不 delete
