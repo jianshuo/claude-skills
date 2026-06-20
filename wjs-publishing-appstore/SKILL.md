@@ -76,7 +76,18 @@ covers iPhone-only apps. Add a 13" iPad pass **only** if
 shows a dialog `xcrun simctl privacy grant microphone` does **not** suppress (a
 real iOS 26 sim limitation). Open Simulator.app, tap 允许/Allow **once** — the
 grant persists for the install, so re-running `shoot.sh` then captures a clean
-frame. (`simctl` has no `tap`; don't try to click it from the script.)
+frame. (`simctl` has no `tap`; don't try to click it from the script — synthetic
+clicks via `osascript` need macOS Accessibility permission the runner lacks.)
+
+**Other iOS 26 sim screenshot gotchas:**
+- To screenshot a screen you can't reach without a tap, temporarily root the app
+  into that view (env-gated `DebugRoot`), and **seed its data via the app's own
+  token** (a sim regenerates its synchronizable-Keychain identity on every
+  reinstall — no iCloud account — so injected data under an old identity won't
+  show; on a real device the identity persists).
+- The sim paints a faint **ghost of `TabView` labels** near the Dynamic Island
+  even for a bare two-tab `TabView` — a sim-only Liquid Glass artifact, not in
+  your app. Don't chase it; verify on device.
 
 ### 4. Add the `release` lane
 Paste `scripts/release_lane.rb` into the existing `fastlane/Fastfile` inside
