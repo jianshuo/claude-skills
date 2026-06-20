@@ -65,9 +65,16 @@ xcodebuild build \
 APP_PATH="$(find "$DERIVED/Build/Products" -name "${SCHEME}.app" -type d | head -1)"
 [[ -z "$APP_PATH" ]] && { echo "Build product ${SCHEME}.app not found under $DERIVED" >&2; exit 1; }
 
-# ---- 3. Install + set language -----------------------------------------------
+# ---- 3. Install + pre-grant privacy ------------------------------------------
 log "Installing $APP_PATH"
 xcrun simctl install "$UDID" "$APP_PATH"
+# Pre-grant TCC so most permission dialogs never appear. NOTE: iOS does NOT
+# honor this for AVFoundation's *record* prompt (mic) — that one still shows on
+# first launch and must be tapped ONCE (see the gotcha below). Everything else
+# (location, photos, contacts, camera, notifications) is reliably suppressed.
+for svc in location location-always photos contacts camera microphone calendar reminders motion; do
+  xcrun simctl privacy "$UDID" grant "$svc" "$BUNDLE_ID" 2>/dev/null || true
+done
 
 # ---- 4. Capture --------------------------------------------------------------
 mkdir -p "$OUT"
