@@ -7,6 +7,8 @@ description: Use when 王建硕 wants to turn his uploaded VoiceDrop voice memos
 
 VoiceDrop 收件箱（`jianshuo.dev/files` 上的 `VoiceDrop-*.m4a`）→ 逐条转写 → 交给 `wjs-mining-articles` 出公众号草稿。这是 VoiceDrop iOS app（开口即录、停即上传）的 Mac 端闭环。
 
+**本 skill 自身的产出 = ① 公众号草稿（`~/code/wechat-publish/`）+ ② 本地音频/SRT 存档（`~/code/voicedrop/archive/`）+ ③ 一份批次报告（处理几条、各出几篇、跳过哪些及原因、收件箱剩余）。** 完整接口契约见 `agents/interface.yaml`。
+
 ## Core Principle
 
 **复用，不重写。** 本 skill 只做两件本身没有的事：**收件箱的进出**（列/下载/删）和**逐条编排**。转写交 `wjs-transcribing-audio`，成文交 `wjs-mining-articles`，一行都不重写。
