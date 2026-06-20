@@ -64,6 +64,12 @@ Edit `drive_screens()` in `shoot.sh` to hit each marketing screen (3–6, named
 covers iPhone-only apps. Add a 13" iPad pass **only** if
 `TARGETED_DEVICE_FAMILY` includes iPad (VoiceDrop is iPhone-only → one size).
 
+**Mic-permission gotcha:** if the app requests microphone/record permission, iOS
+shows a dialog `xcrun simctl privacy grant microphone` does **not** suppress (a
+real iOS 26 sim limitation). Open Simulator.app, tap 允许/Allow **once** — the
+grant persists for the install, so re-running `shoot.sh` then captures a clean
+frame. (`simctl` has no `tap`; don't try to click it from the script.)
+
 ### 4. Add the `release` lane
 Paste `scripts/release_lane.rb` into the existing `fastlane/Fastfile` inside
 `platform :ios do … end`. It uploads metadata + screenshots (the TestFlight lane
