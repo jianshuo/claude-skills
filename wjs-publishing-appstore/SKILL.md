@@ -161,9 +161,10 @@ you're submitting, or hold the screenshot for the version that has it.
 | Symptom | Fix |
 |---------|-----|
 | `Could not find app … on App Store Connect` | App record missing → `fastlane produce` (Step / Prereqs). |
-| Submit fails "missing screenshots" | No 6.9" screenshot, or wrong folder/size. Re-run `shoot.sh`; ASC requires the 6.9" set. |
-| Submit fails on App Privacy / age rating | Set them in the ASC web console once (see gotchas). |
-| `Another version is in review` | `guard_not_in_review` tripped — wait for Apple, or reject the in-flight version. |
+| *"The app name you entered is already being used"* | The `name` is globally taken → pick a unique display name (Step 2). |
+| Submit fails "missing screenshots" / CI uploaded none | No 6.9" screenshot, wrong size, or `fastlane/screenshots/` still gitignored (un-ignore it). |
+| Missing `violence…` / `ageAssurance` / `contentRightsDeclaration` / *"pricing has been set"* | First-submission console items unset → fill age rating, pricing=Free, content rights, App Privacy in the ASC web console once. |
+| `Another version is in review` / `guard_not_in_review` tripped | To update an in-review version, "Remove this version from review" in ASC, then re-dispatch. |
 | Keyword field rejected | Keywords must be comma-separated, **no spaces**, ≤100 chars total. |
 | Wrong build submitted | Use `release skip_build:true` to reuse the exact TestFlight build for this `MARKETING_VERSION`. |
 
