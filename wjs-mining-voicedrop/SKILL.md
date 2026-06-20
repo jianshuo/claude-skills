@@ -62,7 +62,11 @@ set -a; source ~/code/.env; set +a    # FILES_TOKEN + 火山 ASR creds
    "$INBOX" download <name> ~/code/voicedrop/archive
    ```
    音频落 `~/code/voicedrop/archive/<name>`。**这一步就是存档**——之后即使删了 R2，本地也有。
-2. **快速看一眼是不是真录音**：`ffprobe` 查时长。≈0 秒 / 几字节的误传/测试文件 → 跳过、向用户报告，**不删**（让用户自己决定清不清）。
+2. **快速看一眼是不是真录音**：
+   ```bash
+   dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$audio" 2>/dev/null)
+   ```
+   `dur` 为空（非音频/损坏）或 `< 1.0` 秒（误传/测试文件）→ 跳过、向用户报告，**不删**（让用户自己决定清不清）。
 3. **转写** → SRT：载入 **`wjs-transcribing-audio`**（中文走火山豆包 `volc_asr_stream.py` + `build_srt_from_asr.py` + 在 session 内做 AI 润色改错别字）。SRT 落 `~/code/voicedrop/archive/<stem>.srt`。
 4. **挖文章**：把这个 SRT 交给 **`wjs-mining-articles`** 跑它的完整流程——出选题清单（**它的人工闸，照走别跳**）、成文、建微信草稿。语音备忘多是短独白单主题，清单常只有 1 条，照常让用户确认。
 5. **只有上面都成功**（出了至少一篇草稿、用户没中止）**才删 R2**：
