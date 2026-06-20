@@ -97,9 +97,11 @@ term() { xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true; }
 # ===== EDIT THIS for your app =================================================
 # Each numbered screen = one App Store screenshot. Keep 3–6. Filenames sort
 # alphabetically in App Store Connect, so prefix with 01_, 02_, ...
-# Use launch args / deep links to jump to a screen deterministically; fall back
-# to tap x y (points) only if you must. `simctl` cannot type — seed any needed
-# UI state via launch arguments your app reads, or a debug deep link.
+# `simctl` cannot tap or type — jump to each screen with launch arguments / a
+# debug deep link your app reads. Seed any needed UI state the same way.
+# FIRST-LAUNCH MIC PROMPT: if the app requests record permission, iOS shows a
+# dialog `simctl privacy` can't suppress. Open Simulator.app, tap 允许/Allow
+# ONCE; the grant persists, so re-run this script and the shot will be clean.
 drive_screens() {
   term; launch                 # cold launch → main / record screen
   shot "01_record"
@@ -107,9 +109,6 @@ drive_screens() {
   # Example of a second screen via a debug deep link the app handles:
   # term; launch -DeepLink "voicedrop://history"
   # shot "02_history"
-
-  # Example of a tap-driven screen (coordinates are in points for $DEVICE):
-  # tap 320 760; shot "03_detail"
 }
 # =============================================================================
 
