@@ -1,0 +1,39 @@
+# yao-meta-skill Output Contract — wjs-mining-voicedrop
+# Archetype: Production (单用户 + 确定性脚本 + 清晰复用边界)；非 Library/Governed，
+# 故不带 manifest.json / evals / trust report —— 这是有意为之的「最轻可用」。
+name: wjs-mining-voicedrop
+owns: VoiceDrop R2 收件箱的进出（列/下载/删）+ 逐条串行编排；转写与成文一行不重写。
+
+inputs:
+  r2_inbox:
+    desc: jianshuo.dev/files (Cloudflare R2) 上的未处理录音
+    match: VoiceDrop-*.m4a（前缀 + 后缀双重认领；admin 视角下可为 users/<sub>/VoiceDrop-*.m4a）
+  env:
+    file: ~/code/.env
+    keys: [FILES_TOKEN（或 JIANSHUO_DEV_FILES_TOKEN）, VOLC_ASR_*, VOLC_TTS_*]
+
+outputs:
+  drafts: ~/code/wechat-publish/        # 由 wjs-mining-articles 产出的公众号草稿
+  archive:                              # 本 skill 自身的持久产出
+    - ~/code/voicedrop/archive/<name>.m4a
+    - ~/code/voicedrop/archive/<stem>.srt
+  report: 批次汇报（处理 N 条 / 各出几篇草稿 / 跳过哪些及原因 / 收件箱剩余）
+
+exclusions:        # 这些近邻不该路由到这里
+  - 已有 SRT → 直接 wjs-mining-articles
+  - 本地散文件（不在 R2 收件箱）→ wjs-transcribing-audio 再 wjs-mining-articles
+  - 桶里非 VoiceDrop-*.m4a 的文件 → 不碰
+
+reuses:
+  wjs-transcribing-audio: 每条音频 → SRT（中文火山豆包，含润色改错别字）
+  wjs-mining-articles: 每个 SRT → 选题清单 → 成文 → 微信草稿（含其自有人工闸）
+
+rollback_boundary: |
+  R2 delete 不可逆，但仅在「成文成功」后执行，且音频已先落本地存档 ——
+  存档先、删除后，音频永不丢。delete 是「这一条彻底处理完」的最后一步，非中途动作。
+
+preconditions:    # 受检前置，非散落备注
+  - 通过 $INBOX（绝对路径）调用脚本，不依赖当前工作目录
+  - list 非零退出（网络不通 / token 失效）→ 报错停，不进入处理循环
+
+failure_policy: 单条任何一步失败 → 记录原因、跳到下一条、不中止整批、绝不删那条
