@@ -97,6 +97,18 @@ bundle exec fastlane release                      # or build a fresh one first
 Run locally, or via the CI `workflow_dispatch` if your `build.yml` routes a
 `appstore` choice to `fastlane release` (see `wjs-publishing-testflight` Step 3).
 
+**Robust two-step ship (what actually worked):** `git push` → the `beta` lane
+builds and uploads to TestFlight **and waits for Apple to finish processing** →
+*then* dispatch `appstore` → `fastlane release skip_build:true` reuses that
+already-processed build. Building a fresh binary inside the release lane risks
+submitting before the build is processed. CI checks out `main`, so **metadata +
+screenshots must be committed to `main` before you dispatch.**
+
+**Un-ignore the screenshots.** The TestFlight-only setup often has
+`fastlane/screenshots/` in `.gitignore` (that flow uses `skip_screenshots`). This
+lane uploads them, so they **must be committed** — remove that ignore line (keep
+ignoring only `frameit` extras) or CI uploads nothing.
+
 ## App Store Connect one-time gotchas (first submission)
 
 These live in the ASC web console, **not** in fastlane metadata, and fastlane
