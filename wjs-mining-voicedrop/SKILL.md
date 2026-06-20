@@ -55,11 +55,11 @@ set -a; source ~/code/.env; set +a    # FILES_TOKEN + 火山 ASR creds
 
 ### Step 2 · 逐条闭环（串行，一条跑完再下一条）
 
-**串行**，因为删除安全依赖「这一条彻底成功」。对每个 `<name>`：
+**串行**，因为删除安全依赖「这一条彻底成功」。**批次韧性：单条任何一步失败 → 记录原因、跳到下一条、绝不中止整批、绝不删那条。** 对每个 `<name>`：
 
 1. **先下载存档**（绝不先删 R2）：
    ```bash
-   scripts/voicedrop-inbox.sh download <name> ~/code/voicedrop/archive
+   "$INBOX" download <name> ~/code/voicedrop/archive
    ```
    音频落 `~/code/voicedrop/archive/<name>`。**这一步就是存档**——之后即使删了 R2，本地也有。
 2. **快速看一眼是不是真录音**：`ffprobe` 查时长。≈0 秒 / 几字节的误传/测试文件 → 跳过、向用户报告，**不删**（让用户自己决定清不清）。
