@@ -1,6 +1,6 @@
 ---
 name: wjs-distilling-style
-description: Use when the user wants to capture a writer's voice from a few sample articles and rewrite text to sound like that author — "蒸馏文风", "提炼XX的风格", "把这篇改成XX的味儿", "学某某笔法改写", "mimic this writer", "match this author's style", "style transfer". Works for any author,王建硕 included.
+description: Use when the user wants to capture a writer's voice from a few sample articles and rewrite text to sound like that author — "蒸馏文风", "提炼XX的风格", "把这篇改成XX的味儿", "学某某笔法改写", "mimic this writer", "match this author's style", "style transfer". Works for any author, 王建硕 included.
 ---
 
 # 蒸馏文风 · Style Fingerprint
