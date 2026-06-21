@@ -157,7 +157,7 @@ text = re.sub(r'^---\n.*?\n---\n', '', text, count=1, flags=re.DOTALL).strip()
 # matches editor-native source faithfully and survives the editor's
 # normalization passes (raw <br><br> gets folded; empty <p></p> gets stripped).
 
-CODE_STYLE = 'font-family:Menlo,Consolas,monospace;background:#f4f4f4;padding:1px 6px;border-radius:3px;font-size:0.92em;'
+CODE_STYLE = 'font-family:Menlo,Consolas,monospace;background:#f4f4f4;padding:1px 6px;border-radius:3px;'
 BOLD_STYLE = 'color:#ff0000;'
 
 def inline(s):
