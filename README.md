@@ -85,6 +85,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
 | [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
 | [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
+| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop 配套管理：列出 R2 文件 / 蒸馏文风到 VoiceDrop 设置 | `voicedrop list` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -150,6 +151,15 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 - 唯一新增代码：`scripts/voicedrop-inbox.sh`（`list` / `download` / `delete`）。
 
 > 触发词：`处理 VoiceDrop 录音` / `把新录音挖成文章` / `口述备忘变文章` / `处理一下我的录音` / `/wjs-mining-voicedrop`
+
+### [`wjs-voicedrop`](./wjs-voicedrop/)
+
+VoiceDrop App 的两个配套任务：**列文件** 和 **蒸馏文风**。
+
+- **列文件**（`voicedrop list`）：从 `jianshuo.dev/files` 拉出 R2 上的全部文件，按类型分组展示——待处理录音 / 已成文 / 无语音 / 文风设置 / 其他。方便在桌面端一眼看到收件箱状态，无需打开 App。
+- **蒸馏文风**（`voicedrop distill`）：从样本文章提炼写作规则集，格式化成可直接贴入 VoiceDrop「设置 → 文风」的精简 CLAUDE.md，并可通过 Files API 一键上传。蒸馏结果和 `wjs-distilling-style` 共享同一套 9 轴指纹框架。
+
+> 触发词：`voicedrop list` / `列出 VoiceDrop 文件` / `voicedrop distill` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop`
 
 ---
 

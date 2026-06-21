@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-21]
+
+### Added
+
+- **`wjs-voicedrop`** — new SKILL.md formalizing two companion tasks for the VoiceDrop iOS app: **list** (pulls all files from the R2 inbox at `jianshuo.dev/files` and groups them by type — pending recordings, processed articles, empty/silent files, style settings) and **distill** (extracts a compact writing-style rule set from sample articles in a format ready to paste into VoiceDrop's "Settings → Writing Style" field, with optional one-command upload via the Files API). Auth is a bearer token from the VoiceDrop app (Settings → Access Token) or `FILES_TOKEN` from `~/code/.env` for the admin. Triggers: `voicedrop list` / `列出 VoiceDrop 文件` / `voicedrop distill` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop`.
+- **README** — added `wjs-voicedrop` to the skills summary table and as a new subsection in section 1 "公众号 / WeChat".
+
+### Changed
+
+- **`wjs-distilling-style`** — three significant additions: (1) **Card form guidance** — the 9-axis fingerprint should expand into ~30–45 fine-grained actionable dimensions grouped in a table (sentence rhythm / punctuation / paragraph / vocabulary / tone / argument / metaphor / opening / closing / anchor discipline / red lines); anchoring examples stay in the distillation process but are kept brief in the final card so they're not misread as formulas; (2) **Turing blind-test protocol** — a second validation layer beyond the similarity judge: mix AI rewrites with real samples, have a fresh, different-model judge blindly classify each as "real" or "AI-written", aiming for ≤50% accuracy (guessing level); full procedure in `references/turing-blindtest.md`; 6 most common AI tell-signs and their counters in `references/ai-tells.md`; these 6 counter-measures should be embedded in every Style Card; (3) **Honest ceiling disclaimer** — for balanced test sets the floor is ~50%; single articles can fool even sharp judges (especially plain observation/narrative pieces); the skill's strongest use case is rewriting the author's own real material, not generating synthetic corpora.
+- **`wjs-publishing-wechat`** — red highlight color standardized to pure `#ff0000` (was `#c0392b`); inline code style simplified (removed `font-size` override); related-articles section CSS cleaned up.
+- **Marketplace** (`.claude-plugin/marketplace.json`) — renamed from `wjs-skills` to `claude-skills` to match the repository name; expanded skill registry from 14 to all 31 `wjs-*` skills so every skill can be installed by name.
+
 ## [2026-06-20]
 
 ### Added
