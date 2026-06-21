@@ -94,8 +94,7 @@ def render_block(rows):
         return ""
     body = "<br>".join(anchor(t, u) for _, t, u in rows)
     section = (
-        '<section style="margin-top:28px;padding-top:16px;border-top:1px solid #e5e5e5;'
-        'line-height:2.2;font-size:0.95em;">'
+        '<section style="margin-top:28px;padding-top:16px;border-top:1px solid #e5e5e5;">'
         '<strong style="color:#ff0000;">扩展阅读</strong><br>'
         + body
         + "</section>"
