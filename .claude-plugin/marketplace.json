@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "wjs-skills",
+  "name": "claude-skills",
   "description": "31 Claude Code skills: a full video pipeline (transcribe / translate / dub / multicam / segment / overlay / reframe / upload / article→video / word→lesson), WeChat & content publishing (polish & draft / mine articles / mine voice memos / distill style / syndicate / tweet), X growth & engagement (improve content / grow followers / polish engagement / clean spam), site & app publishing (Hugo blog / WordPress→Hugo / TestFlight / App Store / in-site feedback loop), project auditing, skill self-promotion, and 吃一堑长一智 personal reflection. SKILL.md format — also compatible with OpenAI Codex CLI.",
   "owner": {
     "name": "Jianshuo Wang (王建硕)",
