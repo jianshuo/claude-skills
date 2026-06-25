@@ -9,7 +9,7 @@ description: VoiceDrop 配套 skill。list 模式用 articles API 列出已成�
 
 ```bash
 # 王建硕（管理员）直接从 .env 读
-TOKEN=$(grep 'FILES_TOKEN' ~/code/.env | cut -d'=' -f2- | tr -d '"')
+TOKEN=$(grep -E '^FILES_TOKEN=' ~/code/.env | cut -d'=' -f2- | tr -d '"' | head -1)
 
 # 普通用户：App → 设置 → 访问令牌 → 复制
 TOKEN=anon_xxxxxxxx...
