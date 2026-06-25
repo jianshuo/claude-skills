@@ -22,7 +22,7 @@ TOKEN=anon_xxxxxxxx...
 使用 articles API（不再用 `/files/api/list`）：
 
 ```bash
-TOKEN=$(grep 'FILES_TOKEN' ~/code/.env | cut -d'=' -f2- | tr -d '"')
+TOKEN=$(grep -E '^FILES_TOKEN=' ~/code/.env | cut -d'=' -f2- | tr -d '"' | head -1)
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles
 ```
 
@@ -73,7 +73,7 @@ curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/article
 **1. 列出可用文章**
 
 ```bash
-TOKEN=$(grep 'FILES_TOKEN' ~/code/.env | cut -d'=' -f2- | tr -d '"')
+TOKEN=$(grep -E '^FILES_TOKEN=' ~/code/.env | cut -d'=' -f2- | tr -d '"' | head -1)
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles
 ```
 
@@ -144,7 +144,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 如需立即触发挖矿（对待处理录音加急处理）：
 
 ```bash
-TOKEN=$(grep 'FILES_TOKEN' ~/code/.env | cut -d'=' -f2- | tr -d '"')
+TOKEN=$(grep -E '^FILES_TOKEN=' ~/code/.env | cut -d'=' -f2- | tr -d '"' | head -1)
 curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/mine
 ```
 
