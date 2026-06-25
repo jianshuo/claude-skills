@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-25]
+
+### Changed
+
+- **`wjs-voicedrop`** — `list` mode redesigned: instead of listing raw R2 files grouped by type (pending recordings / processed articles / empty/silent files / style settings), it now calls the dedicated articles API (`jianshuo.dev/files/api/articles`) to surface completed articles with their title, stem, version number, and section count — ordered newest-first. The old file-browser view is replaced by an article-centric view. The `distill` mode now reads `articles[*].body` (finished Markdown prose) from the same articles API rather than raw transcripts when selecting sample material for style fingerprinting. New trigger phrase added: `voicedrop 文章`.
+- **README** — updated `wjs-voicedrop` table entry and dedicated skill section to reflect the articles-API-based list mode and the new `voicedrop 文章` trigger phrase.
+
 ## [2026-06-21]
 
 ### Added
