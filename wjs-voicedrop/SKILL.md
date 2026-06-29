@@ -167,7 +167,7 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/a
 ```bash
 # 读
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/download/CLAUDE.md
-# 写（管理员要写 download/users/<sub>/CLAUDE.md）
+# 写
 curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: text/markdown; charset=utf-8" \
   --data-binary @/tmp/voicedrop-claudemd.txt \
