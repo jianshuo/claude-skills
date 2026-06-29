@@ -85,7 +85,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
 | [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
 | [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
-| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop 配套管理：用 articles API 列出已成文文章 / 蒸馏文风并上传 | `voicedrop list` / `voicedrop 文章` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop` |
+| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop 账号完整 API 工具箱：文章/文风/照片/音频 CRUD + 触发挖矿 + 算力账单 + 公众号草稿；自带 6+4 设备配对登录 | `voicedrop api` / `voicedrop 登录` / `voicedrop list` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -154,12 +154,17 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ### [`wjs-voicedrop`](./wjs-voicedrop/)
 
-VoiceDrop App 的两个配套任务：**列文章** 和 **蒸馏文风**。
+VoiceDrop 账号的完整 HTTP API 工具箱，覆盖所有资源的读写操作。
 
-- **列文章**（`voicedrop list`）：调用 `jianshuo.dev/files/api/articles` 列出所有已成文的文章，按时间倒序展示标题、stem、节数和版本号。方便在桌面端一眼看到已挖出的内容，无需打开 App。
-- **蒸馏文风**（`voicedrop distill`）：从已成文文章里选 3–6 篇作为样本，提炼 15–20 条可执行文风规则，组装成精简 CLAUDE.md（`# 我的文风`），通过 Files API 上传到 R2，让 miner 下次挖文章时自动带上。
+- **认证**：内置 `vd-login.mjs`（Node ≥ 20，零依赖）实现 6+4 手机设备配对登录，凭证落 `~/.config/voicedrop/credentials`；也支持从 App 设置复制临时 token。
+- **文章（版本化 CRUD）**：列出 / 读全文 / 写（每次 PUT 追加新版本，HEAD 前移）/ 版本历史 / 撤销回滚（`PATCH /head`）/ 删除（含 SRT/empty/blocked 边车）。
+- **文风（`/files/api/style`）**：读 / 写 / 版本历史 / 回滚——存储已升级为版本化 `CLAUDE.json`，挖矿时自动叠加进 system prompt，随时可 `PATCH /style/head` 回滚。
+- **照片**：列出 / 上传 / 私有下载 / 公开链接下载（无需 token）。
+- **音频录音**：列出（按 `uploaded` 真实时间排序）/ 下载。
+- **操作**：触发挖矿（Worker 直连 `POST /agent/mine/trigger`）/ 查算力余额 / 查账单流水 / 生成公开分享链接 / 发公众号草稿。
+- **蒸馏文风**（distill）：从 3–6 篇已成文文章提炼 15–20 条可执行文风规则，通过 `PUT /files/api/style` 版本化上传，下次挖矿自动生效。
 
-> 触发词：`voicedrop list` / `列出 VoiceDrop 文件` / `voicedrop 文章` / `voicedrop distill` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop`
+> 触发词：`voicedrop api` / `voicedrop 登录` / `登录 voicedrop` / `voicedrop list` / `列出 voicedrop 文章/照片/录音` / `读/写 voicedrop 文章` / `voicedrop distill` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop`
 
 ---
 

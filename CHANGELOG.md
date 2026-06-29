@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-29]
+
+### Changed
+
+- **`wjs-voicedrop`** — major expansion from a two-task companion (list articles + distill style) into a **full VoiceDrop API toolkit** covering all account resources with versioned CRUD:
+  - **Authentication**: ships a built-in `vd-login.mjs` (Node ≥ 20, zero dependencies) implementing the 6+4 phone-device pairing protocol — the skill can now log itself in without any other tool. Also accepts an App-copied anon token.
+  - **Articles**: list / read full body / write (versioned — every PUT appends a new version, HEAD advances) / version history / undo-redo (`PATCH /head`) / delete (including `.srt`, `.empty`, `.blocked` sidecar files).
+  - **Style (`/files/api/style`)**: storage upgraded to versioned `CLAUDE.json` (schema-3, same history/undo/rollback system as articles). The old `download/upload CLAUDE.md` pattern is retired; `PUT /files/api/style` is now the single write path, with full `PATCH /style/head` rollback support. Style is automatically injected into the miner's system prompt on next mining run.
+  - **Photos**: list (via `GET /list` filtered to `photos/`), upload, private download, and public (no-token) download via `/files/api/photo/<full-R2-key>`.
+  - **Audio recordings**: list (via `GET /list` filtered to `VoiceDrop-*.m4a`, sorted by `uploaded` time — not filename, which is an unreliable clock), download.
+  - **Operations**: mine trigger (Worker `POST /agent/mine/trigger`, or Pages fallback), compute-credit balance, ledger, public share link generation, WeChat draft posting.
+  - **Full interface quick-reference table** added covering every resource and operation.
+  - **Distill workflow** updated: sample material now taken from `articles[*].body` (finished Markdown prose) via the articles API; style written via versioned `PUT /files/api/style` rather than raw file upload.
+- **README** — updated `wjs-voicedrop` skills-table entry and dedicated section to reflect the full API toolkit scope, new auth flow, and expanded resource coverage.
+
 ## [2026-06-25]
 
 ### Changed
