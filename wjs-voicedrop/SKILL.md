@@ -297,7 +297,7 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 - `wss://jianshuo.dev/agent/edit?stem=<stem>` — 语音编辑某篇文章（App 持麦克风串行发指令）。
 - `wss://jianshuo.dev/agent/status` — 实时挖矿状态推送（待处理→听录音→挖文章→已成文）。
 - `wss://jianshuo.dev/agent/asr` — 火山流式 ASR 代理（语音听写）。
-- `/agent/link/*` — 设备配对（6+4），由 `/vd-login` skill 封装。
+- `/agent/link/*` — 设备配对（6+4）协议端点，由本 skill 自带的 `vd-login.mjs` 封装（见上面「6+4 自助登录」）。
 
 ---
 
