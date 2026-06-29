@@ -294,10 +294,10 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 
 | 错误 | 修正 |
 |---|---|
-| `401 unauthorized` | token 没设/过期 → 重走上面「6+4 自助登录」，或 App 设置重新复制，或检查 `~/code/.env` 的 FILES_TOKEN |
-| `403 forbidden` / `read-only token` | 用户 token 只能动自己 scope；跨用户/写公众号用 `FILES_TOKEN`；24h 临时 token 只能 list/download |
+| `401 unauthorized` | token 没设/过期 → 重走上面「6+4 自助登录」，或 App 设置重新复制 |
+| `403 forbidden` / `read-only token` | 用户 token 只能动自己 scope；写社区（share）需 Apple 登录过的 session；24h 临时 token 只能 list/download |
 | `articles` 返回空数组 | 还没成文 → 触发挖矿或等 miner |
-| `404 not found`（文章） | stem 写错，或管理员忘了带 `<sub>` 段 |
+| `404 not found`（文章） | stem 写错 |
 | `409 wechat_not_configured` | 该用户没配公众号 appid/secret（App 设置里填） |
 | 照片 `400 not a photo` | `/photo/` 公开接口的 key 必须匹配 `users/<id>/photos/*.(jpg|jpeg|png)` |
 | 上传文风后 App 没变 | 切离再切回「设置」tab 重新加载 |
