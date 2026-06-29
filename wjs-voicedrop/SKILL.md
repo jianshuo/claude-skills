@@ -305,7 +305,7 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 
 | 错误 | 修正 |
 |---|---|
-| `401 unauthorized` | token 没设/过期 → 重跑 `/vd-login`，或 App 设置重新复制，或检查 `~/code/.env` 的 FILES_TOKEN |
+| `401 unauthorized` | token 没设/过期 → 重走上面「6+4 自助登录」，或 App 设置重新复制，或检查 `~/code/.env` 的 FILES_TOKEN |
 | `403 forbidden` / `read-only token` | 用户 token 只能动自己 scope；跨用户/写公众号用 `FILES_TOKEN`；24h 临时 token 只能 list/download |
 | `articles` 返回空数组 | 还没成文 → 触发挖矿或等 miner |
 | `404 not found`（文章） | stem 写错，或管理员忘了带 `<sub>` 段 |
