@@ -164,18 +164,41 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/a
 
 ---
 
-## 文风 CLAUDE.md
+## 文风（版本化 /style）
 
-挖矿时这份会被叠加进 system prompt（`# 我的名字` + `# 我的文风`）。
+挖矿时这份文风会被叠加进 system prompt。存储已升级为**版本化的 `CLAUDE.json`**（schema-3，和文章同一套 history / undo / 回滚），统一走 `/files/api/style`——别再用旧的 `download/upload CLAUDE.md`。
+
+> **名字暂留 `CLAUDE.md`**：`# 我的名字` 仍由旧 `CLAUDE.md` 保管（作者抽取路径读它）；写入只往 `CLAUDE.json` 写文风正文，不再碰名字。端点名字里仍叫 `CLAUDE.md` 只是历史包袱，实际读写的是 `CLAUDE.json`。
+
+**读当前文风**：
 
 ```bash
-# 读
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/download/CLAUDE.md
-# 写
-curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: text/markdown; charset=utf-8" \
-  --data-binary @/tmp/voicedrop-claudemd.txt \
-  https://jianshuo.dev/files/api/upload/CLAUDE.md
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style
+# → {style, head, createdAt, updatedAt}
+# 还没存过 CLAUDE.json、只有旧 CLAUDE.md → {style, head:0, legacy:true}
+#   legacy:true = 读的是旧 md 的「# 我的文风」段；首次 PUT 即落 CLAUDE.json、旧 md 退役
+# 两者都没有 → 404
+```
+
+**写（版本化——每次 PUT 追加一个新版本，head 前移）**：
+
+```bash
+curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"style":"单句成段，段落 1–3 句居多；多用具体数字……"}' \
+  https://jianshuo.dev/files/api/style
+# → {ok:true, head:<新版本号>}    空 style → 400 empty_content
+#   body 可选带 "source":"agent"（默认用户 token 记为 app）
+```
+
+**版本历史 / 回滚（撤销重做，只移 head 指针、不新增版本）**：
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/history
+# → {head, versions:[{v, savedAt, source, style}]}    oldest-first，最多留 10 版
+curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"head":2}' https://jianshuo.dev/files/api/style/head      # 回滚到 v2
+# → {ok:true, head:2}    版本号不存在 → 404
+#   注意：回滚到旧版后再 PUT，会先截掉 head 之后的「未来」版本再追加新版（git HEAD 式）
 ```
 
 ---
