@@ -192,9 +192,12 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
 没有专门的「列照片」接口——用通用 `GET /list` 筛 `photos/`：
 
 ```bash
-# 列出本账号所有照片
+# 列出本账号所有照片（最新会话在前）
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/list \
-  | python3 -c "import json,sys;[print(f['name'],f['size']) for f in json.load(sys.stdin)['files'] if '/photos/' in ('/'+f['name']) or f['name'].startswith('photos/')]"
+  | python3 -c "import json,sys
+ph=[f for f in json.load(sys.stdin)['files'] if f['name'].startswith('photos/') or '/photos/' in f['name']]
+ph.sort(key=lambda f:f['name'], reverse=True)   # photos/<sessionTs>/… → 降序=最新会话在前
+[print(f['name'],f['size']) for f in ph]"
 
 # 下载（私有，scoped）
 curl -s -H "Authorization: Bearer $TOKEN" \
