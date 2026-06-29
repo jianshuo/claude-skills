@@ -302,7 +302,7 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 2. 逐篇 `GET /articles/<stem>`，取 `articles[*].body`（不要 `transcript` 口述原文）。
 3. 派子 agent 分析（隔离上下文）：「提炼这位作者**最突出、可执行**的语言习惯：句长偏好、段落密度、人称、词汇倾向、论证方式、结尾习惯、绝不做的事。**只分析怎么写，不分析思想立场。**输出 15–20 条 bullet，每条一句，用『用 X』『不用 Y』『X 必须在 Y 前』这种可执行语言。」
 4. 回收润色：每条要能被不认识该作者的模型直接照做（「喜欢短句」太模糊；「单句成段，段落 1–3 句居多」才够用）。去掉与服务器 SYSTEM prompt 重复的。
-5. 组装 `# 我的名字` + `# 我的文风`，**预览给用户确认后**用上面的 `PUT upload/CLAUDE.md` 上传。
+5. 组装文风正文，**预览给用户确认后**用上面的 `PUT /files/api/style`（JSON body `{"style":"…"}`）上传；落为新版本，随时可 `PATCH /style/head` 回滚。（名字不在这里写——它仍留在旧 `CLAUDE.md`。）
 6. 成功 → 告知「下次录音挖文章时自动生效」。
 
 ---
