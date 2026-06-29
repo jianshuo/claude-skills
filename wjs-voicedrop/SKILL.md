@@ -220,15 +220,15 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: image/jpeg" \
 
 同样用通用 `GET /list` 筛 `VoiceDrop-*.m4a`：
 
-> **顺序**：`/articles` 端点服务端就按 `createdAt` 倒序（最新在前）。`/list` 是通用接口**不排序**，返回 R2 原始字典序（≈最旧在前）。录音/照片名都以时间戳打头，所以**按 name 降序**即得「最新在前」——和 App「我的录音」列表用的同一招（`audioName >`）。下面的例子已带排序。
+> **顺序**：`/articles` 端点服务端就按 `createdAt` 倒序（最新在前）。`/list` 是通用接口**不排序**，返回 R2 原始字典序。**别按文件名排**——名字里的时间戳不是可靠时钟（时钟偏差、staging/改名、导入的文件都可能对不上）；要排就按 `uploaded`（R2 上传时间，ISO-8601 UTC 字符串，字典序==时间序）。下面的例子已按 `uploaded` 倒序，和 App「我的录音」一致。
 
 ```bash
-# 列出所有录音（最新在前）
+# 列出所有录音（最新在前，按 uploaded 真实时间）
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/list \
   | python3 -c "import json,sys
 recs=[f for f in json.load(sys.stdin)['files'] if f['name'].endswith('.m4a')]
-recs.sort(key=lambda f:f['name'], reverse=True)   # 文件名带时间戳 → 降序=最新在前
-[print(f['name'],f['size']) for f in recs]"
+recs.sort(key=lambda f:f.get('uploaded',''), reverse=True)   # R2 上传时间倒序=最新在前
+[print(f.get('uploaded',''),f['name'],f['size']) for f in recs]"
 
 # 下载
 curl -s -H "Authorization: Bearer $TOKEN" \
