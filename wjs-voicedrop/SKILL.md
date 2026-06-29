@@ -69,10 +69,7 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 | `cancelled` | 用户在手机上点了「不是我」 |
 | `expired` | `start` 到 `finish` 超过 2 分钟，重跑 `start` |
 
-**管理员 vs 用户的 key 写法差异（重要）**：
-
-- **用户 token**：所有 key 都是相对自己 scope 的，例如文章 stem 直接写 `VoiceDrop-xxx`，文件名直接写 `photos/...`。
-- **管理员 token**：scope 为空，要自己带上 `users/<sub>/` 前缀。**文章 API 例外**——`/articles/<sub>/<stem>`（多一段 `<sub>`）。
+**key 写法**：所有 key 都是相对自己 scope 的——文章 stem 直接写 `VoiceDrop-xxx`，文件名直接写 `photos/...`；服务端自动拼上你的 `users/anon-<hash>/` 前缀，越不出自己的数据。
 
 ---
 
