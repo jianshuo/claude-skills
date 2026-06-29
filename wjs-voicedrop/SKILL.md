@@ -1,6 +1,6 @@
 ---
 name: wjs-voicedrop
-description: VoiceDrop 账号的完整 API 工具箱——读写文章(list/read/write/history/版本)、读写文风 CLAUDE.md、列出/上传/下载照片、列出/上传/下载音频录音、触发挖矿(mine)、查算力余额与账单、生成分享链接、发公众号草稿。认证用用户自己的 token 且自带登录：6+4 手机设备配对(本 skill 内置 vd-login.mjs，自己就能登录)或 App 复制的 anon token。触发词："voicedrop api"、"voicedrop 登录"、"登录 voicedrop"、"voicedrop list"、"列出 voicedrop 文章/照片/录音"、"读/写 voicedrop 文章"、"上传/下载 voicedrop 照片/音频"、"voicedrop 触发挖矿"、"voicedrop 算力余额"、"voicedrop distill"、"蒸馏文风"、"/wjs-voicedrop"。
+description: VoiceDrop 账号的完整 API 工具箱——读写文章(list/read/write/history/版本)、读写文风(CLAUDE.json,版本化,走 /style)、列出/上传/下载照片、列出/上传/下载音频录音、触发挖矿(mine)、查算力余额与账单、生成分享链接、发公众号草稿。认证用用户自己的 token 且自带登录：6+4 手机设备配对(本 skill 内置 vd-login.mjs，自己就能登录)或 App 复制的 anon token。触发词："voicedrop api"、"voicedrop 登录"、"登录 voicedrop"、"voicedrop list"、"列出 voicedrop 文章/照片/录音"、"读/写 voicedrop 文章"、"上传/下载 voicedrop 照片/音频"、"voicedrop 触发挖矿"、"voicedrop 算力余额"、"voicedrop distill"、"蒸馏文风"、"/wjs-voicedrop"。
 ---
 
 # VoiceDrop API Skill
@@ -86,8 +86,11 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 | | 写 SRT 边车 | `PUT /files/api/articles/<stem>/srt` |
 | | 标记无语音 | `PUT /files/api/articles/<stem>/empty` |
 | | 标记算力不足 | `PUT /files/api/articles/<stem>/blocked` |
-| **文风** | 读 | `GET /files/api/download/CLAUDE.md` |
-| | 写 | `PUT /files/api/upload/CLAUDE.md` |
+| **文风** | 读 | `GET /files/api/style` → `{style,head,…}` |
+| | 写(版本化) | `PUT /files/api/style`，body `{"style":"…"}` |
+| | 版本历史 | `GET /files/api/style/history` |
+| | 撤销/重做 | `PATCH /files/api/style/head`，body `{"head":N}` |
+| **名字** | 读/写 | 暂留老 `download/upload CLAUDE.md`（`# 我的名字`，以后再搬家）|
 | **照片** | 列出 | `GET /files/api/list`（筛 `photos/`） |
 | | 上传 | `PUT /files/api/upload/photos/<sessionTs>/<offset>-<rand>.jpg` |
 | | 下载(私有) | `GET /files/api/download/photos/<...>.jpg` |
@@ -160,18 +163,31 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/a
 
 ---
 
-## 文风 CLAUDE.md
+## 文风（CLAUDE.json，版本化）
 
-挖矿时这份会被叠加进 system prompt（`# 我的名字` + `# 我的文风`）。
+文风现在存 **`users/<sub>/CLAUDE.json`**（schema-3 版本化信封，和文章同格式），通过
+`/files/api/style` 端点读写，服务端自动记版本。挖矿时这份文风会被叠加进 system prompt。
+**名字不在这里**——名字暂留老 `CLAUDE.md` 的 `# 我的名字`（以后再找正式的家）。
+读 `/style` 时若还没有 CLAUDE.json，服务端会回退解析老 `CLAUDE.md` 的「# 我的文风」段。
 
 ```bash
-# 读
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/download/CLAUDE.md
-# 写
-curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: text/markdown; charset=utf-8" \
-  --data-binary @/tmp/voicedrop-claudemd.txt \
-  https://jianshuo.dev/files/api/upload/CLAUDE.md
+# 读当前文风
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style
+# 写（版本化，body 是 JSON {"style":"…"}）
+curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d "$(jq -Rs '{style:.}' < /tmp/voicedrop-style.txt)" \
+  https://jianshuo.dev/files/api/style
+# 版本历史 / 撤销
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/history
+curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"head":2}' https://jianshuo.dev/files/api/style/head
+```
+
+名字（暂留老 CLAUDE.md）：
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/download/CLAUDE.md   # 读
+curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/markdown; charset=utf-8" \
+  --data-binary $'# 我的名字\n王建硕\n' https://jianshuo.dev/files/api/upload/CLAUDE.md          # 写
 ```
 
 ---
@@ -269,13 +285,13 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 
 ## 工作流：distill —— 蒸馏文风并上传
 
-从样本文章提炼可执行的「文风规则」，写进 `CLAUDE.md`，让 miner 自动带上。
+从样本文章提炼可执行的「文风规则」，写进 `CLAUDE.json`，让 miner 自动带上。
 
 1. `GET /articles` 列出 → 请用户选 **3–6 篇**（<3 篇提醒指纹不稳）。
 2. 逐篇 `GET /articles/<stem>`，取 `articles[*].body`（不要 `transcript` 口述原文）。
 3. 派子 agent 分析（隔离上下文）：「提炼这位作者**最突出、可执行**的语言习惯：句长偏好、段落密度、人称、词汇倾向、论证方式、结尾习惯、绝不做的事。**只分析怎么写，不分析思想立场。**输出 15–20 条 bullet，每条一句，用『用 X』『不用 Y』『X 必须在 Y 前』这种可执行语言。」
 4. 回收润色：每条要能被不认识该作者的模型直接照做（「喜欢短句」太模糊；「单句成段，段落 1–3 句居多」才够用）。去掉与服务器 SYSTEM prompt 重复的。
-5. 组装 `# 我的名字` + `# 我的文风`，**预览给用户确认后**用上面的 `PUT upload/CLAUDE.md` 上传。
+5. 文风正文（**不含名字**），**预览给用户确认后**用上面的 `PUT /files/api/style`（body `{"style":"…"}`）上传 —— 版本化，旧版可 `style/history` + `style/head` 回滚。
 6. 成功 → 告知「下次录音挖文章时自动生效」。
 
 ---
