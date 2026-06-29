@@ -16,29 +16,22 @@ VoiceDrop 后端的完整 HTTP 接口工具箱。所有资源（文章、文风�
 
 ---
 
-## 认证（三种，优先 6+4 设备配对）
+## 认证（用户 token，优先 6+4 设备配对）
 
-所有接口（除公开的 `GET /files/api/photo/*`）都要 `Authorization: Bearer $TOKEN`。按下面优先级取 token：
+所有接口（除公开的 `GET /files/api/photo/*`）都要 `Authorization: Bearer $TOKEN`。token 取用户自己的凭证：
 
 ```bash
-# 1) 6+4 手机设备配对登录（本 skill 自带的 vd-login.mjs 存下来的某个具体用户身份）
-# 2) 管理员 FILES_TOKEN（王建硕本人，能看所有用户）
+# 6+4 手机设备配对登录（本 skill 自带的 vd-login.mjs 存下来的用户身份）
 CRED=~/.config/voicedrop/credentials
-if [ -f "$CRED" ]; then
-  TOKEN=$(python3 -c "import json;print(json.load(open('$CRED'))['token'])")
-  SCOPE=$(python3 -c "import json;print(json.load(open('$CRED'))['scope'])")   # users/anon-xxxx/
-else
-  TOKEN=$(grep -E '^FILES_TOKEN=' ~/code/.env | cut -d'=' -f2- | tr -d '"' | head -1)
-  SCOPE=""   # 管理员 = 整桶
-fi
+TOKEN=$(python3 -c "import json;print(json.load(open('$CRED'))['token'])")
+SCOPE=$(python3 -c "import json;print(json.load(open('$CRED'))['scope'])")   # users/anon-xxxx/
 ```
 
-**三种 token 的区别：**
+**两种取 token 的方式（都是同一个用户、只能访问自己的数据）：**
 
 | 方式 | token 形态 | scope（能看谁） | 怎么拿 |
 |---|---|---|---|
-| **6+4 设备配对** | `anon_…`（某用户的完整密钥） | 该用户自己 `users/anon-<hash>/` | 下面「自助登录」流程，凭证落 `~/.config/voicedrop/credentials` |
-| **管理员** | `FILES_TOKEN` | **全部用户**（scope 为空 = 整桶） | `~/code/.env` 的 `FILES_TOKEN` |
+| **6+4 设备配对** | `anon_…`（该用户的完整密钥） | 该用户自己 `users/anon-<hash>/` | 下面「自助登录」流程，凭证落 `~/.config/voicedrop/credentials` |
 | **App 临时** | `anon_…` | 该用户自己 | App 设置 → 账户/访问令牌 → 复制 |
 
 ### 6+4 自助登录（本 skill 自带，无需别的 skill）
