@@ -117,6 +117,14 @@ export function logout() { fs.rmSync(CRED, { force: true }); fs.rmSync(STATE, { 
 
 // ── CLI (only when run directly, not when imported) ──
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  // Node 20 hides the global WebSocket behind a flag, which finish() needs.
+  // If it's missing, re-exec ourselves once with the flag (env guard stops recursion).
+  if (typeof WebSocket === 'undefined' && !process.env.__VD_WS_REEXEC) {
+    const { spawnSync } = await import('node:child_process');
+    const r = spawnSync(process.execPath, ['--experimental-websocket', process.argv[1], ...process.argv.slice(2)],
+      { stdio: 'inherit', env: { ...process.env, __VD_WS_REEXEC: '1' } });
+    process.exit(r.status ?? 1);
+  }
   const [cmd, arg] = process.argv.slice(2);
   const out = (o) => { console.log(JSON.stringify(o)); process.exit(o.ok === false ? 1 : 0); };
   (async () => {
