@@ -112,7 +112,6 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles
 # → {"articles":[{stem,title,head,createdAt,updatedAt,count}]}   count=节数, head=当前版本号
-# 管理员：GET .../articles/<sub>
 ```
 
 格式化展示：
