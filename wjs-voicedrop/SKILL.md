@@ -21,7 +21,7 @@ VoiceDrop 后端的完整 HTTP 接口工具箱。所有资源（文章、文风�
 所有接口（除公开的 `GET /files/api/photo/*`）都要 `Authorization: Bearer $TOKEN`。按下面优先级取 token：
 
 ```bash
-# 1) 6+4 手机设备配对登录（/vd-login 存下来的某个具体用户身份）
+# 1) 6+4 手机设备配对登录（本 skill 自带的 vd-login.mjs 存下来的某个具体用户身份）
 # 2) 管理员 FILES_TOKEN（王建硕本人，能看所有用户）
 CRED=~/.config/voicedrop/credentials
 if [ -f "$CRED" ]; then
@@ -37,11 +37,44 @@ fi
 
 | 方式 | token 形态 | scope（能看谁） | 怎么拿 |
 |---|---|---|---|
-| **6+4 设备配对** | `anon_…`（某用户的完整密钥） | 该用户自己 `users/anon-<hash>/` | 跑 `/vd-login`：手机 设置→账户 给 **6 位 hex**，配对后手机弹 **4 位数字**，成功后凭证落 `~/.config/voicedrop/credentials` |
+| **6+4 设备配对** | `anon_…`（某用户的完整密钥） | 该用户自己 `users/anon-<hash>/` | 下面「自助登录」流程，凭证落 `~/.config/voicedrop/credentials` |
 | **管理员** | `FILES_TOKEN` | **全部用户**（scope 为空 = 整桶） | `~/code/.env` 的 `FILES_TOKEN` |
 | **App 临时** | `anon_…` | 该用户自己 | App 设置 → 账户/访问令牌 → 复制 |
 
-> **6+4 是什么**：VoiceDrop 的「新设备登录」协议。手机（老设备）在 设置→账户 显示一个 6 位十六进制短码，电脑端 `/vd-login start <6hex>` 发起配对，手机随后弹出 4 位验证码，`/vd-login finish <4digit>` 验证后手机把账号密钥**端到端加密**传过来，存到本地。详见 `/vd-login` skill。本 skill 只负责**用**这个凭证调 API；没凭证时建议用户先跑 `/vd-login`。
+### 6+4 自助登录（本 skill 自带，无需别的 skill）
+
+本目录自带 `vd-login.mjs`（零依赖，Node ≥ 20）——它扮演设备配对协议里的「新设备」，和手机（老设备）配一次对，把账号密钥**端到端加密**取到本地。**先查是否已登录**，没有再走两步握手：
+
+```bash
+VD=~/.claude/skills/wjs-voicedrop/vd-login.mjs
+node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","live":true}；未登录 → ok:false
+```
+
+**前提**：用户手机在线、app 在前台、已登录目标账号、是支持设备配对的版本。
+
+**两步握手（每条子命令只打印一行 JSON，按 `ok` 解析，别抓散文）：**
+
+1. 问用户要 **6 位十六进制码**（手机 **设置 → 账户** 里那串短 ID）。
+2. `node "$VD" start <6hex>`：
+   - `{"ok":true,"pairingId":…,"matchCount":N}` → 告诉用户**手机这会儿会弹一个 4 位数字码**。
+   - `{"ok":false,"error":"no_match"}` → 6 位码错了，或手机离线/后台/旧版本 → 回第 1 步。
+3. 问用户要**手机上弹出的 4 位数字码**。
+4. `node "$VD" finish <4digit>`：
+   - `{"ok":true,"scope":"users/anon-…/"}` → 登录成功，凭证已写 `~/.config/voicedrop/credentials`（0600）。
+   - `{"ok":false,"error":"wrong_code","remaining":N}` → 码输错了，问对的再重跑 `finish`（配对还活着，共 5 次 / 2 分钟）。
+   - `{"ok":false,"error":"expired"|"too_many_attempts"|"timeout"|"cancelled"}` → 从第 1 步重来。
+
+其它子命令：`node "$VD" logout`（删凭证）。
+
+**安全须知（用户没听过就说一遍）**：这是把账号的**完整密钥**拷到磁盘，**不是**可吊销的子 token（VoiceDrop 的 anon 身份签不出子 token）。谁拿到 `~/.config/voicedrop/credentials` 就有该账号全部权限，且无法单独吊销这台机器。保持文件私有，**绝不**提交或同步到任何可读处。
+
+| 登录报错 | 原因 / 处理 |
+|---|---|
+| `no_match` | 6 位码错，或手机离线/后台/旧版本 |
+| `wrong_code` + `remaining` | 4 位码输错，用对的重跑 `finish`（5 次 / 2 分钟） |
+| `timeout` | 手机没响应——把 app 切到前台，从 `start` 重来 |
+| `cancelled` | 用户在手机上点了「不是我」 |
+| `expired` | `start` 到 `finish` 超过 2 分钟，重跑 `start` |
 
 **管理员 vs 用户的 key 写法差异（重要）**：
 
