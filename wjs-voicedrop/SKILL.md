@@ -268,15 +268,6 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 
 ---
 
-## 管理员专用（FILES_TOKEN）
-
-- 看任意用户：所有通用文件接口用**完整 key**（`download/users/<sub>/...`、`list` 返回完整 key）。
-- 文章 API 多带一段 `<sub>`：`GET /files/api/articles/<sub>`（列）、`/articles/<sub>/<stem>`（读写）。
-- 送算力：`POST /agent/usage/grant`，body `{"user_sub":"users/anon-xxx/","suanli":500,"reason":"campaign:xxx"}`。
-- 全量账户：`GET /agent/usage/admin/accounts` → `{accounts:[{user_sub,balance_suanli,spent_suanli,spent_yuan}]}`。
-
----
-
 ## 工作流：distill —— 蒸馏文风并上传
 
 从样本文章提炼可执行的「文风规则」，写进 `CLAUDE.md`，让 miner 自动带上。
