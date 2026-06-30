@@ -1,6 +1,6 @@
 ---
 name: wjs-voicedrop
-description: VoiceDrop 账号的完整 API 工具箱——读写文章(list/read/write/history/版本)、读写文风 CLAUDE.md、列出/上传/下载照片、列出/上传/下载音频录音、触发挖矿(mine)、查算力余额与账单、生成分享链接、发公众号草稿。认证用用户自己的 token 且自带登录：6+4 手机设备配对(本 skill 内置 vd-login.mjs，自己就能登录)或 App 复制的 anon token。触发词："voicedrop api"、"voicedrop 登录"、"登录 voicedrop"、"voicedrop list"、"列出 voicedrop 文章/照片/录音"、"读/写 voicedrop 文章"、"上传/下载 voicedrop 照片/音频"、"voicedrop 触发挖矿"、"voicedrop 算力余额"、"voicedrop distill"、"蒸馏文风"、"/wjs-voicedrop"。
+description: VoiceDrop 账号的完整 API 工具箱——读写文章(list/read/write/history/版本)、读写文风 CLAUDE.md、列出/上传/下载照片、列出/上传/下载音频录音、触发挖矿(mine)、查算力余额与账单、生成分享链接、发公众号草稿。认证用用户自己的 token 且自带登录：6+4 手机设备配对(本 skill 内置 vd-login.mjs，自己就能登录)或 App 复制的 anon token。别名："vd"、"voicedrop"、"口述" 都指这个 app（口述 = VoiceDrop 这款语音口述 app），用户提到这三个词中任意一个、且涉及录音/文章/文风/照片/挖矿/算力等操作，都用本 skill。触发词："vd"、"voicedrop"、"口述"、"口述 app"、"voicedrop api"、"voicedrop 登录"、"登录 voicedrop"、"登录 vd"、"voicedrop list"、"列出 voicedrop 文章/照片/录音"、"读/写 voicedrop 文章"、"上传/下载 voicedrop 照片/音频"、"voicedrop 触发挖矿"、"voicedrop 算力余额"、"voicedrop distill"、"蒸馏文风"、"/wjs-voicedrop"。
 ---
 
 # VoiceDrop API Skill
