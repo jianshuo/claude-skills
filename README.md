@@ -85,7 +85,8 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
 | [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
 | [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
-| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop 账号完整 API 工具箱：文章/文风/照片/音频 CRUD + 触发挖矿 + 算力账单 + 公众号草稿；自带 6+4 设备配对登录 | `voicedrop api` / `voicedrop 登录` / `voicedrop list` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop` |
+| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop 账号完整 API 工具箱：文章/文风/照片/音频 CRUD + 触发挖矿 + 算力账单 + 公众号草稿；自带 6+4 设备配对登录 | `vd` / `voicedrop` / `口述` / `voicedrop api` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop` |
+| [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/) | 评估 VoiceDrop 挖矿 prompt 改版：用金标集对冠军和候选做盲评对决，输出胜率报告，人工确认后才晋级生产 | `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `/wjs-evaling-voicedrop-prompts` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -164,7 +165,18 @@ VoiceDrop 账号的完整 HTTP API 工具箱，覆盖所有资源的读写操作
 - **操作**：触发挖矿（Worker 直连 `POST /agent/mine/trigger`）/ 查算力余额 / 查账单流水 / 生成公开分享链接 / 发公众号草稿。
 - **蒸馏文风**（distill）：从 3–6 篇已成文文章提炼 15–20 条可执行文风规则，通过 `PUT /files/api/style` 版本化上传，下次挖矿自动生效。
 
-> 触发词：`voicedrop api` / `voicedrop 登录` / `登录 voicedrop` / `voicedrop list` / `列出 voicedrop 文章/照片/录音` / `读/写 voicedrop 文章` / `voicedrop distill` / `蒸馏 VoiceDrop 文风` / `/wjs-voicedrop`
+> 触发词：`vd` / `voicedrop` / `口述` / `voicedrop api` / `voicedrop 登录` / `登录 voicedrop` / `登录 vd` / `voicedrop list` / `列出 voicedrop 文章/照片/录音` / `读/写 voicedrop 文章` / `上传/下载 voicedrop 照片/音频` / `voicedrop 触发挖矿` / `voicedrop 算力余额` / `voicedrop distill` / `蒸馏文风` / `/wjs-voicedrop`
+
+### [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/)
+
+评估 VoiceDrop 挖矿 prompt 的改版是否真的更好。用一组金标集对「冠军 prompt」（当前生产版）和「候选 prompt」（改版）跑相同输入，派盲评裁判 agent 做成对比较，汇总胜率报告——胜率 ≥ 70% 且无确定性回退，才在用户确认后晋级生产。
+
+- **盲评协议**：A/B 顺序随机（一半 fixture 把候选放 A，一半放 B），每条由与生成模型不同家族的裁判模型独立评分，完全消除位置偏见。
+- **判决维度**（`references/judge-rubric.md`）：结构完整性、王建硕文风还原、事实骨架保留、句子节奏、段落密度——每维 1–5 分 + 理由。
+- **晋级门槛**：胜率 ≥ 70% + 无 JSON 格式回退 + 用户点「认可」，三者缺一不可；候选写回 `mine.js` 后自动跑 `npm test` 确认无破坏。
+- 不做无人值守、不测成本/延迟、不评审核或语音编辑 prompt。
+
+> 触发词：`评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `比一比两版 prompt` / `/wjs-evaling-voicedrop-prompts`
 
 ---
 

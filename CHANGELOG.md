@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-06-30]
+
+### Added
+
+- **`wjs-evaling-voicedrop-prompts`** — new skill: evaluates whether a change to VoiceDrop's mining system prompt (`MINE_SYSTEM` in `agent/src/prompts/mine.js`) is actually better than the live version. Runs a local eval harness against a golden fixture set, dispatches blind pairwise judge subagents (A/B order randomised — half the fixtures put the candidate as A, half as B — using a different model family than the generator to eliminate position bias), aggregates a win-rate verdict, and promotes the candidate only when win-rate ≥ 70%, no deterministic regressions, and the user explicitly approves. Ships `references/judge-rubric.md` covering five scoring dimensions: structural completeness, 王建硕 voice fidelity, fact-skeleton preservation, sentence rhythm, and paragraph density. Triggers: `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `比一比两版 prompt` / `/wjs-evaling-voicedrop-prompts`.
+- **README** — added `wjs-evaling-voicedrop-prompts` to the skills summary table and as a new subsection in section 1 "公众号 / WeChat".
+
+### Changed
+
+- **`wjs-voicedrop`** — expanded trigger surface: `vd`, `voicedrop`, and `口述` are now recognised as broad entry-point aliases for any VoiceDrop-related operation (recordings, articles, style, photos, mining, compute), in addition to the existing specific command triggers.
+
 ## [2026-06-29]
 
 ### Changed
