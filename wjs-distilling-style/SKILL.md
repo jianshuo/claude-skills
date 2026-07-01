@@ -13,6 +13,8 @@ description: Use when the user wants to capture a writer's voice from a few samp
 
 两个模式：**蒸馏**（样本 → Style Card 文件）和**改写**（目标文章 + Style Card → 改写稿，带盲测闭环）。
 
+> **默认走精简版（用户约定）**：日常蒸馏 / 改写任务**优先用 `references/oneshot-prompts.md` 的一次性 prompt**（Prompt A 改写 / Prompt B 蒸馏）——9 轴指纹 + 锚点 + 事实骨架纪律 + AI 露馅 6 反制都在，只把多轮判官盲测 / 图灵测 / 回炉换成**一轮内联自检**。够用、一把过。只有要**硬验一张卡到底像不像**（发布级、批量伪造）时，才回到下面的完整闭环（判官 subagent + 图灵盲测）。
+
 ## 何时用
 
 - 用户给几篇某作者的文章，想提炼他怎么写
