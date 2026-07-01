@@ -115,7 +115,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-testflight`](./wjs-publishing-testflight/) | 配置 fastlane + GitHub Actions，推 main 自动构建上传 TestFlight，每第 10 个 build 自动提审 App Store | iOS 项目 → Fastfile + build.yml + 自动 TestFlight / App Store |
 | [`wjs-publishing-appstore`](./wjs-publishing-appstore/) | iOS TestFlight build → App Store：截图 + 元数据文案 + 提审（fastlane deliver + release lane） | `提交 App Store` / `准备截图和文案` / `/wjs-publishing-appstore` |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
-| [`wjs-distilling-style`](./wjs-distilling-style/) | 从少量样文提炼任意作者写作指纹，再把目标文本改写成那种味道（9 轴指纹 + 盲测判官闭环） | `蒸馏文风` / `把这篇改成XX的味儿` / `/wjs-distilling-style` |
+| [`wjs-distilling-style`](./wjs-distilling-style/) | 从少量样文提炼任意作者写作指纹，再把目标文本改写成那种味道；日常用一次性 prompt 一把过，深验时开完整判官盲测闭环 | `蒸馏文风` / `把这篇改成XX的味儿` / `/wjs-distilling-style` |
 
 ---
 
@@ -395,7 +395,8 @@ VoiceDrop 账号的完整 HTTP API 工具箱，覆盖所有资源的读写操作
 
 - **9 轴结构化指纹**：句子节奏、段落长度、词汇签名、语气腔调、论证结构、比喻运用、情绪强度、开头收尾、雷区——每轴必须摘 2–3 句真实锚点原句（没有锚点的轴等于没蒸馏）。
 - **事实骨架纪律**：先把原文信息点列成 bullet，改写只换「怎么说」，不增不减事实——改风格不是改内容。
-- **独立判官盲测（必做）**：起一个 subagent，只给它 Style Card + 改写稿，不告诉它是 AI 改的，逐轴评分（1–5），列出具体出戏句；自评不算数，盲测才算。
+- **默认一次性 prompt（日常推荐）**：`references/oneshot-prompts.md` 提供两段自包含提示词——Prompt A（Style Card + 目标文章 → 改写稿）和 Prompt B（样本文章 → Style Card）——内嵌 9 轴指纹、事实骨架纪律和 AI 露馅 6 条反制，把多轮判官循环压缩成一轮内联自检，够用、一把过。
+- **独立判官盲测（深验时启用）**：起一个 subagent，只给它 Style Card + 改写稿，不告诉它是 AI 改的，逐轴评分（1–5），列出具体出戏句；发布级 / 批量高仿真时才跑完整闭环（含图灵判别盲测）。
 - **两种模式**：蒸馏（样本 → `~/code/style-cards/<author>/style-card.md`）/ 改写（目标文本 + Style Card → 改写稿，不达标最多 2–3 轮回炉）。样本 < 3 篇会明确提示用户指纹会不稳。
 - Style Cards 存在本地独立库（`~/code/style-cards/`），不同步到公开 repo，防止他人稿件外泄。
 

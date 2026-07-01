@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-01]
+
+### Changed
+
+- **`wjs-distilling-style`** — added a default "one-shot" shortcut for everyday use: `references/oneshot-prompts.md` ships two standalone copy-paste prompts (Prompt A: Style Card + article → rewrite; Prompt B: samples → Style Card) that bundle the full 9-axis fingerprint, fact-skeleton discipline, and all 6 AI-tell countermeasures into a single call, replacing the multi-round judge blind-test loop with one inline self-check. The full judge-subagent + Turing blind-test pipeline is still there for production-grade or batch validation — the new guidance is "default to the one-shot; escalate to the full loop only when hard validation is needed."
+- **README** — updated `wjs-distilling-style` skills-table entry and dedicated section to reflect the new lightweight default mode and clarify that the judge blind-test is for deep-validation only.
+
 ## [2026-06-30]
 
 ### Added
