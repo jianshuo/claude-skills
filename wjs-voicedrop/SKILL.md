@@ -115,7 +115,8 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles
-# → {"articles":[{stem,title,head,createdAt,updatedAt,count}]}   count=节数, head=当前版本号
+# → {"articles":[{stem,title,head,createdAt,updatedAt,count,tags?}]}   count=节数, head=当前版本号
+#   tags=标签数组（doc 顶层字段，语音 tag_article 工具写入，可 remove:true 删）；无标签时字段不出现
 ```
 
 格式化展示：
