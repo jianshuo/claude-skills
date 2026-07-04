@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-04]
+
+### Changed
+
+- **`wjs-voicedrop`** — the articles list API (`GET /files/api/articles`) now returns an optional `tags` field per article: an array of tags written by the `tag_article` voice tool, removable by including `remove: true`. The field is absent when no tags exist.
+
 ## [2026-07-01]
 
 ### Changed
