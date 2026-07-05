@@ -195,8 +195,9 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/a
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style
-# → {style, head, createdAt, updatedAt}
-# 还没存过 CLAUDE.json、只有旧 CLAUDE.md → {style, head:0, legacy:true}
+# → {style, name, styles, head, createdAt, updatedAt, default?}
+#   name=作者名；styles=App 里选中的预设风格编号数组(≤3)；default:true=还没存过、返回的是默认王建硕文风
+# 还没存过 CLAUDE.json、只有旧 CLAUDE.md → {style, name, head:0, legacy:true}
 #   legacy:true = 读的是旧 md 的「# 我的文风」段；首次 PUT 即落 CLAUDE.json、旧 md 退役
 # 两者都没有 → 404
 ```
