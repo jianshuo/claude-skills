@@ -320,7 +320,7 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: audio/mp4" \
 ```bash
 # 推荐：Worker 直连，任何有效 token 都行
 curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/agent/mine/trigger
-# → 由 Miner DO 返回（如 queued）
+# → 202 queued（Miner DO 接单；服务端每 6 小时也有 cron 自动扫一遍）
 # 备用：Pages 转发
 curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/mine   # → {ok:true}
 ```
