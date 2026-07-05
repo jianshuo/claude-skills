@@ -210,6 +210,7 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/j
   https://jianshuo.dev/files/api/style
 # → {ok:true, head:<新版本号>}    空 style → 400 empty_content
 #   body 可选带 "source":"agent"（默认用户 token 记为 app）
+#   body 还可带 "name"（作者名）和 "styles"（≤3 个预设风格编号）——只改这两个（不带 style）是改 profile，不新增版本
 ```
 
 **版本历史 / 回滚（撤销重做，只移 head 指针、不新增版本）**：
