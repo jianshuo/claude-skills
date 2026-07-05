@@ -341,14 +341,46 @@ curl -s -H "Authorization: Bearer $TOKEN" "https://jianshuo.dev/agent/usage/ledg
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/share/articles/<stem>.json
-# → {url:"https://jianshuo.dev/voicedrop/<id>"}
+# → {url:"https://jianshuo.dev/voicedrop/<id>"}    分享页可加 ?s=<index> 直达第几节
 curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/wechat/articles/<stem>.json
 # → {ok,created,updated} / 409 wechat_not_configured / 502 {errcode,errmsg}
+# 公众号封面图库（公开）：GET /files/api/asset/wechat-covers/ → {covers}；GET /files/api/asset/wechat-covers/<名字> 取图
+```
+
+---
+
+## 社区 community（VD 社区信息流）
+
+读随便看（任何有效 token）；**写（share/unshare）必须是 Apple 登录的 session**，否则 403 `needs_apple_signin`。分享出去的是「指针」——社区帖实时读你文章的当前版本，改文章社区跟着变。
+
+```bash
+# 信息流（最新在前；mine=true 是自己发的；replyTo 有值=这是条回复）
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/list
+# → {posts:[{shareId,author,title,firstSharedAt,updatedAt,count,mine,replyTo?}]}
+
+# 读一条（全文 + 照片 + 作者）
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/get/<shareId>
+# → 帖子 + articles + owner + photos    404 not found
+
+# 某条帖子的回复（最旧在前）
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/replies/<shareId>
+
+# 把自己一篇文章分享到社区（body 可带 {"replyTo":"<shareId>"} 作为回复）
+curl -s -X POST -H "Authorization: Bearer $APPLE_SESSION" \
+  https://jianshuo.dev/files/api/community/share/articles/<stem>.json
+# → {ok,shareId}    403 needs_apple_signin / 403 content_flagged（关键词审核没过）/ 400 empty article
+
+# 查自己某篇是否已分享 / 撤下 / 举报
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/shared/articles/<stem>.json   # → {shared,shareId?}
+curl -s -X POST -H "Authorization: Bearer $APPLE_SESSION" https://jianshuo.dev/files/api/community/unshare/<shareId>   # 仅限自己的帖，403 not owner
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -d '{"reason":"垃圾内容"}' https://jianshuo.dev/files/api/community/report/<shareId>   # 立即隐藏待审
 ```
 
 ---
 
 ## 工作流：distill —— 蒸馏文风并上传
+
+> 现在有**两条路**：① App 同款的服务端一键蒸馏——`POST /style/collect` 攒语料 → `POST /agent/style/extract`（见上面「文风语料」小节），交给服务器后台跑；② 下面的本地手工蒸馏——自己挑文章、自己派子 agent 提炼、预览确认后 PUT，可控性最强。
 
 从样本文章提炼可执行的「文风规则」，写进 `CLAUDE.md`，让 miner 自动带上。
 
