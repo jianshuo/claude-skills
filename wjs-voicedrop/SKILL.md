@@ -94,6 +94,11 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 | | 写（版本化） | `PUT /files/api/style` |
 | | 版本历史 | `GET /files/api/style/history` |
 | | 切版本(撤销/重做) | `PATCH /files/api/style/head` |
+| **文风语料(偷师)** | 收一条样本 | `POST /files/api/style/collect` |
+| | 语料清单 | `GET /files/api/style/dataset` |
+| | 清空语料 | `DELETE /files/api/style/dataset` |
+| **蒸馏/重挖** | 服务端蒸馏文风 | `POST /agent/style/extract` |
+| | 单篇按某版文风重挖 | `POST /agent/restyle` |
 | **照片** | 列出 | `GET /files/api/list`（筛 `photos/`） |
 | | 上传 | `PUT /files/api/upload/photos/<sessionTs>/<offset>-<rand>.jpg` |
 | | 下载(私有) | `GET /files/api/download/photos/<...>.jpg` |
@@ -106,8 +111,19 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 | | 账单流水 | `GET /agent/usage/ledger?limit=N` |
 | **分享** | 生成公开链接 | `GET /files/api/share/articles/<stem>.json` |
 | **公众号** | 发/更新草稿 | `POST /files/api/wechat/articles/<stem>.json` |
+| | 封面图库(公开) | `GET /files/api/asset/wechat-covers/` |
+| **社区** | 分享文章到社区 | `POST /files/api/community/share/articles/<stem>.json`（需 Apple 登录） |
+| | 信息流 | `GET /files/api/community/list` |
+| | 读一条(含全文/照片) | `GET /files/api/community/get/<shareId>` |
+| | 回复列表 | `GET /files/api/community/replies/<shareId>` |
+| | 某文章是否已分享 | `GET /files/api/community/shared/articles/<stem>.json` |
+| | 撤下自己的分享 | `POST /files/api/community/unshare/<shareId>`（需 Apple 登录） |
+| | 举报 | `POST /files/api/community/report/<shareId>` |
 | **身份** | 我是谁 | `GET /files/api/whoami` |
+| | Apple 登录换 session | `POST /files/api/auth/apple` |
+| | 领 24h 只读 token | `GET /files/api/token/articles` |
 | **通用文件** | 删除任意文件 | `DELETE /files/api/file/<name>` |
+| **UI 配置** | 长按菜单配置 | `GET /agent/ui-config` |
 
 ---
 
