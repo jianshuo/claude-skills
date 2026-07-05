@@ -181,6 +181,8 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/a
 
 边车写入：`PUT .../articles/<stem>/srt`（body=SRT 文本）、`/empty`（body `{"reason":"no-speech"}`）、`/blocked`（body `{"reason":"no-credit"}`）。
 
+**标签 tags**：HTTP 侧只读——列表接口带出 `tags` 数组；写入没有专门端点，靠语音库指令（`/agent/command` WS 里的 `tag_article` 工具，可 `remove:true` 删）。要用 HTTP 改标签，只能 `PUT` 整篇文章 doc 时带上顶层 `tags` 字段。
+
 ---
 
 ## 文风（版本化 /style）
