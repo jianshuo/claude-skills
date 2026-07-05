@@ -224,6 +224,36 @@ curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application
 #   注意：回滚到旧版后再 PUT，会先截掉 head 之后的「未来」版本再追加新版（git HEAD 式）
 ```
 
+### 文风语料（偷师）+ 服务端蒸馏 + 单篇重挖
+
+App 的「偷师」功能：先往语料库收样本，攒够了让服务端一键蒸馏成新文风版本。
+
+```bash
+# 收一条语料样本（type/title/source 可选）
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"type":"article","title":"样本标题","text":"样本正文……","source":"web"}' \
+  https://jianshuo.dev/files/api/style/collect
+# → {ok:true, id}    空 text → 400 empty_text    （落在 <scope>style/<id>.json）
+
+# 看语料清单（只有元数据，不含正文）
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/dataset
+# → {items:[{id,type,title,chars,source,collectedAt}], count, totalChars}
+
+# 清空语料库
+curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/dataset
+# → {ok:true, deleted:N}
+
+# 服务端蒸馏：把语料库蒸成新文风（后台跑，落成 CLAUDE.json 新版本 + 自动生成一篇「你的写作风格」介绍文章）
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"clearAfter":true}' https://jianshuo.dev/agent/style/extract
+# → {ok:true}（异步）   语料不够 → 400 insufficient-corpus {totalChars,min} / 400 empty-dataset / 500 distill-failed
+
+# 单篇重挖：用某个文风版本把一条录音重新挖一遍（同步，等结果）
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"stem":"VoiceDrop-2026-07-02-...","styleV":3}' https://jianshuo.dev/agent/restyle
+# → 200 重挖结果；失败 → 422；参数错 → 400 bad-request    （styleV 不传=当前 head）
+```
+
 ---
 
 ## 照片 photos
