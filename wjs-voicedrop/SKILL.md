@@ -20,7 +20,7 @@ VoiceDrop 后端的完整 HTTP 接口工具箱。所有资源（文章、文风�
 
 ## 认证（用户 token，优先 6+4 设备配对）
 
-所有接口（除公开的 `GET /files/api/photo/*`）都要 `Authorization: Bearer $TOKEN`。token 取用户自己的凭证：
+所有接口都要 `Authorization: Bearer $TOKEN`，例外是几个公开端点：`GET /files/api/photo/*`（公开照片）、`GET /files/api/asset/wechat-covers/*`（公众号封面图库）、`GET /voicedrop/<id>`（分享页 HTML，`?s=<index>` 选第几节）。token 取用户自己的凭证：
 
 ```bash
 # 6+4 手机设备配对登录（本 skill 自带的 vd-login.mjs 存下来的用户身份）
