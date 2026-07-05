@@ -7,14 +7,14 @@ description: VoiceDrop 账号的完整 API 工具箱——文章(list/read/write
 
 > **安装**：本 skill = 这个目录。把它放到 `~/.claude/skills/wjs-voicedrop/` 即装好——`git clone https://github.com/jianshuo/claude-skills` 后 `cp -R wjs-voicedrop ~/.claude/skills/`（或直接对 Claude Code 说「安装 https://github.com/jianshuo/claude-skills/tree/main/wjs-voicedrop」）。登录脚本 `vd-login.mjs` 需 Node ≥ 20。
 
-VoiceDrop 后端的完整 HTTP 接口工具箱。所有资源（文章、文风、照片、音频）都能列出、读、写；还能触发挖矿、查算力、发公众号。**先认证拿 `$TOKEN`，再调任意接口。**
+VoiceDrop 后端的完整 HTTP 接口工具箱。所有资源（文章、文风、照片、音频）都能列出、读、写；还能触发挖矿、蒸馏文风、单篇重挖、查算力、发公众号、逛社区。**先认证拿 `$TOKEN`，再调任意接口。**
 
 两个 base URL：
 
 | 服务 | Base URL | 提供 |
 |---|---|---|
-| Files API（Cloudflare Pages） | `https://jianshuo.dev/files/api` | 文件/文章/照片/音频/分享/公众号 |
-| Agent Worker（Durable Objects） | `https://jianshuo.dev/agent` | 挖矿触发、算力余额/账单、语音编辑(WS)、设备配对 |
+| Files API（Cloudflare Pages） | `https://jianshuo.dev/files/api` | 文件/文章/文风(含语料)/照片/音频/分享/公众号/社区/Apple 登录 |
+| Agent Worker（Durable Objects） | `https://jianshuo.dev/agent` | 挖矿触发、文风蒸馏、单篇重挖、算力余额/账单、语音编辑(WS)、库指令(WS)、设备配对 |
 
 ---
 
