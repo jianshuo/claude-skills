@@ -395,10 +395,29 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -d '{"reason":"垃圾内容"}'
 
 ## 实时接口（WebSocket，了解即可，curl 调不动）
 
-- `wss://jianshuo.dev/agent/edit?stem=<stem>` — 语音编辑某篇文章（App 持麦克风串行发指令）。
+- `wss://jianshuo.dev/agent/edit?stem=<stem>` — 语音编辑某篇文章（App 持麦克风串行发指令；发 `{type:"instruct",text,images?,articleIndex?}`，收 `snapshot/status/updated/reply/error`；每篇上限 100 次编辑，算力不足回 `no-credit`）。
+- `wss://jianshuo.dev/agent/command` — **库级语音指令**（LibraryAgent DO）：跨文章操作——合并、删除、重挖、打标签（`tag_article`）、改文风等；删这类破坏性操作有 `confirm/cancel` 二次确认往返。
 - `wss://jianshuo.dev/agent/status` — 实时挖矿状态推送（待处理→听录音→挖文章→已成文）。
 - `wss://jianshuo.dev/agent/asr` — 火山流式 ASR 代理（语音听写）。
-- `/agent/link/*` — 设备配对（6+4）协议端点，由本 skill 自带的 `vd-login.mjs` 封装（见上面「6+4 自助登录」）。
+- `/agent/link/*`（`start/verify/complete/cancel` + `wss …/link/socket`） — 设备配对（6+4）协议端点，由本 skill 自带的 `vd-login.mjs` 封装（见上面「6+4 自助登录」）。
+
+---
+
+## Admin 专用端点（需要 `FILES_TOKEN`，普通用户 token 调不动）
+
+日常用不到，列出来备查（管理员 = Cloudflare 环境变量 `FILES_TOKEN` 持有者）：
+
+| 端点 | 用途 |
+|---|---|
+| `GET /files/api/articles/<sub>`、`/style/<sub>/...` | 以任意用户身份读写文章/文风（路径多一段用户 sub） |
+| `GET /files/api/community/reports` / `POST /files/api/community/resolve/<shareId>` | 看举报队列 / 裁决（body `{action:"remove"\|"restore"}`） |
+| `POST /agent/usage/grant`、`POST /agent/usage/grant/batch` | 给用户送算力（可 `expire_days` 过期、`all:true` 全员） |
+| `GET /agent/usage/admin/accounts` | 全部账户余额一览 |
+| `GET /files/api/llmlog/dates|list`、`GET /files/api/minelog/dates|list` | LLM 调用日志 / 挖矿日志 |
+| `GET /agent/llm-health` | Anthropic 直连 vs ENAM relay 健康探针 |
+| `POST /agent/notify` | 手动往某用户 StatusHub 推状态 |
+| `GET|PUT /agent/prompt-registry`、`/agent/prompt-lab/*` | 挖矿 prompt 调优台（prompt.jianshuo.dev 用） |
+| `POST /agent/paint-callback` | paint.jianshuo.dev 画图回调（专用 `PAINT_CALLBACK_TOKEN`，不是给人调的） |
 
 ---
 
@@ -407,9 +426,14 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -d '{"reason":"垃圾内容"}'
 | 错误 | 修正 |
 |---|---|
 | `401 unauthorized` | token 没设/过期 → 重走上面「6+4 自助登录」，或 App 设置重新复制 |
-| `403 forbidden` / `read-only token` | 用户 token 只能动自己 scope；写社区（share）需 Apple 登录过的 session；24h 临时 token 只能 list/download |
+| `403 forbidden` / `read-only token` | 用户 token 只能动自己 scope；24h 临时 token 只能 list/download |
+| `403 needs_apple_signin` | 社区 share/unshare 必须用 Apple 登录的 session token，anon token 不行 |
+| `403 content_flagged` | 社区分享被关键词审核拦下（返回 `{categories}` 或 `{term}`） |
 | `articles` 返回空数组 | 还没成文 → 触发挖矿或等 miner |
 | `404 not found`（文章） | stem 写错 |
 | `409 wechat_not_configured` | 该用户没配公众号 appid/secret（App 设置里填） |
 | 照片 `400 not a photo` | `/photo/` 公开接口的 key 必须匹配 `users/<id>/photos/*.(jpg|jpeg|png)` |
+| `400 insufficient-corpus` / `empty-dataset` | 语料不够蒸馏——先 `POST /style/collect` 攒够 `min` 字数 |
+| `restyle` 回 422 | 重挖失败（看 body 里的原因；styleV 是否存在、录音是否还在） |
+| usage 接口回 `degraded:true` | 算力子系统暂不可用（fail-soft），不是余额为 0，稍后重试 |
 | 上传文风后 App 没变 | 切离再切回「设置」tab 重新加载 |
