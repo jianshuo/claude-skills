@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-05]
+
+### Changed
+
+- **`wjs-voicedrop`** — full server API sync (16 commits) expanding the toolkit with four new resource categories and a set of admin endpoints:
+  - **文风语料（偷师）**: three new endpoints — `POST /files/api/style/collect` (add a sample article to the style corpus), `GET /files/api/style/dataset` (list corpus metadata: item count and total chars, no full text), `DELETE /files/api/style/dataset` (wipe the corpus). Corpus items live under `<scope>style/<id>.json`.
+  - **服务端蒸馏** (`POST /agent/style/extract`): distills the accumulated corpus into a new versioned `CLAUDE.json` style entry in the background; also auto-generates a「你的写作风格」intro article. Requires a minimum corpus size (`totalChars` ≥ `min`); accepts `clearAfter: true` to wipe corpus after success. Errors: `400 insufficient-corpus` / `400 empty-dataset` / `500 distill-failed`.
+  - **单篇重挖** (`POST /agent/restyle`): re-mines a single recording with a specific style version (`styleV` defaults to current head). Runs synchronously and returns the restyle result; `422` on failure, `400 bad-request` on bad params.
+  - **社区** (Community feed): full set of endpoints — info-feed (`GET /files/api/community/list`), read a post with full body + photos + author (`GET .../get/<shareId>`), reply list (`GET .../replies/<shareId>`), share an article (`POST .../share/articles/<stem>.json`, optionally with `replyTo`), check if already shared (`GET .../shared/articles/<stem>.json`), unshare (`POST .../unshare/<shareId>`), report (`POST .../report/<shareId>`). Share and unshare require an Apple login session (`403 needs_apple_signin` otherwise); read operations accept any valid token. Shares are live pointers — editing the source article updates the community post instantly.
+  - **Apple 登录** (`POST /files/api/auth/apple`): exchanges a Sign in with Apple `identityToken` for a session token scoped to `users/<sub>/`; required for all community write operations.
+  - **Admin 专用端点**: documented a set of `FILES_TOKEN`-gated admin-only endpoints: per-user article/style read-write, community report queue and moderation (`resolve` with `remove`/`restore`), compute grant (single and batch, with optional expiry or `all:true`), full account balance list, LLM/mine log viewers, Anthropic health probe (direct vs ENAM relay), manual StatusHub push, prompt registry for mining prompt tuning, and the paint callback endpoint.
+- **README** — updated `wjs-voicedrop` skills-table entry and dedicated section to reflect style corpus/偷师, server-side extraction, single-article restyle, community feed, Apple login, and admin endpoint additions; added `偷师` / `重新挖` / `voicedrop 社区` to the trigger-word list.
+
 ## [2026-07-04]
 
 ### Changed
