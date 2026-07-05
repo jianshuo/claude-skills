@@ -173,7 +173,7 @@ curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application
   -d '{"head":2}' https://jianshuo.dev/files/api/articles/<stem>/head     # 只移指针，不新增版本
 ```
 
-**删除**（连 `.srt/.empty/.blocked` 边车一起删，**不删音频**）：
+**删除**（连 `.srt/.empty/.blocked/.tags` 边车一起删，**不删音频**）：
 
 ```bash
 curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles/<stem>
