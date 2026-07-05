@@ -29,12 +29,14 @@ TOKEN=$(python3 -c "import json;print(json.load(open('$CRED'))['token'])")
 SCOPE=$(python3 -c "import json;print(json.load(open('$CRED'))['scope'])")   # users/anon-xxxx/
 ```
 
-**两种取 token 的方式（都是同一个用户、只能访问自己的数据）：**
+**取 token 的方式（都只能访问自己 scope 的数据）：**
 
 | 方式 | token 形态 | scope（能看谁） | 怎么拿 |
 |---|---|---|---|
 | **6+4 设备配对** | `anon_…`（该用户的完整密钥） | 该用户自己 `users/anon-<hash>/` | 下面「自助登录」流程，凭证落 `~/.config/voicedrop/credentials` |
 | **App 临时** | `anon_…` | 该用户自己 | App 设置 → 账户/访问令牌 → 复制 |
+| **Apple 登录 session** | JWT（HS256，带 `apple` 标记） | 该用户自己 `users/<sub>/` | `POST /files/api/auth/apple`，body `{identityToken}`（App 内 Sign in with Apple 后端换发）→ `{session,scope}`。**写社区必须用这种** |
+| **24h 只读 token** | 短期 token（`ro:true`） | 该用户自己，仅 `list`/`download` | `GET /files/api/token/articles` → `{token,url,expires_in:86400}`，用于把文章列表只读地交给外部工具；干别的一律 403 `read-only token` |
 
 ### 6+4 自助登录（本 skill 自带，无需别的 skill）
 
