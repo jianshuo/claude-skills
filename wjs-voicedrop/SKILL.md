@@ -413,7 +413,7 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -d '{"reason":"垃圾内容"}'
 | `GET /files/api/community/reports` / `POST /files/api/community/resolve/<shareId>` | 看举报队列 / 裁决（body `{action:"remove"\|"restore"}`） |
 | `POST /agent/usage/grant`、`POST /agent/usage/grant/batch` | 给用户送算力（可 `expire_days` 过期、`all:true` 全员） |
 | `GET /agent/usage/admin/accounts` | 全部账户余额一览 |
-| `GET /files/api/llmlog/dates|list`、`GET /files/api/minelog/dates|list` | LLM 调用日志 / 挖矿日志 |
+| `GET /files/api/llmlog/dates`、`/llmlog/list?date=`、`/minelog/dates`、`/minelog/list?date=` | LLM 调用日志 / 挖矿日志 |
 | `GET /agent/llm-health` | Anthropic 直连 vs ENAM relay 健康探针 |
 | `POST /agent/notify` | 手动往某用户 StatusHub 推状态 |
 | `GET|PUT /agent/prompt-registry`、`/agent/prompt-lab/*` | 挖矿 prompt 调优台（prompt.jianshuo.dev 用） |
