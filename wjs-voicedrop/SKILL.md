@@ -333,7 +333,8 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api
 curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/agent/usage/balance
 # → {suanli, yuan, granted_suanli, spent_suanli}   （23 算力 = ¥1）
 curl -s -H "Authorization: Bearer $TOKEN" "https://jianshuo.dev/agent/usage/ledger?limit=50"
-# → {entries:[{ts(毫秒), kind:grant|spend, reason:signup|asr|mine|edit|campaign:*, suanli, balance_suanli, detail}]}
+# → {entries:[{ts(毫秒), kind:grant|spend, reason:signup|asr|mine|edit|image-edit|campaign:*, suanli, balance_suanli, detail}]}
+# 注意：usage 子系统 fail-soft——内部出错时返回 200 {error:"usage-unavailable",degraded:true}，别当成余额为 0
 ```
 
 **生成公开分享链接 / 发公众号草稿**：
