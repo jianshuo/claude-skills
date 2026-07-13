@@ -1,449 +1,125 @@
 ---
 name: wjs-voicedrop
-description: VoiceDrop 账号的完整 API 工具箱——文章(list/read/write/版本/删除/边车/标签)、文风(读写/版本/语料偷师 collect/dataset/服务端蒸馏 extract/单篇重挖 restyle)、照片/音频(列出/上传/下载)、触发挖矿(mine)、算力余额与账单、公开分享链接、发公众号草稿、社区(分享/浏览/回复/举报)。认证用用户自己的 token 且自带登录：6+4 手机设备配对(本 skill 内置 vd-login.mjs，自己就能登录)、App 复制的 anon token，或 Apple 登录 session。别名："vd"、"voicedrop"、"口述" 都指这个 app（口述 = VoiceDrop 这款语音口述 app），用户提到这三个词中任意一个、且涉及录音/文章/文风/照片/挖矿/算力/社区等操作，都用本 skill。触发词："vd"、"voicedrop"、"口述"、"口述 app"、"voicedrop api"、"voicedrop 登录"、"列出 voicedrop 文章/照片/录音"、"读/写 voicedrop 文章"、"voicedrop 触发挖矿"、"voicedrop 算力余额"、"蒸馏文风"、"偷师"、"重新挖"、"voicedrop 社区"、"/wjs-voicedrop"。
+description: VoiceDrop 的入口。所有能力都在 MCP 里（voicedrop.cn/mcp，32 个工具：文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币、算力、分享/公众号/小红书）。本 skill 只做一件事——把你接上那个 MCP：用它的 login 工具做 6+4 手机配对登录拿到令牌，然后接进客户端。触发词："voicedrop"、"登录 voicedrop"、"voicedrop 登录"、"接 voicedrop mcp"、"voicedrop token"、"/wjs-voicedrop"。
 ---
 
-# VoiceDrop API Skill
+# VoiceDrop
 
-> **安装**：本 skill = 这个目录。把它放到 `~/.claude/skills/wjs-voicedrop/` 即装好——`git clone https://github.com/jianshuo/claude-skills` 后 `cp -R wjs-voicedrop ~/.claude/skills/`（或直接对 Claude Code 说「安装 https://github.com/jianshuo/claude-skills/tree/main/wjs-voicedrop」）。登录脚本 `vd-login.mjs` 需 Node ≥ 20。
+**VoiceDrop 的全部能力都在 MCP 里。这个 skill 唯一的作用，是把你接上去。**
 
-VoiceDrop 后端的完整 HTTP 接口工具箱。所有资源（文章、文风、照片、音频）都能列出、读、写；还能触发挖矿、蒸馏文风、单篇重挖、查算力、发公众号、逛社区。**先认证拿 `$TOKEN`，再调任意接口。**
+## 先看：接上了吗？
 
-两个 base URL：
+会话里已经有 `list_articles`、`read_style`、`community_feed`、`credit_balance` 这些工具？
 
-| 服务 | Base URL | 提供 |
-|---|---|---|
-| Files API（Cloudflare Pages） | `https://jianshuo.dev/files/api` | 文件/文章/文风(含语料)/照片/音频/分享/公众号/社区/Apple 登录 |
-| Agent Worker（Durable Objects） | `https://jianshuo.dev/agent` | 挖矿触发、文风蒸馏、单篇重挖、算力余额/账单、语音编辑(WS)、库指令(WS)、设备配对 |
+**接上了。停止阅读本文件，直接用工具。**
+
+工具自带完整说明（参数、语义、花不花算力都写在描述里）。**本文件有意不重复它们**——重复就会漂移：改了 MCP 忘了改这里，你就会照着过期的文档干活。**单一真源是 MCP 自己。**
+
+没接上的话，往下走。全程两步：登录拿令牌 → 接进客户端。
 
 ---
 
-## 认证（用户 token，优先 6+4 设备配对）
+## 第一步：登录（MCP 的 `login` 工具，6+4 手机配对）
 
-所有接口都要 `Authorization: Bearer $TOKEN`，例外是几个公开端点：`GET /files/api/photo/*`（公开照片）、`GET /files/api/asset/wechat-covers/*`（公众号封面图库）、`GET /voicedrop/<id>`（分享页 HTML，`?s=<index>` 选第几节）。token 取用户自己的凭证：
+**一个工具，调两次。** 靠码的形状分辨阶段（6 位十六进制 / 4 位数字）：
 
-```bash
-# 6+4 手机设备配对登录（本 skill 自带的 vd-login.mjs 存下来的用户身份）
-CRED=~/.config/voicedrop/credentials
-TOKEN=$(python3 -c "import json;print(json.load(open('$CRED'))['token'])")
-SCOPE=$(python3 -c "import json;print(json.load(open('$CRED'))['scope'])")   # users/anon-xxxx/
+```
+login(code="a3f2b1")             → 手机弹出 4 位码，返回 pairing 句柄
+login(code="7391", pairing="…")  → 返回 anon_ 令牌
 ```
 
-**取 token 的方式（都只能访问自己 scope 的数据）：**
+**为什么两次往返省不掉**：4 位码是服务端在第一步**才随机生成**的——第一步之前它不存在。而且它是安全性的核心：6 位码可能同时匹配多个账号（最多 10 个），服务端给每个候选推**不同**的 4 位码。报对了，才同时证明「手机在你手上」和「你要的是哪个账号」。省掉它，猜个 6 位码 + 手机上误点一下就能被接管。
 
-| 方式 | token 形态 | scope（能看谁） | 怎么拿 |
-|---|---|---|---|
-| **6+4 设备配对** | `anon_…`（该用户的完整密钥） | 该用户自己 `users/anon-<hash>/` | 下面「自助登录」流程，凭证落 `~/.config/voicedrop/credentials` |
-| **App 临时** | `anon_…` | 该用户自己 | App 设置 → 账户/访问令牌 → 复制 |
-| **Apple 登录 session** | JWT（HS256，带 `apple` 标记） | 该用户自己 `users/<sub>/` | `POST /files/api/auth/apple`，body `{identityToken}`（App 内 Sign in with Apple 后端换发）→ `{session,scope}`。**写社区必须用这种** |
-| **24h 只读 token** | 短期 token（`ro:true`） | 该用户自己，仅 `list`/`download` | `GET /files/api/token/articles` → `{token,url,expires_in:86400}`，用于把文章列表只读地交给外部工具；干别的一律 403 `read-only token` |
+### MCP 还没接上，怎么调它的工具？
 
-### 6+4 自助登录（本 skill 自带，无需别的 skill）
-
-本目录自带 `vd-login.mjs`（零依赖，Node ≥ 20）——它扮演设备配对协议里的「新设备」，和手机（老设备）配一次对，把账号密钥**端到端加密**取到本地。**先查是否已登录**，没有再走两步握手：
+`login` 是**唯一免 token 的工具**（要 token 才能登录、要登录才能拿 token，那是死锁）。所以**不必先接 MCP，也不必装任何东西**——curl 直接打端点：
 
 ```bash
-VD=~/.claude/skills/wjs-voicedrop/vd-login.mjs
-node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","live":true}；未登录 → ok:false
+VD=https://voicedrop.cn/mcp
+call() {  # $1=工具名  $2=参数 JSON
+  curl -s -X POST "$VD" -H 'Content-Type: application/json' \
+    -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"$1\",\"arguments\":$2}}" \
+    | python3 -c "import json,sys;r=json.load(sys.stdin)['result'];t=r['content'][0]['text'];print('ERR: '+t if r['isError'] else t)"
+}
 ```
 
-**前提**：用户手机在线、app 在前台、已登录目标账号、是支持设备配对的版本。
+1. 问用户要手机 **设置 → 账户** 里的 **6 位十六进制码**：
 
-**两步握手（每条子命令只打印一行 JSON，按 `ok` 解析，别抓散文）：**
+   ```bash
+   call login '{"code":"a3f2b1"}'
+   # → {"pairing":"…", "next":"看手机——App 里会弹出一个 4 位数字码…"}
+   ```
 
-1. 问用户要 **6 位十六进制码**（手机 **设置 → 账户** 里那串短 ID）。
-2. `node "$VD" start <6hex>`：
-   - `{"ok":true,"pairingId":…,"matchCount":N}` → 告诉用户**手机这会儿会弹一个 4 位数字码**。
-   - `{"ok":false,"error":"no_match"}` → 6 位码错了，或手机离线/后台/旧版本 → 回第 1 步。
-3. 问用户要**手机上弹出的 4 位数字码**。
-4. `node "$VD" finish <4digit>`：
-   - `{"ok":true,"scope":"users/anon-…/"}` → 登录成功，凭证已写 `~/.config/voicedrop/credentials`（0600）。
-   - `{"ok":false,"error":"wrong_code","remaining":N}` → 码输错了，问对的再重跑 `finish`（配对还活着，共 5 次 / 2 分钟）。
-   - `{"ok":false,"error":"expired"|"too_many_attempts"|"timeout"|"cancelled"}` → 从第 1 步重来。
+2. **手机上会弹出 4 位数字码**（也会收到一条推送「有新设备要登录」）。问用户要那个码：
 
-其它子命令：`node "$VD" logout`（删凭证）。
+   ```bash
+   call login '{"code":"7391","pairing":"<上一步返回的 pairing 原样粘回来>"}'
+   # → {"token":"anon_…", "scope":"users/anon-…/", "next":"…"}
+   ```
 
-**安全须知（用户没听过就说一遍）**：这是把账号的**完整密钥**拷到磁盘，**不是**可吊销的子 token（VoiceDrop 的 anon 身份签不出子 token）。谁拿到 `~/.config/voicedrop/credentials` 就有该账号全部权限，且无法单独吊销这台机器。保持文件私有，**绝不**提交或同步到任何可读处。
+### 节奏很重要（这几条是真机上流血换来的）
 
-| 登录报错 | 原因 / 处理 |
+- **配对只活 2 分钟。** 拿到 6 位码**立刻**发起，拿到 4 位码**立刻**完成。**中间不要聊天、不要解释、不要顺手干别的**——超时就得整个重来。
+- **用户报完 4 位码后，多半会切回电脑。** App 一进后台，服务端的「放行」消息就送不到手机。这时手机会收到**第二条推送「确认登录」——提醒用户立刻点它**；或者手动把 App 切回前台，登录会自动完成（服务端存着待办，回前台自动补送）。
+- **手机没弹码？** 让用户把 App 切到前台就行——码会自动补送出来，不必重新发起。
+
+### 报错对照
+
+| 报错 | 含义 / 怎么办 |
 |---|---|
-| `no_match` | 6 位码错，或手机离线/后台/旧版本 |
-| `wrong_code` + `remaining` | 4 位码输错，用对的重跑 `finish`（5 次 / 2 分钟） |
-| `timeout` | 手机没响应——把 app 切到前台，从 `start` 重来 |
-| `cancelled` | 用户在手机上点了「不是我」 |
-| `expired` | `start` 到 `finish` 超过 2 分钟，重跑 `start` |
+| `没找到这个账号` | 6 位码抄错，或手机离线/未登录该账号 |
+| `验证码不对，还能再试 N 次` | 4 位码错了。配对还活着，**报个对的重调一次 `login` 就行**，别重来 |
+| `验证码不对，还能再试 ? 次` | **注意那个 `?`** —— 它说明配对已经不存在了（多半超过 2 分钟过期），**必须重新发起**，不是码错 |
+| `手机没有响应` | 手机没放行。让用户点「确认登录」推送，或把 App 切回前台 |
+| `你在手机上点了「不是我」` | 用户拒绝了这次登录 |
 
-**key 写法**：所有 key 都是相对自己 scope 的——文章 stem 直接写 `VoiceDrop-xxx`，文件名直接写 `photos/...`；服务端自动拼上你的 `users/anon-<hash>/` 前缀，越不出自己的数据。
+### 安全须知（用户没听过就说一遍）
 
----
+`login` 返回的是账号的**完整密钥**（`anon_…`）——**不可吊销、不会过期**，谁拿到它就拥有该账号的全部权限。而且它**会进入模型上下文和会话记录**。别贴到任何公开的地方。
 
-## 全部接口速查
-
-| 资源 | 操作 | 方法 + 路径 |
-|---|---|---|
-| **文章** | 列出 | `GET /files/api/articles` |
-| | 读 | `GET /files/api/articles/<stem>` |
-| | 写（版本化） | `PUT /files/api/articles/<stem>` |
-| | 版本历史 | `GET /files/api/articles/<stem>/history` |
-| | 切版本(撤销/重做) | `PATCH /files/api/articles/<stem>/head` |
-| | 删除(连边车) | `DELETE /files/api/articles/<stem>` |
-| | 写 SRT 边车 | `PUT /files/api/articles/<stem>/srt` |
-| | 标记无语音 | `PUT /files/api/articles/<stem>/empty` |
-| | 标记算力不足 | `PUT /files/api/articles/<stem>/blocked` |
-| **文风** | 读 | `GET /files/api/style` |
-| | 写（版本化） | `PUT /files/api/style` |
-| | 版本历史 | `GET /files/api/style/history` |
-| | 切版本(撤销/重做) | `PATCH /files/api/style/head` |
-| **文风语料(偷师)** | 收一条样本 | `POST /files/api/style/collect` |
-| | 语料清单 | `GET /files/api/style/dataset` |
-| | 清空语料 | `DELETE /files/api/style/dataset` |
-| **蒸馏/重挖** | 服务端蒸馏文风 | `POST /agent/style/extract` |
-| | 单篇按某版文风重挖 | `POST /agent/restyle` |
-| **照片** | 列出 | `GET /files/api/list`（筛 `photos/`） |
-| | 上传 | `PUT /files/api/upload/photos/<sessionTs>/<offset>-<rand>.jpg` |
-| | 下载(私有) | `GET /files/api/download/photos/<...>.jpg` |
-| | 下载(公开) | `GET /files/api/photo/<完整 R2 key>`（无需 token） |
-| **音频** | 列出(推荐) | `GET /files/api/recordings`（索引直出，~0.5s，含状态位） |
-| | 列出(通用) | `GET /files/api/list`（筛 `VoiceDrop-*.m4a`，全量 ~2.5s） |
-| | 上传 | `PUT /files/api/upload/VoiceDrop-<...>.m4a`（自动触发挖矿） |
-| | 下载 | `GET /files/api/download/VoiceDrop-<...>.m4a` |
-| **挖矿** | 触发 | `POST /agent/mine/trigger`（推荐）或 `POST /files/api/mine` |
-| **算力** | 余额 | `GET /agent/usage/balance` |
-| | 账单流水 | `GET /agent/usage/ledger?limit=N` |
-| **分享** | 生成公开链接 | `GET /files/api/share/articles/<stem>.json` |
-| **公众号** | 发/更新草稿 | `POST /files/api/wechat/articles/<stem>.json` |
-| | 封面图库(公开) | `GET /files/api/asset/wechat-covers/` |
-| **社区** | 分享文章到社区 | `POST /files/api/community/share/articles/<stem>.json`（需 Apple 登录） |
-| | 信息流 | `GET /files/api/community/list` |
-| | 读一条(含全文/照片) | `GET /files/api/community/get/<shareId>` |
-| | 回复列表 | `GET /files/api/community/replies/<shareId>` |
-| | 某文章是否已分享 | `GET /files/api/community/shared/articles/<stem>.json` |
-| | 撤下自己的分享 | `POST /files/api/community/unshare/<shareId>`（需 Apple 登录） |
-| | 举报 | `POST /files/api/community/report/<shareId>` |
-| **身份** | 我是谁 | `GET /files/api/whoami` |
-| | Apple 登录换 session | `POST /files/api/auth/apple` |
-| | 领 24h 只读 token | `GET /files/api/token/articles` |
-| **通用文件** | 删除任意文件 | `DELETE /files/api/file/<name>` |
-| **UI 配置** | 长按菜单配置 | `GET /agent/ui-config` |
+> 不想走配对？App 里 **设置 → 账户 → 访问令牌** 可以直接复制，效果一样。
 
 ---
 
-## 文章 articles（版本化 CRUD）
-
-**列出**（最新在前）：
+## 第二步：接进客户端
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles
-# → {"articles":[{stem,title,head,createdAt,updatedAt,count,tags?}]}   count=节数, head=当前版本号
-#   tags=标签数组（doc 顶层字段，语音 tag_article 工具写入，可 remove:true 删）；无标签时字段不出现
+claude mcp add voicedrop --transport http https://voicedrop.cn/mcp \
+  --header "Authorization: Bearer <上一步拿到的 token>"
 ```
 
-格式化展示：
+其它客户端（Claude 桌面版自定义连接器等）：URL 填 `https://voicedrop.cn/mcp`，自定义头填 `Authorization: Bearer <token>`。
 
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles | python3 -c "
-import json,sys; from datetime import datetime
-for a in json.load(sys.stdin).get('articles',[]):
-    dt=datetime.fromtimestamp(a['createdAt']/1000).strftime('%Y-%m-%d')
-    print(f\"  [{dt}] {a['title']}  (stem={a['stem']}, {a['count']} 节, v{a['head']})\")"
-```
+接上后用 `/mcp` 确认工具已加载，然后**正常使唤即可，不用再回到本文件**。
 
-**读全文**：
+**令牌的能力边界**（决定了哪些工具会报错）：
 
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles/<stem>
-# → {transcript, srt, articles:[{title,body}], createdAt, updatedAt, status, model, ...}
-#   body 是 Markdown 正文；[[photo:<relkey>]] 是内嵌照片标记
-```
+| 令牌 | 限制 |
+|---|---|
+| **anon**（6+4 配对 / App 复制的） | **不能发社区、不能投币**——那需要 Apple 或微信登录后的身份 |
+| **Apple / 微信 session** | 全功能 |
 
-**写**（版本化——每次 PUT 追加一个新版本，head 前移）：
-
-```bash
-curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"articles":[{"title":"新标题","body":"新正文..."}]}' \
-  https://jianshuo.dev/files/api/articles/<stem>
-# → {ok:true, head:<新版本号>}
-```
-
-**版本历史 / 切版本（撤销重做）**：
-
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles/<stem>/history
-# → {head, versions:[...]}
-curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"head":2}' https://jianshuo.dev/files/api/articles/<stem>/head     # 只移指针，不新增版本
-```
-
-**删除**（连 `.srt/.empty/.blocked/.tags` 边车一起删，**不删音频**）：
-
-```bash
-curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/articles/<stem>
-```
-
-边车写入：`PUT .../articles/<stem>/srt`（body=SRT 文本）、`/empty`（body `{"reason":"no-speech"}`）、`/blocked`（body `{"reason":"no-credit"}`）。
-
-**标签 tags**：HTTP 侧只读——列表接口带出 `tags` 数组；写入没有专门端点，靠语音库指令（`/agent/command` WS 里的 `tag_article` 工具，可 `remove:true` 删）。要用 HTTP 改标签，只能 `PUT` 整篇文章 doc 时带上顶层 `tags` 字段。
+碰到 `需要 Apple 登录` 之类的报错，就是这个原因：让用户在 App 里用 Apple/微信登录，再重新复制令牌。
 
 ---
 
-## 文风（版本化 /style）
+## MCP 唯一做不到的事
 
-挖矿时这份文风会被叠加进 system prompt。存储已升级为**版本化的 `CLAUDE.json`**（schema-3，和文章同一套 history / undo / 回滚），统一走 `/files/api/style`——别再用旧的 `download/upload CLAUDE.md`。
+**上传录音/照片这类二进制文件。**
 
-> **名字暂留 `CLAUDE.md`**：`# 我的名字` 仍由旧 `CLAUDE.md` 保管（作者抽取路径读它）；写入只往 `CLAUDE.json` 写文风正文，不再碰名字。端点名字里仍叫 `CLAUDE.md` 只是历史包袱，实际读写的是 `CLAUDE.json`。
+这是**物理限制，不是偷懒**：MCP server 跑在远端，读不到你本地的文件；唯一的办法是把文件 base64 塞进模型上下文——几 MB 的二进制流进 LLM，是灾难。
 
-**读当前文风**：
-
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style
-# → {style, name, styles, head, createdAt, updatedAt, default?}
-#   name=作者名；styles=App 里选中的预设风格编号数组(≤3)；default:true=还没存过、返回的是默认王建硕文风
-# 还没存过 CLAUDE.json、只有旧 CLAUDE.md → {style, name, head:0, legacy:true}
-#   legacy:true = 读的是旧 md 的「# 我的文风」段；首次 PUT 即落 CLAUDE.json、旧 md 退役
-# 两者都没有 → 404
-```
-
-**写（版本化——每次 PUT 追加一个新版本，head 前移）**：
+正常路径是**在 App 里录**。真要从命令行传：
 
 ```bash
-curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"style":"单句成段，段落 1–3 句居多；多用具体数字……"}' \
-  https://jianshuo.dev/files/api/style
-# → {ok:true, head:<新版本号>}    空 style → 400 empty_content
-#   body 可选带 "source":"agent"（默认用户 token 记为 app）
-#   body 还可带 "name"（作者名）和 "styles"（≤3 个预设风格编号）——只改这两个（不带 style）是改 profile，不新增版本
-```
-
-**版本历史 / 回滚（撤销重做，只移 head 指针、不新增版本）**：
-
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/history
-# → {head, versions:[{v, savedAt, source, style}]}    oldest-first，最多留 10 版
-curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"head":2}' https://jianshuo.dev/files/api/style/head      # 回滚到 v2
-# → {ok:true, head:2}    版本号不存在 → 404
-#   注意：回滚到旧版后再 PUT，会先截掉 head 之后的「未来」版本再追加新版（git HEAD 式）
-```
-
-### 文风语料（偷师）+ 服务端蒸馏 + 单篇重挖
-
-App 的「偷师」功能：先往语料库收样本，攒够了让服务端一键蒸馏成新文风版本。
-
-```bash
-# 收一条语料样本（type/title/source 可选）
-curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"type":"article","title":"样本标题","text":"样本正文……","source":"web"}' \
-  https://jianshuo.dev/files/api/style/collect
-# → {ok:true, id}    空 text → 400 empty_text    （落在 <scope>style/<id>.json）
-
-# 看语料清单（只有元数据，不含正文）
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/dataset
-# → {items:[{id,type,title,chars,source,collectedAt}], count, totalChars}
-
-# 清空语料库
-curl -s -X DELETE -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/style/dataset
-# → {ok:true, deleted:N}
-
-# 服务端蒸馏：把语料库蒸成新文风（后台跑，落成 CLAUDE.json 新版本 + 自动生成一篇「你的写作风格」介绍文章）
-curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"clearAfter":true}' https://jianshuo.dev/agent/style/extract
-# → {ok:true}（异步）   语料不够 → 400 insufficient-corpus {totalChars,min} / 400 empty-dataset / 500 distill-failed
-
-# 单篇重挖：用某个文风版本把一条录音重新挖一遍（同步，等结果）
-curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"stem":"VoiceDrop-2026-07-02-...","styleV":3}' https://jianshuo.dev/agent/restyle
-# → 200 重挖结果；失败 → 422；参数错 → 400 bad-request    （styleV 不传=当前 head）
-```
-
----
-
-## 照片 photos
-
-没有专门的「列照片」接口——用通用 `GET /list` 筛 `photos/`：
-
-```bash
-# 列出本账号所有照片（最新在前，按 uploaded 真实时间）
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/list \
-  | python3 -c "import json,sys
-ph=[f for f in json.load(sys.stdin)['files'] if f['name'].startswith('photos/') or '/photos/' in f['name']]
-ph.sort(key=lambda f:f.get('uploaded',''), reverse=True)   # R2 上传时间倒序=最新在前
-[print(f.get('uploaded',''),f['name'],f['size']) for f in ph]"
-
-# 下载（私有，scoped）
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://jianshuo.dev/files/api/download/photos/<sessionTs>/<offset>-<rand>.jpg" -o out.jpg
-
-# 下载（公开，无需 token——任何展示面都走这个；key 必须是完整 R2 key）
-curl -s "https://jianshuo.dev/files/api/photo/users/<sub>/photos/<sessionTs>/<offset>-<rand>.jpg" -o out.jpg
-
-# 上传（≤1200px 方形 JPEG）
-curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: image/jpeg" \
-  --data-binary @photo.jpg \
-  "https://jianshuo.dev/files/api/upload/photos/<sessionTs>/<offset>-<rand>.jpg"
-```
-
-**命名约定**：`photos/<sessionTs>/<offset>-<rand>.jpg`。`sessionTs`=录音开始的 `yyyy-MM-dd-HHmmss`；`offset`=距录音起点的整数秒；`<rand>`=3 位 base36 防同秒撞 key。正文里引用照片用 `[[photo:photos/<sessionTs>/<offset>-<rand>.jpg]]`（token 就是相对 key）。
-
----
-
-## 音频 audio（录音）
-
-**首选专用 `GET /recordings`**（2026-07-13 起）：索引直出（~0.5s，别再全量 `/list` 了），每条自带四个状态位，App「我的录音」同款数据源：
-
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/recordings
-# → {recordings:[{name,uploaded,hasArticles,isEmpty,blocked,hasTags}]}
-#   hasArticles=已成文  isEmpty=无语音  blocked=算力不足/过长  hasTags=挖矿前预置标签
-#   不排序——要最新在前就按 uploaded 倒序（ISO-8601 UTC，字典序==时间序）
-```
-
-老办法（通用 `GET /list` 筛 `VoiceDrop-*.m4a`，全量 ~2.5s，仅当需要连其他文件一起看时用）：
-
-> **顺序**：`/articles` 端点服务端就按 `createdAt` 倒序（最新在前）。`/list` 是通用接口**不排序**，返回 R2 原始字典序。**别按文件名排**——名字里的时间戳不是可靠时钟（时钟偏差、staging/改名、导入的文件都可能对不上）；要排就按 `uploaded`（R2 上传时间，ISO-8601 UTC 字符串，字典序==时间序）。下面的例子已按 `uploaded` 倒序，和 App「我的录音」一致。
-
-```bash
-# 列出所有录音（最新在前，按 uploaded 真实时间）
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/list \
-  | python3 -c "import json,sys
-recs=[f for f in json.load(sys.stdin)['files'] if f['name'].endswith('.m4a')]
-recs.sort(key=lambda f:f.get('uploaded',''), reverse=True)   # R2 上传时间倒序=最新在前
-[print(f.get('uploaded',''),f['name'],f['size']) for f in recs]"
-
-# 下载
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://jianshuo.dev/files/api/download/VoiceDrop-2026-06-20-143052-...m4a" -o rec.m4a
-
-# 上传（leaf 是 VoiceDrop-*.m4a → 自动触发挖矿）
-curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: audio/mp4" \
+# 文件名必须纯 ASCII；leaf 是 VoiceDrop-*.m4a 会自动触发挖矿
+curl -s -X PUT -H "Authorization: Bearer <token>" -H "Content-Type: audio/mp4" \
   --data-binary @rec.m4a \
   "https://jianshuo.dev/files/api/upload/VoiceDrop-<ts>-<dur>-<weekday>-<period>.m4a"
 ```
 
-**命名约定**：`VoiceDrop-<ts>-<dur>-<weekday>-<period>[-<city>-<district>].m4a`（全 ASCII）。**处理状态**靠边车判断：`articles/<stem>.json` 存在=已成文；`.empty`=无语音；`.blocked`=算力不足/录音过长。
+传完用 MCP 的 `trigger_mining` 催一下，`list_articles` 看结果。
 
 ---
 
-## 操作
-
-**触发挖矿**（处理待处理录音）：
-
-```bash
-# 推荐：Worker 直连，任何有效 token 都行
-curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/agent/mine/trigger
-# → 202 queued（Miner DO 接单；服务端每 6 小时也有 cron 自动扫一遍）
-# 备用：Pages 转发
-curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/mine   # → {ok:true}
-```
-
-完整挖矿语义（ASR→Claude→多文章）见 `/wjs-mining-voicedrop`。
-
-**算力余额 + 账单**：
-
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/agent/usage/balance
-# → {suanli, yuan, granted_suanli, spent_suanli}   （23 算力 = ¥1）
-curl -s -H "Authorization: Bearer $TOKEN" "https://jianshuo.dev/agent/usage/ledger?limit=50"
-# → {entries:[{ts(毫秒), kind:grant|spend, reason:signup|asr|mine|edit|image-edit|campaign:*, suanli, balance_suanli, detail}]}
-# 注意：usage 子系统 fail-soft——内部出错时返回 200 {error:"usage-unavailable",degraded:true}，别当成余额为 0
-```
-
-**生成公开分享链接 / 发公众号草稿**：
-
-```bash
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/share/articles/<stem>.json
-# → {url:"https://jianshuo.dev/voicedrop/<id>"}    分享页可加 ?s=<index> 直达第几节
-curl -s -X POST -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/wechat/articles/<stem>.json
-# → {ok,created,updated} / 409 wechat_not_configured / 502 {errcode,errmsg}
-# 公众号封面图库（公开）：GET /files/api/asset/wechat-covers/ → {covers}；GET /files/api/asset/wechat-covers/<名字> 取图
-```
-
----
-
-## 社区 community（VD 社区信息流）
-
-读随便看（任何有效 token）；**写（share/unshare）必须是 Apple 登录的 session**，否则 403 `needs_apple_signin`。分享出去的是「指针」——社区帖实时读你文章的当前版本，改文章社区跟着变。
-
-```bash
-# 信息流（最新在前；mine=true 是自己发的；replyTo 有值=这是条回复）
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/list
-# → {posts:[{shareId,author,title,firstSharedAt,updatedAt,count,mine,replyTo?}]}
-
-# 读一条（全文 + 照片 + 作者）
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/get/<shareId>
-# → 帖子 + articles + owner + photos    404 not found
-
-# 某条帖子的回复（最旧在前）
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/replies/<shareId>
-
-# 把自己一篇文章分享到社区（body 可带 {"replyTo":"<shareId>"} 作为回复）
-curl -s -X POST -H "Authorization: Bearer $APPLE_SESSION" \
-  https://jianshuo.dev/files/api/community/share/articles/<stem>.json
-# → {ok,shareId}    403 needs_apple_signin / 403 content_flagged（关键词审核没过）/ 400 empty article
-
-# 查自己某篇是否已分享 / 撤下 / 举报
-curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/community/shared/articles/<stem>.json   # → {shared,shareId?}
-curl -s -X POST -H "Authorization: Bearer $APPLE_SESSION" https://jianshuo.dev/files/api/community/unshare/<shareId>   # 仅限自己的帖，403 not owner
-curl -s -X POST -H "Authorization: Bearer $TOKEN" -d '{"reason":"垃圾内容"}' https://jianshuo.dev/files/api/community/report/<shareId>   # 立即隐藏待审
-```
-
----
-
-## 工作流：distill —— 蒸馏文风并上传
-
-> 现在有**两条路**：① App 同款的服务端一键蒸馏——`POST /style/collect` 攒语料 → `POST /agent/style/extract`（见上面「文风语料」小节），交给服务器后台跑；② 下面的本地手工蒸馏——自己挑文章、自己派子 agent 提炼、预览确认后 PUT，可控性最强。
-
-从样本文章提炼可执行的「文风规则」，写进 `CLAUDE.md`，让 miner 自动带上。
-
-1. `GET /articles` 列出 → 请用户选 **3–6 篇**（<3 篇提醒指纹不稳）。
-2. 逐篇 `GET /articles/<stem>`，取 `articles[*].body`（不要 `transcript` 口述原文）。
-3. 派子 agent 分析（隔离上下文）：「提炼这位作者**最突出、可执行**的语言习惯：句长偏好、段落密度、人称、词汇倾向、论证方式、结尾习惯、绝不做的事。**只分析怎么写，不分析思想立场。**输出 15–20 条 bullet，每条一句，用『用 X』『不用 Y』『X 必须在 Y 前』这种可执行语言。」
-4. 回收润色：每条要能被不认识该作者的模型直接照做（「喜欢短句」太模糊；「单句成段，段落 1–3 句居多」才够用）。去掉与服务器 SYSTEM prompt 重复的。
-5. 组装文风正文，**预览给用户确认后**用上面的 `PUT /files/api/style`（JSON body `{"style":"…"}`）上传；落为新版本，随时可 `PATCH /style/head` 回滚。（名字不在这里写——它仍留在旧 `CLAUDE.md`。）
-6. 成功 → 告知「下次录音挖文章时自动生效」。
-
----
-
-## 实时接口（WebSocket，了解即可，curl 调不动）
-
-- `wss://jianshuo.dev/agent/edit?stem=<stem>` — 语音编辑某篇文章（App 持麦克风串行发指令；发 `{type:"instruct",text,images?,articleIndex?}`，收 `snapshot/status/updated/reply/error`；每篇上限 100 次编辑，算力不足回 `no-credit`）。
-- `wss://jianshuo.dev/agent/command` — **库级语音指令**（LibraryAgent DO）：跨文章操作——合并、删除、重挖、打标签（`tag_article`）、改文风等；删这类破坏性操作有 `confirm/cancel` 二次确认往返。
-- `wss://jianshuo.dev/agent/status` — 实时挖矿状态推送（待处理→听录音→挖文章→已成文）。
-- `wss://jianshuo.dev/agent/asr` — 火山流式 ASR 代理（语音听写）。
-- `/agent/link/*`（`start/verify/complete/cancel` + `wss …/link/socket`） — 设备配对（6+4）协议端点，由本 skill 自带的 `vd-login.mjs` 封装（见上面「6+4 自助登录」）。
-
----
-
-## Admin 专用端点（需要 `FILES_TOKEN`，普通用户 token 调不动）
-
-日常用不到，列出来备查（管理员 = Cloudflare 环境变量 `FILES_TOKEN` 持有者）：
-
-| 端点 | 用途 |
-|---|---|
-| `GET /files/api/articles/<sub>`、`/style/<sub>/...` | 以任意用户身份读写文章/文风（路径多一段用户 sub） |
-| `GET /files/api/community/reports` / `POST /files/api/community/resolve/<shareId>` | 看举报队列 / 裁决（body `{action:"remove"\|"restore"}`） |
-| `POST /agent/usage/grant`、`POST /agent/usage/grant/batch` | 给用户送算力（可 `expire_days` 过期、`all:true` 全员） |
-| `GET /agent/usage/admin/accounts` | 全部账户余额一览 |
-| `GET /files/api/llmlog/dates`、`/llmlog/list?date=`、`/minelog/dates`、`/minelog/list?date=` | LLM 调用日志 / 挖矿日志 |
-| `GET /agent/llm-health` | Anthropic 直连 vs ENAM relay 健康探针 |
-| `POST /agent/notify` | 手动往某用户 StatusHub 推状态 |
-| `GET`/`PUT /agent/prompt-registry`、`/agent/prompt-lab/*` | 挖矿 prompt 调优台（prompt.jianshuo.dev 用） |
-| `POST /agent/paint-callback` | paint.jianshuo.dev 画图回调（专用 `PAINT_CALLBACK_TOKEN`，不是给人调的） |
-
----
-
-## 常见错误
-
-| 错误 | 修正 |
-|---|---|
-| `401 unauthorized` | token 没设/过期 → 重走上面「6+4 自助登录」，或 App 设置重新复制 |
-| `403 forbidden` / `read-only token` | 用户 token 只能动自己 scope；24h 临时 token 只能 list/download |
-| `403 needs_apple_signin` | 社区 share/unshare 必须用 Apple 登录的 session token，anon token 不行 |
-| `403 content_flagged` | 社区分享被关键词审核拦下（返回 `{categories}` 或 `{term}`） |
-| `articles` 返回空数组 | 还没成文 → 触发挖矿或等 miner |
-| `404 not found`（文章） | stem 写错 |
-| `409 wechat_not_configured` | 该用户没配公众号 appid/secret（App 设置里填） |
-| 照片 `400 not a photo` | `/photo/` 公开接口的 key 必须匹配 `users/<id>/photos/*.(jpg|jpeg|png)` |
-| `400 insufficient-corpus` / `empty-dataset` | 语料不够蒸馏——先 `POST /style/collect` 攒够 `min` 字数 |
-| `restyle` 回 422 | 重挖失败（看 body 里的原因；styleV 是否存在、录音是否还在） |
-| usage 接口回 `degraded:true` | 算力子系统暂不可用（fail-soft），不是余额为 0，稍后重试 |
-| 上传文风后 App 没变 | 切离再切回「设置」tab 重新加载 |
+**MCP 源码**：`~/code/jianshuo.dev/mcp/`（`README.md` 讲了架构和几个不显然的约束）。
