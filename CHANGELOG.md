@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-13]
+
+### Changed
+
+- **`wjs-voicedrop`** — audio listing switched to a dedicated fast endpoint: `GET /files/api/recordings` is now the recommended way to list voice recordings (~0.5 s, index-direct, same data source as the app's "My Recordings" view), returning per-recording status fields (`hasArticles`, `isEmpty`, `blocked`, `hasTags`). The old generic `GET /files/api/list` filtered to `VoiceDrop-*.m4a` (~2.5 s full scan) is kept as a fallback for when other file types need to be browsed at the same time.
+
 ## [2026-07-05]
 
 ### Changed
