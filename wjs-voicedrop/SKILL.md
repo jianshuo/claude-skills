@@ -288,7 +288,16 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: image/jpeg" \
 
 ## 音频 audio（录音）
 
-同样用通用 `GET /list` 筛 `VoiceDrop-*.m4a`：
+**首选专用 `GET /recordings`**（2026-07-13 起）：索引直出（~0.5s，别再全量 `/list` 了），每条自带四个状态位，App「我的录音」同款数据源：
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" https://jianshuo.dev/files/api/recordings
+# → {recordings:[{name,uploaded,hasArticles,isEmpty,blocked,hasTags}]}
+#   hasArticles=已成文  isEmpty=无语音  blocked=算力不足/过长  hasTags=挖矿前预置标签
+#   不排序——要最新在前就按 uploaded 倒序（ISO-8601 UTC，字典序==时间序）
+```
+
+老办法（通用 `GET /list` 筛 `VoiceDrop-*.m4a`，全量 ~2.5s，仅当需要连其他文件一起看时用）：
 
 > **顺序**：`/articles` 端点服务端就按 `createdAt` 倒序（最新在前）。`/list` 是通用接口**不排序**，返回 R2 原始字典序。**别按文件名排**——名字里的时间戳不是可靠时钟（时钟偏差、staging/改名、导入的文件都可能对不上）；要排就按 `uploaded`（R2 上传时间，ISO-8601 UTC 字符串，字典序==时间序）。下面的例子已按 `uploaded` 倒序，和 App「我的录音」一致。
 
