@@ -103,7 +103,8 @@ node "$VD" status        # 已登录 → {"ok":true,"scope":"users/anon-…/","l
 | | 上传 | `PUT /files/api/upload/photos/<sessionTs>/<offset>-<rand>.jpg` |
 | | 下载(私有) | `GET /files/api/download/photos/<...>.jpg` |
 | | 下载(公开) | `GET /files/api/photo/<完整 R2 key>`（无需 token） |
-| **音频** | 列出 | `GET /files/api/list`（筛 `VoiceDrop-*.m4a`） |
+| **音频** | 列出(推荐) | `GET /files/api/recordings`（索引直出，~0.5s，含状态位） |
+| | 列出(通用) | `GET /files/api/list`（筛 `VoiceDrop-*.m4a`，全量 ~2.5s） |
 | | 上传 | `PUT /files/api/upload/VoiceDrop-<...>.m4a`（自动触发挖矿） |
 | | 下载 | `GET /files/api/download/VoiceDrop-<...>.m4a` |
 | **挖矿** | 触发 | `POST /agent/mine/trigger`（推荐）或 `POST /files/api/mine` |
