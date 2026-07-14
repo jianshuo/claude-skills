@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-14]
+
+### Changed
+
+- **`wjs-voicedrop`** — major architecture pivot: the skill is now a **thin MCP gateway** rather than a self-contained HTTP API toolkit. All VoiceDrop capabilities (articles, style, mining, community, compute, sharing, etc.) have moved into the VoiceDrop MCP server at `voicedrop.cn/mcp` (32 tools); this skill's only job is to broker the login that connects Claude Code to that MCP. The built-in `vd-login.mjs` Node script was removed — login is now handled via the MCP's own `login` tool using the same two-step 6+4 handshake (6-hex code → phone shows 4-digit code → done). When the MCP tools (`list_articles`, `read_style`, `community_feed`, `credit_balance`, etc.) are already present in the session, the skill instructs Claude to skip the SKILL.md entirely and use them directly. Trigger words narrowed to: `voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `voicedrop token` / `/wjs-voicedrop`.
+- **README** — updated `wjs-voicedrop` skills-table entry and dedicated section to reflect the MCP-gateway architecture; removed the API-toolkit bullet list and replaced it with a concise three-point explanation of when to skip the skill vs. how to log in.
+
 ## [2026-07-13]
 
 ### Changed

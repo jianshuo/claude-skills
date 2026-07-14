@@ -85,7 +85,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
 | [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
 | [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
-| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop 账号完整 API 工具箱：文章/文风/照片/音频 CRUD + 文风语料偷师 + 服务端蒸馏 + 单篇重挖 + 社区 + 触发挖矿 + 算力账单 + 公众号草稿；自带 6+4 设备配对登录和 Apple 登录 | `vd` / `voicedrop` / `口述` / `偷师` / `重新挖` / `voicedrop 社区` / `/wjs-voicedrop` |
+| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop MCP 的入口：完成 6+4 手机配对登录，把你接上 voicedrop.cn/mcp 的 32 个工具（文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币等） | `voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `/wjs-voicedrop` |
 | [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/) | 评估 VoiceDrop 挖矿 prompt 改版：用金标集对冠军和候选做盲评对决，输出胜率报告，人工确认后才晋级生产 | `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `/wjs-evaling-voicedrop-prompts` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
@@ -155,20 +155,13 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ### [`wjs-voicedrop`](./wjs-voicedrop/)
 
-VoiceDrop 账号的完整 HTTP API 工具箱，覆盖所有资源和操作。
+VoiceDrop 的 MCP 接入入口。所有实际功能（文章、文风、挖矿、社区……）都在 voicedrop.cn/mcp 的 32 个 MCP 工具里；本 skill 唯一的工作是把你接上去。
 
-- **认证**：内置 `vd-login.mjs`（Node ≥ 20，零依赖）实现 6+4 手机设备配对登录，凭证落 `~/.config/voicedrop/credentials`；也支持 App 设置复制临时 token，或 Apple 登录换 session（`POST /files/api/auth/apple`——社区写操作必须用这种）。
-- **文章（版本化 CRUD）**：列出 / 读全文 / 写（每次 PUT 追加新版本，HEAD 前移）/ 版本历史 / 撤销回滚（`PATCH /head`）/ 删除（含 SRT/empty/blocked 边车）。
-- **文风（`/files/api/style`）**：读 / 写 / 版本历史 / 回滚——版本化 `CLAUDE.json`，挖矿时自动叠加进 system prompt，随时可 `PATCH /style/head` 回滚。
-- **文风语料（偷师）**：收集他人文章样本到语料库（`POST /style/collect`），查看语料清单（`GET /style/dataset`）或一键清空（`DELETE /style/dataset`）；攒够后触发**服务端蒸馏**（`POST /agent/style/extract`），后台自动产出新文风版本 + 一篇「你的写作风格」介绍文章。
-- **单篇重挖**（`POST /agent/restyle`）：用指定文风版本把某条录音重新挖掘成文章；`styleV` 不传则用当前 head；同步返回结果。
-- **照片**：列出 / 上传 / 私有下载 / 公开链接下载（无需 token）。
-- **音频录音**：列出（按 `uploaded` 真实时间排序）/ 下载。
-- **操作**：触发挖矿（`POST /agent/mine/trigger`）/ 查算力余额 / 查账单流水 / 生成公开分享链接 / 发公众号草稿。
-- **社区**：浏览信息流 / 读帖全文（含照片）/ 查回复 / 分享或撤下自己的文章 / 举报——share/unshare 必须用 Apple 登录 session；分享出去的是指针，改文章社区帖实时同步。
-- **蒸馏文风**（本地 distill）：从 3–6 篇已成文文章提炼 15–20 条可执行文风规则，版本化上传，下次挖矿自动生效。
+- **接上了？直接用工具。** 会话里已有 `list_articles`、`read_style`、`community_feed`、`credit_balance` 等工具时，无需阅读 SKILL.md，直接调用。
+- **还没接上？走两步登录：** 用 MCP 的 `login` 工具完成 6+4 手机配对——先用手机 **设置 → 账户** 里的 6 位十六进制码发第一步，手机弹出 4 位数字码后发第二步，拿到 `anon_` 令牌后接进客户端。
+- **MCP 覆盖的 32 个工具**：文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币、算力余额与账单、分享 / 公众号 / 小红书等。工具说明以 MCP 自身描述为准。
 
-> 触发词：`vd` / `voicedrop` / `口述` / `voicedrop api` / `voicedrop 登录` / `偷师` / `重新挖` / `voicedrop 社区` / `蒸馏文风` / `voicedrop distill` / `/wjs-voicedrop`
+> 触发词：`voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `voicedrop token` / `/wjs-voicedrop`
 
 ### [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/)
 
