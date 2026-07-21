@@ -311,7 +311,10 @@ fi
 
 if [[ -z "$DRAFT_ID" ]]; then
   echo "→ md2wechat create_draft draft.json ..." >&2
-  RESULT=$(md2wechat create_draft draft.json 2>&1)
+  # --json 强制输出 {success,data,...} 信封：md2wechat 新版默认输出不再是可解析的
+  # JSON，导致下面的解析失败 + set -e 中断，而草稿其实已在微信侧建成 → 重跑就建重复
+  # （2026-07-21 踩到，多建了几篇）。带 --json 后解析恢复、media_id 正常写回 publish.json。
+  RESULT=$(md2wechat create_draft draft.json --json 2>&1)
   DRAFT_ID=$(echo "$RESULT" | python3 -c "
 import sys, json, re
 data = sys.stdin.read()
