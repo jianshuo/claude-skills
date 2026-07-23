@@ -53,7 +53,7 @@ call() {  # $1=工具名  $2=参数 JSON
 2. **手机上会弹出 4 位数字码**（也会收到一条推送「有新设备要登录」）。问用户要那个码：
 
    ```bash
-   call login '{"code":"7391","pairing":"<上一步返回的 pairing 原样粘回来>"}'
+   call login '{"verify_code":"7391","pairing":"<上一步返回的 pairing 原样粘回来>"}'
    # → {"token":"anon_…", "scope":"users/anon-…/", "next":"…"}
    ```
 
