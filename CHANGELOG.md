@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-23]
+
+### Fixed
+
+- **`wjs-publishing-wechat`** (`scripts/upload-draft.sh`) — added `--json` flag to the `md2wechat create_draft` call. Newer versions of `md2wechat` no longer emit parseable JSON by default, so the script was aborting (via `set -e`) *after* the draft had already been created on WeChat's servers — producing duplicate drafts on every re-run. With `--json`, the structured `{success, data, …}` envelope is always returned and `media_id` is correctly written back to `publish.json`.
+- **`wjs-voicedrop`** — corrected the login step-2 parameter name from `code` to `verify_code` in both the quick-reference code example and the full curl-based invocation snippet. The 6-digit hex `code` belongs exclusively to step 1; step 2 takes `verify_code` (the 4-digit number shown on the phone) plus `pairing` (the handle returned by step 1). Using `code` in step 2 caused a confusing parameter collision with step 1.
+
 ## [2026-07-14]
 
 ### Changed
