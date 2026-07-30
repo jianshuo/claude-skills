@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-07-30]
+
+### Fixed
+
+- **`wjs-voicedrop`** (SKILL.md) — applied the final code-level correction to the step-2 login example: the inline `call()` snippet now passes `"verify_code": "7391"` (not `"code"`) alongside `"pairing"`. The conceptual fix was described in the 2026-07-23 entry; the 2026-07-24 commit landed it in the actual code block inside SKILL.md.
+
 ## [2026-07-23]
 
 ### Fixed
