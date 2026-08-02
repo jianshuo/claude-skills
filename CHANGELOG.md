@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-02]
+
+### Added
+
+- **`wjs-voicedrop-choosing-cover`** — new skill for deciding whether a VoiceDrop article should get an AI-generated cover image (题图), and if so which style and prompt to use. Works in four steps: (1) check whether existing `[[photo:KEY]]` real photos already serve as cover — AI art is skipped when a relevant real photo exists; (2) pick the image style that matches the article's tone from six options (思辨/概念图, 生活随笔/水彩, 怀旧/胶片油画, 科技/编辑部封面, 幽默/轻插画, 哀伤/素描淡彩); (3) assemble a production-ready prompt locked to VoiceDrop's 2.45:1 / 1568×640 spec with a title of 6–10 characters and an embedded avoid-list; (4) optionally trigger image generation. Outputs a three-line contract (verdict → style → prompt) and contains four built-in red-flag checks (repeat style, real-photo override, wrong spec, mismatch tone) that force a redo rather than silently producing a wrong cover.
+
 ## [2026-07-30]
 
 ### Fixed

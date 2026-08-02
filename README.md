@@ -87,6 +87,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
 | [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop MCP 的入口：完成 6+4 手机配对登录，把你接上 voicedrop.cn/mcp 的 32 个工具（文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币等） | `voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `/wjs-voicedrop` |
 | [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/) | 评估 VoiceDrop 挖矿 prompt 改版：用金标集对冠军和候选做盲评对决，输出胜率报告，人工确认后才晋级生产 | `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `/wjs-evaling-voicedrop-prompts` |
+| [`wjs-voicedrop-choosing-cover`](./wjs-voicedrop-choosing-cover/) | 判断 VoiceDrop 文章是否需要 AI 题图，并选定风格与生成可直接用的 prompt（比例 2.45:1 / 1568×640） | `这篇要不要配题图` / `选个题图风格` / `给这篇出个题图 prompt` / `/wjs-voicedrop-choosing-cover` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -173,6 +174,17 @@ VoiceDrop 的 MCP 接入入口。所有实际功能（文章、文风、挖矿�
 - 不做无人值守、不测成本/延迟、不评审核或语音编辑 prompt。
 
 > 触发词：`评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `比一比两版 prompt` / `/wjs-evaling-voicedrop-prompts`
+
+### [`wjs-voicedrop-choosing-cover`](./wjs-voicedrop-choosing-cover/)
+
+给一篇 VoiceDrop 文章做两个决定：**配不配题图**，以及**用哪种风格的 prompt 生成**。
+
+- **真照片优先**：文中有 `[[photo:KEY]]` 实拍且与主题相关 → 直接指出用哪张当封面，不写 AI prompt。
+- **四步流水**：① 配不配（实拍 / 无照片 / 极短文）→ ② 按文章气质选风格（思辨 / 生活随笔 / 怀旧 / 科技 / 幽默 / 哀伤 共 6 种）→ ③ 拼 prompt（比例 2.45:1 / 1568×640，标题 6–10 字，带避免清单）→ ④ 出图（仅用户要求时）。
+- **固定输出契约**（每篇 3–4 行）：判断 → 风格 → Prompt（或封面裁切建议）。
+- **内置防呆 Red Flags**：连续同风格、文中有实拍还写 AI prompt、规格混错（900×383）、哀伤文卡通化 —— 任一触发即打回重来。
+
+> 触发词：`这篇要不要配题图` / `选个题图风格` / `给这篇出个题图 prompt` / `choosing cover` / `/wjs-voicedrop-choosing-cover`
 
 ---
 
