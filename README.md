@@ -88,6 +88,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop MCP 的入口：完成 6+4 手机配对登录，把你接上 voicedrop.cn/mcp 的 32 个工具（文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币等） | `voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `/wjs-voicedrop` |
 | [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/) | 评估 VoiceDrop 挖矿 prompt 改版：用金标集对冠军和候选做盲评对决，输出胜率报告，人工确认后才晋级生产 | `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `/wjs-evaling-voicedrop-prompts` |
 | [`wjs-voicedrop-choosing-cover`](./wjs-voicedrop-choosing-cover/) | 判断 VoiceDrop 文章是否需要 AI 题图，并选定风格与生成可直接用的 prompt（比例 2.45:1 / 1568×640） | `这篇要不要配题图` / `选个题图风格` / `给这篇出个题图 prompt` / `/wjs-voicedrop-choosing-cover` |
+| [`wjs-voicedrop-post-processing`](./wjs-voicedrop-post-processing/) | 新挖 VoiceDrop 文章后处理守护进程（launchd 每 5 分钟触发，无人值守） | `/wjs-voicedrop-post-processing <stem>` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -185,6 +186,17 @@ VoiceDrop 的 MCP 接入入口。所有实际功能（文章、文风、挖矿�
 - **内置防呆 Red Flags**：连续同风格、文中有实拍还写 AI prompt、规格混错（900×383）、哀伤文卡通化 —— 任一触发即打回重来。
 
 > 触发词：`这篇要不要配题图` / `选个题图风格` / `给这篇出个题图 prompt` / `choosing cover` / `/wjs-voicedrop-choosing-cover`
+
+### [`wjs-voicedrop-post-processing`](./wjs-voicedrop-post-processing/)
+
+VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-postprocess` 每 5 分钟轮询触发，以文章 stem 为参数无人值守地运行。
+
+- **守护进程模式**：通过 `claude -p`（headless）调用，voicedrop MCP 预先接好；读文章 / 写版本工具可用，发布、删除类工具在调用方已禁用。
+- **当前是骨架版**：验证正文非空、标题存在，完成后输出 `postprocess ok: <stem> — <标题>（<字数>字）`。
+- **可扩展**：第 2 步占位符可替换为配图 / 打标签 / 质量评分 / 生成摘要等动作，轮询器无需改动。
+- **幂等**：读失败自动重试一次，再失败以非零退出（轮询器下一轮重试），绝不发布、删除或修改文风库。
+
+> 触发词：`/wjs-voicedrop-post-processing <stem>`（守护进程直接调用，不走自然语言触发）
 
 ---
 

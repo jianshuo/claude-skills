@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-07]
+
+### Added
+
+- **`wjs-voicedrop-post-processing`** — new skeleton skill for headless, unattended post-processing of freshly mined VoiceDrop articles. Invoked by a launchd daemon (`com.jianshuo.voicedrop-postprocess`, 5-minute polling interval) via `claude -p` with the article stem as argument. Currently does a minimal health check (body non-empty, title present) and emits `postprocess ok: <stem> — <title>（<N>字）` on success; exits non-zero on failure so the poller retries next round. The write-version-only / no-publish / no-delete / no-community constraints are enforced at the caller level. The post-processing action slot (step 2) is a defined stub, ready to be replaced with cover selection, tagging, quality scoring, or summary generation once the design is settled — the poller requires no changes when that happens.
+
 ## [2026-08-02]
 
 ### Added
