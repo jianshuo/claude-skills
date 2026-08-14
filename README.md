@@ -89,6 +89,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/) | 评估 VoiceDrop 挖矿 prompt 改版：用金标集对冠军和候选做盲评对决，输出胜率报告，人工确认后才晋级生产 | `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `/wjs-evaling-voicedrop-prompts` |
 | [`wjs-voicedrop-choosing-cover`](./wjs-voicedrop-choosing-cover/) | 判断 VoiceDrop 文章是否需要 AI 题图，并选定风格与生成可直接用的 prompt（比例 2.45:1 / 1568×640） | `这篇要不要配题图` / `选个题图风格` / `给这篇出个题图 prompt` / `/wjs-voicedrop-choosing-cover` |
 | [`wjs-voicedrop-post-processing`](./wjs-voicedrop-post-processing/) | 新挖 VoiceDrop 文章后处理守护进程（launchd 每 5 分钟触发，无人值守） | `/wjs-voicedrop-post-processing <stem>` |
+| [`wjs-voicedrop-reading-aloud`](./wjs-voicedrop-reading-aloud/) | 文字转有声书 mp3（豆包 seed-tts-2.0 多声色编排朗读，先写脚本再合成） | `做成有声书` / `朗读出来` / `读给我听` / `/wjs-voicedrop-reading-aloud` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
@@ -197,6 +198,16 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **幂等**：读失败自动重试一次，再失败以非零退出（轮询器下一轮重试），绝不发布、删除或修改文风库。
 
 > 触发词：`/wjs-voicedrop-post-processing <stem>`（守护进程直接调用，不走自然语言触发）
+
+### [`wjs-voicedrop-reading-aloud`](./wjs-voicedrop-reading-aloud/)
+
+把文字（段落、文件、URL 或 VoiceDrop 文章）重写成有声书朗读脚本，再用火山引擎豆包 seed-tts-2.0 合成 mp3。核心不是照字念，而是**编排**：不同性质的内容（正文叙述、引用、大白话吐槽）分配不同音色，关键转折处加表演指令，合成后 SendUserFile 发回。
+
+- **编排即再创作**：洗掉 markdown 视觉残留，把表格列表改成口语句，标题化进过渡句，主声贯穿全篇，引用/吐槽换声——声音切换是给听众的「格式信号」，等价于视觉上的引用块。
+- **合成工具**：`~/code/volcano-tts/tts.py --script` 模式，支持 `@voice` 声道切换和 `[表演指令]` 嵌入；只用 `_uranus_bigtts` 后缀音色（seed-tts-2.0），裸 API 会把标注原样念出来。
+- **验收**：`afinfo out.mp3` 对时长；疑似标注被念出来时用 ASR 抽查。
+
+> 触发词：`做成有声书` / `朗读出来` / `读给我听` / `念出来` / `read aloud` / `/wjs-voicedrop-reading-aloud`
 
 ---
 

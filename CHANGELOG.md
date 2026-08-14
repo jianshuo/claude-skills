@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-14]
+
+### Added
+
+- **`wjs-voicedrop-reading-aloud`** — new skill: turns text (a passage, file, URL, or VoiceDrop article) into an expressive audiobook mp3 using Volcano Engine Doubao seed-tts-2.0 synthesis. The core step is *arranging* a reading script rather than transcribing: different content types (narration, quotes, casual asides) are assigned distinct `_uranus_bigtts` voices, performance cues are embedded as `[action/emotion hints]`, and the script is processed by `tts.py --script` which parses `@voice` section declarations and cue segments into proper `context_texts` API calls (bare API calls read the brackets aloud). The arranged script is shown to the user for approval before synthesis; the finished mp3 is delivered via SendUserFile. Includes a 7-voice tested table, anti-pattern guide (cue density limits, bracket-leakage detection, unsupported voice types), and a QA checklist (afinfo duration check + ASR spot-check).
+
 ## [2026-08-07]
 
 ### Added
