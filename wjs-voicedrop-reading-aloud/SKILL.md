@@ -95,7 +95,7 @@ python3 ~/code/volcano-tts/tts.py -f script.txt --script -o out.mp3 \
 
 ## 常见坑
 
-- **指令悄无声息不生效（听起来全一样）** → `context_texts`/`section_id` 必须嵌在 `additions`（JSON 字符串）里，放 `req_params` 顶层会被服务端静默忽略、不报错。`tts.py` 已按正确层级实现；怀疑时用「极慢哭腔」指令 A/B 对比时长（应 +25% 以上），基线合成是确定性的（同句同参时长完全一致），差异小于 5% 即未生效。
+- **指令悄无声息不生效（听起来全一样）** → 三个已实锤的坑，`tts.py` 均已修复：① `context_texts`/`section_id` 必须嵌在 `additions`（JSON 字符串）里，放 `req_params` 顶层被静默忽略；② `context_texts` 传多条时只有第一条生效——段内指令必须独占一条，不能「全局+段内」并列（全局排前面会把段内全顶掉）；③ 转述包装（「按照这个指示朗读：X」）会稀释效果，标注原文直发最强。怀疑时用「极慢哭腔」指令 A/B 对比时长（应 +25% 以上），基线合成是确定性的（同句同参时长完全一致），差异小于 5% 即未生效。
 - 标注被念出来 → 忘了走 `tts.py` 的标注解析，或用了它不认的括号格式（支持 `【】` 与 `[ ]`）。
 - `resource ID is mismatched with speaker related resource` → 用了非 2.0 音色。
 - 输出中间语气断裂感明显 → 标注切段太碎，合并标注、减少切换。
