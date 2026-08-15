@@ -88,7 +88,8 @@ python3 ~/code/volcano-tts/tts.py -f script.txt --script -o out.mp3 \
 | 旁白（对话感/播客感） | zh_male_shenyeboke_uranus_bigtts | 深夜播客 |
 | 解说腔 | zh_male_cixingjieshuonan_uranus_bigtts | 磁性解说男声 |
 | 引用/名人语录/译文 | zh_male_yizhipiannan_uranus_bigtts | 译制片男 |
-| 大白话/吐槽/内心 OS | zh_male_fanjuanqingnian_uranus_bigtts | 反卷青年 |
+| 大白话/吐槽/内心 OS | zh_female_shuangkuaisisi_uranus_bigtts | 爽快思思（用户定：大白话用女声，与男声旁白区分） |
+| 大白话（男声备选） | zh_male_fanjuanqingnian_uranus_bigtts | 反卷青年 |
 | 通用女声 | zh_female_vv_uranus_bigtts | Vivi |
 
 更多 2.0 音色：https://www.volcengine.com/docs/6561/1257544 （只认 `_uranus_bigtts` 后缀）。
