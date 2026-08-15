@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-15]
+
+### Changed
+
+- **`wjs-voicedrop-reading-aloud`** — three operational refinements based on hands-on testing: (1) **Voice instruction effectiveness rule** added: the seed-tts-2.0 model responds strongly to dramatic, emotionally exaggerated instructions (crying, whispering, excited shouting, judge-announcing, +50% duration-level changes) but barely responds to subtle stage directions ("语气一沉") or mechanical precision cues ("停顿一秒", "放慢一倍"). Guidance now says to exaggerate rather than understate — "请把声音压到接近耳语，凑近话筒，像说破一个秘密" beats "压低声音"; (2) **Voice table updated to 8 voices**: the default voice for casual speech / sarcasm / inner monologue ("大白话/吐槽/内心 OS") switched from 反卷青年 (male) to 爽快思思 (female, `zh_female_shuangkuaisisi_uranus_bigtts`) so the register contrast with the male narrator is immediately audible; 反卷青年 is kept as a male backup for the same role; (3) **Silent-instruction troubleshooting expanded** from one root cause to three confirmed ones: ① `context_texts`/`section_id` must be nested inside `additions` (JSON string), not placed at the `req_params` top level — the top-level placement is silently ignored; ② when `context_texts` carries multiple entries, only the first takes effect — a global instruction and a per-segment instruction can't be stacked in the same array (the global, listed first, knocks out everything after it); ③ paraphrase wrappers ("按照这个指示朗读：X") dilute effectiveness — direct, literal instructions are strongest.
+
 ## [2026-08-14]
 
 ### Added
