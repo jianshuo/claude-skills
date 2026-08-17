@@ -1,224 +1,180 @@
 ---
 name: wjs-creating-video-book
-description: Use when the user wants a book turned into a YouTube 讲书/解读视频 — they give a book title (中文或英文) or a PDF/EPUB/笔记 file and want a 1920×1080 横屏中文讲书视频, published to the 王建硕 YouTube channel. Triggers — "把这本书做成视频", "讲书视频", "解读这本书", "讲一讲《X》", "book explanation video", "/wjs-creating-video-book <书名|文件>".
+description: Use when the user wants a book turned into YouTube chapter videos — 每章用 VoiceDrop 读书的有声书 mp3 做音轨，配 GPT Image 2 画面和中心思想大字，输出 1920×1080 横屏视频发 YouTube。Triggers — "把这本书做成视频", "有声书做成视频", "讲书视频", "book video", "/wjs-creating-video-book <书名>".
 ---
 
 # wjs-creating-video-book
 
-把一本书做成 **1920×1080 横屏、4-8 分钟** 的中文 YouTube 讲书视频：王建硕视角的讲书稿 + Volcano TTS 旁白 + HyperFrames CSS/GSAP 章节化动画 + 抽象水彩背景，渲染后上传 YouTube。
-
-**REQUIRED BACKGROUND:** 视觉系统（色彩 / 字体逻辑 / 布局 / 转场 / Modern Motion Techniques / SFX / HyperFrames 工程坑）全部继承 `wjs-converting-text-to-video`。**先读那个 SKILL.md**，本 skill 只写差异。
+把一本书做成 **按章节的 YouTube 视频**：每一章用 VoiceDrop 读书的有声书 mp3 作为音轨，从章节内容提炼 **1-3 个中心思想**，为每个中心思想设计提示词、用 GPT Image 2 生成画面（Ken Burns 缓推 + 交叉淡化），中心思想以大字叠加在画面上，最终合成 1920×1080 横屏视频，上传 YouTube。
 
 ## What this skill produces
 
 | 维度 | 默认 |
 |---|---|
-| 尺寸 | 1920×1080 横屏 (16:9) — 这是和文章短视频最大的差异 |
-| 时长 | 4-8 分钟（讲书需要展开，不是 90 秒 punch）|
-| 结构 | Hook → 一句话立论 → 3-5 个核心观点（每个观点 2-4 scene）→ 我怎么用 → 收尾 CTA |
-| Scene 数 | 12-24 |
-| 旁白 | 火山引擎 Volcano TTS，默认 `zh_male_ahu_conversation_wvae_bigtts`（阿虎对话）|
-| 背景 | GPT Image 2 抽象水彩（横屏 1920×1088）+ blur 30 + 暖黑 overlay |
+| 尺寸 | 1920×1080 横屏 (16:9)，30fps |
+| 粒度 | **一章一支视频**（章节 mp3 多长视频就多长）|
+| 音轨 | VoiceDrop 读书的章节有声书 mp3（不重新 TTS）|
+| 画面 | 每章 1-3 张 GPT Image 2 生成图，Ken Burns 缓推，段间 1s 交叉淡化 |
+| 文字 | 每个中心思想：大字标题（≤12 字）+ 一句阐释，淡入淡出，Pillow 渲染 |
 | 项目目录 | `~/code/book-videos/<book-slug>/` |
-| 输出 | `<book-slug>.mp4` + `thumbnail.jpg` + `UPLOAD_META.md` |
-| 发布 | `wjs-uploading-video` 上传（横屏 → 普通 video，非 Shorts），默认 public |
+| 输出 | `<slug>-chNN.mp4` × N 章 + `UPLOAD_META.md` |
+| 发布 | `wjs-uploading-video` 上传（横屏普通 video），默认 public |
 
 ## When this skill fires
 
-- 用户给一本书（书名 / PDF / EPUB / 读书笔记），说「做成视频」「讲一讲这本书」「解读一下」
-- 用户跑 `/wjs-creating-video-book <书名或文件路径>`
+- 用户给一本书说「做成视频」「把有声书配上画面发 YouTube」
+- 用户跑 `/wjs-creating-video-book <书名或书架章节>`
 
 ## When NOT to use
 
-- 输入是自己写的文章 `article.md` → `/wjs-converting-text-to-video`（竖屏 30-90s）
-- 要竖屏短视频版讲书（视频号/Shorts）→ 先用本 skill 出稿，再走 `/wjs-converting-text-to-video` 的竖屏管线
-- 要把书整本朗读成有声书 → `/wjs-voicedrop-reading-aloud`
-- 要写书评文章发公众号 → `/wjs-publishing-wechat`
+- 要的是 30-90 秒竖屏解说短视频 → `/wjs-converting-text-to-video`
+- 只要有声书 mp3、不要视频 → `/wjs-voicedrop-reading-aloud`
+- 要写书评文章 → `/wjs-publishing-wechat`
 
 ## Core Principle
 
-**讲书不是书摘。书是引子，讲的是"我读完之后怎么看"。**
+**这是「听为主、看为辅」的视频。** 音轨是整章朗读，观众是在"听书"；画面的职责是给眼睛一个可以停留的锚点，不是动画表演。所以：
 
-一支平庸的讲书视频复述目录：「第一章讲了 X，第二章讲了 Y」。一支王建硕式的讲书视频只挑 3-5 个真正扎人的观点，每个观点配一个自己的经历、一个家常类比、或一个反直觉的推论 —— 观点是书的，例子和判断是自己的。写稿时调用 `wangjianshuo-perspective` skill 保持语气：平实、断言、具体和抽象之间架梯子。
-
-**版权红线**：讲书是评论 + 解读（合理使用），不是朗读。直接引用原文每处 ≤ 2 句，全片 ≤ 5 处，其余全部用自己的话重述。
+- **中心思想宁少勿多** — 一章挑 1-3 个真正的支柱观点，一张画面停留几分钟是正常的
+- **全书一个视觉风格** — 章与章之间画风必须一致（同一媒介、同一色调家族），观众换章时不出戏
+- **画面画具象场景，不画抽象概念** — 「杠杆」画一根撬动巨石的长杆，不画"杠杆"两个字或抽象箭头图表
+- **版权自查** — 整章朗读原文 + 公开发布，只适用于公版书或用户拥有权利的书；在版权书先向用户确认再发布
 
 ## Workflow
 
-### Step 0: Bootstrap 项目目录
+### Step 0: 项目目录
 
 ```bash
-SLUG=<book-slug>   # 优先用书的英文名做短 slug（如 naval-almanack）；没有英文名才用拼音
+SLUG=<book-slug>   # 优先用书的英文名短 slug（如 naval-almanack）；没有英文名才用拼音
 BOOK=~/code/book-videos/$SLUG
-mkdir -p $BOOK
-~/.claude/skills/wjs-converting-text-to-video/scripts/bootstrap-project.sh $BOOK
-
-# bootstrap 默认竖屏 —— 讲书是横屏，必须改 meta.json：
-cat > $BOOK/video/meta.json <<'EOF'
-{ "name": "wjs-book-video", "width": 1920, "height": 1080, "fps": 30 }
-EOF
+mkdir -p $BOOK/chapters/{01,02,...}   # 每章一个两位数目录
 ```
 
-bootstrap 会复制 `tts_narration.py`、生成 `hyperframes.json` / `package.json`、合成 SFX。它会提示「no illustration.png」— 忽略，bg 由 Step 5 生成。
+### Step 1: 每章拿到文本 + 有声书 mp3
 
-### Step 1: 拿到书的内容 → `notes.md`
-
-按输入类型：
-
-| 输入 | 做法 |
+| 素材 | 来源（按优先级）|
 |---|---|
-| PDF | 直接 Read（分页读，抓核心章节）|
-| EPUB | `pandoc book.epub -t plain -o book.txt` 后读 |
-| 只有书名 | 用自己的知识写出核心框架；关键数据 / 出版信息用 WebSearch 核实 |
-| 用户笔记 | 以笔记为准，书的框架做补充 |
+| 章节 mp3 | ① jianshuo.dev 书架有声书已合成的章节 mp3（R2，见 memory [[jianshuo-dev-audiobook]]）直接下载 ② 没有 → 用 `/wjs-voicedrop-reading-aloud` 从章节文本生成 |
+| 章节文本 | 书架页面 / 用户给的 PDF・EPUB（EPUB 先 `pandoc x.epub -t plain`，pandoc 未装先 `brew install pandoc`）|
 
-产出 `notes.md`：书的一句话主张、核心概念清单（每个概念一段解释 + 书中的关键例子）、金句候选（标注出处章节）、值得质疑的点。
+存为 `chapters/NN/audio.mp3` 和 `chapters/NN/chapter.md`。
 
-**禁止编造**：没核实过的引文一律不写成引号引用；不确定的数据不进稿。
+### Step 2: 每章提炼 1-3 个中心思想 → `ideas.json`
 
-### Step 2: 写讲书稿 → `script.md`
+读 `chapter.md`，挑真正的支柱观点。数量跟着音频长度走：<5 分钟 1-2 个，5-15 分钟 2-3 个，>15 分钟也**最多 3 个**（画面是锚点不是字幕）。
 
-调 `wangjianshuo-perspective` 定语气。**1100-2100 字**（中文 TTS ≈ 4.5 字/秒 → 4-8 分钟音频；成片 ≈ 音频长度 + 收尾缓冲，所以字数直接决定片长）。
-
-结构（这也是后面 scene 的章节骨架）：
-
-1. **Hook**（≤3 句）— 一个反直觉的问题或断言，不是「今天给大家介绍一本书」
-2. **立论**（1 段）— 这本书用一句话说什么 + 我为什么觉得它值得讲
-3. **观点 × 3-5** — 每个观点：书里怎么说（1-2 句）→ 我自己的例子/类比（这是重头）→ 一个推论或判断
-4. **我怎么用**（1 段）— 读完之后我实际改变了什么，具体到动作
-5. **收尾**（≤3 句）— 一句话收束 + CTA（「这本书值得你自己翻一遍」之类，不要「一键三连」腔）
-
-**旁白文字规则**（同 `wjs-converting-text-to-video` Step 2）：口语、短句；不写 `——` 破折号（TTS 会念出"破折号"）、不写括号注释、不留 markdown 加粗；不提百姓网 facts。
-
-### Step 3: 拆 scene → `video/narration_chunks.json`
-
-格式同 sibling：`[{"id": "s01", "text": "..."}]`。
-
-- 每个观点章节 2-4 个 scene；每 scene 旁白 5-18 秒（讲书比短视频呼吸长，但仍要短长交替）
-- **章节边界必须是强转场** — 主用 T2 white flash；T4 color flash 长片放宽到全片 ≤3 次（覆盖 sibling 的 ≤2 规则）。章节内部用 T1/T3
-- Scene Mix Rule（sibling Step 1b）整体适用，按 4-8 分钟等比放大：每个章节内 ≥2 种模板类型；全片 A3 color-flip 2-4 个；B1 双行 strikethrough 全片 ≤4 个
-
-### Step 4: TTS
-
-```bash
-cd $BOOK/video
-set -a && source ~/code/.env && set +a     # VOLC_TTS_APPID / VOLC_TTS_ACCESS_TOKEN
-uvx --with requests python tts_narration.py   # → narration.mp3 + timing.json
+```json
+[
+  {"title": "杠杆是新的钱",  "caption": "代码和媒体是无需许可的杠杆", "image": "img-1.png", "start": 0},
+  {"title": "把自己产品化",  "caption": "独特知识乘以杠杆才有复利",   "image": "img-2.png", "start": 312}
+]
 ```
 
-声音选择、Volcano 的坑（不传 emotion、不用 kokoro、避开 jieshuonansheng）全部见 sibling Step 3。**长稿注意**：任何一段 chunk 出现 >3 字/秒的异常时长 = hallucinate，拆短重合成。
+- `title` ≤12 字（大字）；`caption` 一句话 ≤20 字；都不写标点结尾
+- `start`（秒）= 该思想在朗读中开始被讲到的位置，按文本位置比例估算即可；全部省略则均分音频
+- 中心思想必须忠于章节内容 — 这不是二次创作，是给听众划重点
 
-### Step 5: 横屏水彩背景
+### Step 3: 每个中心思想一张画面（GPT Image 2）
 
-```bash
-~/.claude/skills/wjs-converting-text-to-video/scripts/generate-bg.sh $BOOK reflection 1920x1088
-```
+先给**全书**定一个风格底稿 `$BOOK/style.md`（只做一次）：媒介（如 水彩 / 胶片摄影 / 极简插画）、色调家族、光线气质，2-3 句。
 
-第三个参数 `1920x1088` 是横屏尺寸（该脚本默认竖屏，别漏）。theme 按书的气质选：思维/心理类 `reflection`、商业/科技类 `tech`、成长类 `growth`、警世类 `warning`。输出 `video/bg.png`。
-
-### Step 6: HyperFrames composition（横屏差异点）
-
-Composition 骨架、bg-image/overlay 层、色彩系统、motion、`<audio>` 必须带 id 等工程规则全同 sibling Step 5，改 `data-width="1920" data-height="1080"`，body 尺寸同改。**横屏专属差异**：
-
-| 项 | 竖屏 (sibling) | 横屏（本 skill）|
-|---|---|---|
-| Punch hero 字号 | 280-400px | 200-320px（屏更矮，超 320px 会溢出）|
-| 长句 hero | 100-150px | 90-140px，一行能放 12-16 字，少分行 |
-| 网格 | 2×N | 3×N / 4×N 横排卡片可用了 |
-| 左右分屏 B2 | 偶尔 | **主力模板** — 左观点右例子、左书里右现实 |
-| 常驻元素 | 无 | 左下角小字书名+作者（opacity 0.5, 28px, 全片常驻，z-index 3, 放 scene 外）|
-| 章节标号 | 无 | 每章节首 scene 一个大编号 01-05 + 章节题 |
-
-**第一帧规则**（硬性，同 sibling）：t=0 必须 bg-image 可见 + s1 标题可见（不 from opacity:0），s1 不是 color-flip。
-
-### Step 7: SFX
-
-`video/sfx/{tick,chime,bell}.mp3` 已由 Step 0 bootstrap 生成，接入 timeline 的方法同 sibling Step 6。讲书片长，额外规则：**bell 只用在全片唯一的 climax**（通常是「我怎么用」章节的落点），章节切换用 tick。
-
-### Step 8: Lint + Inspect + Render
+每张图的提示词 = 全书风格 + 该思想的**具象场景意象**：
 
 ```bash
-cd $BOOK/video
-npx hyperframes lint            # 0 errors
-# inspect 的时间点从 timing.json 取：每个章节首 scene 的 start + 1s，全部列上
-npx hyperframes inspect --at <t1,t2,...>   # 0 errors
-npx hyperframes render --quality standard --fps 30 --output ../$SLUG.mp4
+node ~/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.cjs \
+  --json --provider codex images generate \
+  --prompt "<全书风格>. <这个中心思想的具象场景>. No text, no words, no letters." \
+  --out $BOOK/chapters/NN/img-1.png --format png --size 1920x1088 --quality high
 ```
 
-长片渲染慢（standard 下 6 分钟片约 8-12 分钟），先用 `--quality draft` 迭代，最终出片用 standard。
+- **提示词必须带 "No text, no words, no letters"** — 文字由 Step 4 叠加，AI 画中文必崩
+- 画具象场景（人、物、光、空间），不画概念图解 / 图表 / 箭头
+- 同章多张图之间也要有视觉关联（同一空间的不同角度、同一天的不同时辰）
 
-### Step 9: 缩略图 `thumbnail.jpg`
-
-用视频帧 + 大字，不另画 AI 插画（同封面约定）：
+### Step 4: 合成本章视频
 
 ```bash
-cd $BOOK/video    # 以下命令都在 video/ 里跑
-# 挑立论 scene 的一帧（视觉最有代表性的时刻）；snapshot 输出到 snapshots/，文件名含时间戳，ls 确认
-npx hyperframes snapshot --at <t> .
-ffmpeg -y -i snapshots/<刚生成的文件>.png -vf scale=1280:720 ../thumbnail.jpg
+cd $BOOK/chapters/NN
+uvx --with pillow python ~/.claude/skills/wjs-creating-video-book/scripts/render-chapter.py .
+mv chapter.mp4 $BOOK/$SLUG-chNN.mp4
 ```
 
-如果帧本身文字不够大，就在 composition 里临时做一个 thumbnail 专用 scene（书名 + 一句钩子，字号拉满）再 snapshot。uploader 不支持 API 设缩略图 —— 提醒用户在 YouTube Studio 手动设置。
+脚本（已在本机验证）做的事：每张图 3840 上采样后 zoompan 缓推（12s 约 1.09×）、段间 1s xfade、中心思想大字 + 阐释句 Pillow 渲染成透明 PNG 后 overlay（1s alpha 淡入淡出，避开段首段尾各 0.8s/0.5s）、章节 mp3 直接做音轨，`-crf 19` 输出。字体自动探测 PingFang → Hiragino Sans GB → STHeiti。
 
-### Step 10: 写 `UPLOAD_META.md` + 上传
+**注意**：本机 ffmpeg 没编译 drawtext，文字必须走脚本里的 Pillow 路径，别试图手写 drawtext 滤镜。
 
-**格式必须严格照抄下面这个骨架** — `upload_youtube.py` 的 `parse_meta_md()` 只认 `## NN · 文件名` 块头 + `**短标题**` / `**视频描述**` 小节 + 正文里的 `#tag`，别的格式解析出 0 个块直接退出：
+### Step 5: 缩略图（每章）
+
+用视频帧 + 大字（不另画 AI 插画）：挑该章标题字最清晰的一帧：
+
+```bash
+ffmpeg -y -ss <标题完全显示的秒数> -i $BOOK/$SLUG-chNN.mp4 -frames:v 1 -vf scale=1280:720 $BOOK/thumb-chNN.jpg
+```
+
+uploader 不支持 API 设缩略图 — 上传后提醒用户在 YouTube Studio 手动设置。
+
+### Step 6: `UPLOAD_META.md` + 上传
+
+**格式必须严格照抄下面骨架** — `upload_youtube.py` 的解析器只认 `## NN · 文件名` 块头 + `**短标题**` / `**视频描述**` 小节 + 正文里的 `#tag`，别的格式解析出 0 个块直接退出。每章一个块：
 
 ```markdown
-## 01 · <slug>.mp4
+## 01 · <slug>-ch01.mp4
 
 **短标题**
-《书名》讲了什么？<一句话钩子>
+《书名》第一章：<章名或一句话钩子>
 
 **视频描述**
-<2-3 段：这本书是什么 + 视频讲了哪几个观点>
+<本章讲什么，2-3 句> + 本章的中心思想列表
 
-章节：
-00:00 开场
-00:35 观点一 …（从 timing.json 换算）
+有声书朗读来自 VoiceDrop。
 
-#讲书 #书评 #<书名> #<作者> #读书
+#有声书 #听书 #<书名> #<作者> #读书
+
+---
 ```
 
 ```bash
 python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir $BOOK
 ```
 
-`--dir` 模式自动配对目录里的 mp4 和 `UPLOAD_META.md`（**不要用 `--video` + `--meta`** — `--meta` 只在 `--dir` 分支生效，`--video` 分支要求 `--title` 且忽略 meta 文件）。
-
-横屏 → 普通 video（标题不加 #shorts）。默认 public；上传完把视频链接回给用户，并提醒手动设缩略图。**不走** 文章视频那条 daily cron（那是给批量竖屏 Shorts 的）。
+`--dir` 模式自动配对目录里的 mp4 和 `UPLOAD_META.md`（**不要用 `--video` + `--meta`** — `--meta` 只在 `--dir` 分支生效，`--video` 分支要求 `--title` 且忽略 meta 文件）。多章节视频建议加 `--playlist <id>` 归入同一播放列表。上传完把链接回给用户。
 
 ## 目录结构
 
 ```
 ~/code/book-videos/<slug>/
-├── notes.md                  # Step 1 书的要点
-├── script.md                 # Step 2 讲书稿
-├── <slug>.mp4                # ⭐ 最终视频
-├── thumbnail.jpg             # YouTube 缩略图（手动设）
+├── style.md                  # 全书视觉风格底稿（一次定）
+├── <slug>-ch01.mp4 ...       # ⭐ 每章最终视频（在根目录，供 --dir 上传扫描）
+├── thumb-ch01.jpg ...        # 每章缩略图（YouTube Studio 手动设）
 ├── UPLOAD_META.md
-└── video/                    # 中间产物（同 sibling 结构）
-    ├── narration_chunks.json / tts_narration.py / narration.mp3 / narration/ / timing.json
-    ├── bg.png / sfx/ / index.html / hyperframes.json / snapshots/
+└── chapters/
+    └── 01/
+        ├── chapter.md        # 章节文本
+        ├── audio.mp3         # VoiceDrop 读书 mp3
+        ├── ideas.json        # 1-3 个中心思想
+        ├── img-1.png ...     # GPT Image 2 画面
+        └── overlay-1.png ... # 脚本生成的文字层（中间产物）
 ```
 
-## Anti-Patterns（本 skill 特有；通用反模式见 sibling）
+## Anti-Patterns
 
 | 不要 | 原因 |
 |------|------|
-| 复述目录（第一章…第二章…）| 那是书摘，不是讲书。只挑 3-5 个扎人观点 |
-| 观点全是书里的例子 | 例子必须换成自己的经历/类比，观点书的、例子自己的 |
-| 编造引文 / 未核实的数据进稿 | 讲书视频公开发布，错引原文很难看 |
-| 大段朗读原文 | 版权红线：直接引用每处 ≤2 句、全片 ≤5 处 |
-| 竖屏字号表照搬横屏 | 横屏矮，hero 超 320px 必溢出；inspect 必跑 |
-| 全片居中大字 | 横屏优势是宽 — 左右分屏、3-4 列网格用起来 |
-| 硬撑到 8 分钟 | 观点讲完就收，5 分钟的好片 > 8 分钟的水片 |
-| 「一键三连」「记得订阅点赞」腔 | 不是这个频道的语气；CTA 是「值得你自己翻一遍」式 |
+| 把章节文本重新 TTS | 音轨就是 VoiceDrop 读书 mp3，重新合成既浪费又不一致 |
+| 一章塞 5-6 个中心思想 | 画面变成字幕机。锚点宁少勿多，≤3 |
+| 提示词里让 AI 画字 | GPT Image 2 画中文必崩。提示词强制 "No text"，文字走 Pillow 叠加 |
+| 画抽象概念图解（箭头/图表/概念词）| 画具象场景，让画面自己会呼吸 |
+| 每章换一种画风 | 全书一个 style.md，章间一致 |
+| 手写 drawtext 滤镜 | 本机 ffmpeg 没编译 drawtext，会 "No such filter"。用脚本的 Pillow 路径 |
+| 在版权书直接公开发布 | 整章朗读原文的版权风险远大于讲书评论。公版书 / 有权利的书才默认发；否则先确认 |
 | 缩略图另画 AI 插画 | 用视频帧 + 大字（同封面约定）|
+| 上传用 `--video` + `--meta` | 该组合不成立（`--video` 要求 `--title` 且忽略 meta），用 `--dir` |
 
 ## Dependencies
 
-同 `wjs-converting-text-to-video`（HyperFrames CLI / GPT Image 2 / Volcano TTS env / ffmpeg），外加：
-- **wjs-uploading-video** — 上传（Step 10），OAuth token `~/.config/youtube/token.json`
-- **pandoc** — EPUB 转文本；仅 EPUB 输入需要，且本机默认**未装**，用前先 `brew install pandoc`
-- **wangjianshuo-perspective** skill — Step 2 写稿语气
+- **ffmpeg**（已装；注意本机构建无 drawtext，脚本已用 Pillow 绕过）
+- **uvx + pillow** — 文字层渲染（`uvx --with pillow python ...`）
+- **GPT Image 2**（`~/.claude/skills/gpt-image-2-skill/`，`--provider codex`）— 画面生成
+- **wjs-voicedrop-reading-aloud** — 章节 mp3 不存在时生成
+- **wjs-uploading-video** + OAuth token `~/.config/youtube/token.json` — 上传
+- **pandoc** — 仅 EPUB 输入需要，本机默认未装，先 `brew install pandoc`
