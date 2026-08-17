@@ -142,8 +142,11 @@ uploader 不支持 API 设缩略图 — 上传后提醒用户在 YouTube Studio 
 ```
 
 ```bash
-python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir $BOOK
+uvx --with google-auth --with requests python \
+  ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir $BOOK
 ```
+
+章节多时注意 YouTube 每日配额（默认约 6 个/天）：建 `upload-batch-N/` 暂存目录放当天要传的 mp4 软链接 + `UPLOAD_META.md` 软链接，`--dir` 指向暂存目录分天传。
 
 `--dir` 模式自动配对目录里的 mp4 和 `UPLOAD_META.md`（**不要用 `--video` + `--meta`** — `--meta` 只在 `--dir` 分支生效，`--video` 分支要求 `--title` 且忽略 meta 文件）。多章节视频建议加 `--playlist <id>` 归入同一播放列表。上传完把链接回给用户。
 
