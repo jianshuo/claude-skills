@@ -32,6 +32,13 @@ This skill bypasses `httplib2`: it does OAuth via `google-auth`, then drives the
 
 If you're tempted to "just call the YouTube API client directly," don't — it'll fail in this environment.
 
+**`ModuleNotFoundError: No module named 'google.oauth2'`** — Homebrew 升级 Python 大版本后 site-packages 会丢（2026-08 从 3.13→3.14 实际发生过）。别重新 pip install，直接用 uvx 带依赖跑（已验证）：
+
+```bash
+uvx --with google-auth --with requests python \
+  ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir "/path/to/final"
+```
+
 ## Usage
 
 ### Batch upload a `final/` directory
