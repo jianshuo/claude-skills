@@ -51,16 +51,31 @@ def clean_transcript(md: str) -> str:
 
 
 def split_chunks(text: str, limit: int = CHUNK):
-    paras, chunks, cur = text.split("\n\n"), [], ""
-    for p in paras:
-        cand = (cur + "\n\n" + p).strip()
-        if len(cand) > limit and cur:
+    """One chunk per '## ' section (readable comment-sized pieces);
+    oversized sections fall back to paragraph packing; tiny ones merge."""
+    sections = re.split(r'\n(?=## )', text)
+    chunks = []
+    for sec in sections:
+        sec = sec.strip()
+        if not sec:
+            continue
+        if len(sec) <= limit:
+            # merge very short sections into the previous chunk
+            if chunks and len(sec) < 300 and len(chunks[-1]) + len(sec) < limit:
+                chunks[-1] += "\n\n" + sec
+            else:
+                chunks.append(sec)
+            continue
+        cur = ""
+        for p in sec.split("\n\n"):
+            cand = (cur + "\n\n" + p).strip()
+            if len(cand) > limit and cur:
+                chunks.append(cur)
+                cur = p
+            else:
+                cur = cand
+        if cur:
             chunks.append(cur)
-            cur = p
-        else:
-            cur = cand
-    if cur:
-        chunks.append(cur)
     return chunks
 
 
