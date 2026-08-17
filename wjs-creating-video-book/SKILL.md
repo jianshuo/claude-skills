@@ -48,11 +48,18 @@ description: Use when the user wants a book turned into a YouTube 讲书/解读�
 ### Step 0: Bootstrap 项目目录
 
 ```bash
-SLUG=<book-slug>   # 书名拼音或英文短 slug，如 thinking-fast-and-slow
-mkdir -p ~/code/book-videos/$SLUG/video
-cd ~/code/book-videos/$SLUG
-cp ~/.claude/skills/wjs-converting-text-to-video/scripts/tts.py video/tts_narration.py
+SLUG=<book-slug>   # 优先用书的英文名做短 slug（如 naval-almanack）；没有英文名才用拼音
+BOOK=~/code/book-videos/$SLUG
+mkdir -p $BOOK
+~/.claude/skills/wjs-converting-text-to-video/scripts/bootstrap-project.sh $BOOK
+
+# bootstrap 默认竖屏 —— 讲书是横屏，必须改 meta.json：
+cat > $BOOK/video/meta.json <<'EOF'
+{ "name": "wjs-book-video", "width": 1920, "height": 1080, "fps": 30 }
+EOF
 ```
+
+bootstrap 会复制 `tts_narration.py`、生成 `hyperframes.json` / `package.json`、合成 SFX。它会提示「no illustration.png」— 忽略，bg 由 Step 5 生成。
 
 ### Step 1: 拿到书的内容 → `notes.md`
 
