@@ -150,6 +150,21 @@ uvx --with google-auth --with requests python \
 
 `--dir` 模式自动配对目录里的 mp4 和 `UPLOAD_META.md`（**不要用 `--video` + `--meta`** — `--meta` 只在 `--dir` 分支生效，`--video` 分支要求 `--title` 且忽略 meta 文件）。多章节视频建议加 `--playlist <id>` 归入同一播放列表。上传完把链接回给用户。
 
+### Step 7: 把全文文稿挂成评论
+
+每支视频上传后，把该章文稿以「置顶评论 + 按小节分条回复」的形式挂在视频下面（听书的人可以对照读）：
+
+```bash
+uvx --with google-auth --with requests python \
+  ~/.claude/skills/wjs-creating-video-book/scripts/post-transcript-comments.py \
+  <video_id> chapters/NN/chapter.md \
+  --header "📖《书名》第 N 章「章名」全文文稿"
+```
+
+脚本行为：自动剥离 chapter.md 里的站点页眉页脚，按 `## ` 小节切成 3-6 条评论（第一条是置顶主评论，其余作为它的回复，每条 ≤4200 字、标 k/N 序号），回复间隔 2s 防 spam 判定。
+
+**权限**：需要 `youtube.force-ssl` scope。若 token 只有 `youtube.upload`（发评论报 403 / 脚本提示 re-auth），跑一次 `uvx --with google-auth-oauthlib python ~/.claude/skills/wjs-creating-video-book/scripts/reauth-youtube.py` — 会弹浏览器让用户点一次授权，新 token 同时含 upload + force-ssl，以后不用再弹。
+
 ## 目录结构
 
 ```
