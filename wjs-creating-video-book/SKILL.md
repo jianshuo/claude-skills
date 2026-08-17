@@ -111,8 +111,7 @@ uvx --with requests python tts_narration.py   # → narration.mp3 + timing.json
 ### Step 5: 横屏水彩背景
 
 ```bash
-~/.claude/skills/wjs-converting-text-to-video/scripts/generate-bg.sh \
-  ~/code/book-videos/$SLUG reflection 1920x1088
+~/.claude/skills/wjs-converting-text-to-video/scripts/generate-bg.sh $BOOK reflection 1920x1088
 ```
 
 第三个参数 `1920x1088` 是横屏尺寸（该脚本默认竖屏，别漏）。theme 按书的气质选：思维/心理类 `reflection`、商业/科技类 `tech`、成长类 `growth`、警世类 `warning`。输出 `video/bg.png`。
