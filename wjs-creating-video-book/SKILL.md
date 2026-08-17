@@ -95,7 +95,7 @@ bootstrap 会复制 `tts_narration.py`、生成 `hyperframes.json` / `package.js
 格式同 sibling：`[{"id": "s01", "text": "..."}]`。
 
 - 每个观点章节 2-4 个 scene；每 scene 旁白 5-18 秒（讲书比短视频呼吸长，但仍要短长交替）
-- **章节边界必须是强转场**（T2 white flash / T4 color flash），章节内部用 T1/T3
+- **章节边界必须是强转场** — 主用 T2 white flash；T4 color flash 长片放宽到全片 ≤3 次（覆盖 sibling 的 ≤2 规则）。章节内部用 T1/T3
 - Scene Mix Rule（sibling Step 1b）整体适用，按 4-8 分钟等比放大：每个章节内 ≥2 种模板类型；全片 A3 color-flip 2-4 个；B1 双行 strikethrough 全片 ≤4 个
 
 ### Step 4: TTS
