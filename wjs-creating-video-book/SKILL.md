@@ -171,6 +171,8 @@ python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir $BO
 | 把章节文本重新 TTS | 音轨就是 VoiceDrop 读书 mp3，重新合成既浪费又不一致 |
 | 一章塞 5-6 个中心思想 | 画面变成字幕机。锚点宁少勿多，≤3 |
 | 提示词里让 AI 画字 | GPT Image 2 画中文必崩。提示词强制 "No text"，文字走 Pillow 叠加 |
+| 提示词不写 landscape/wide composition | Codex 端 `--size` 只是参考，会返回方图竖图，16:9 裁剪损失大半画面 |
+| 用照片写实风格 | 插画才耐得住 Ken Burns 缓推 + 大字叠加；photo 风显廉价 |
 | 画抽象概念图解（箭头/图表/概念词）| 画具象场景，让画面自己会呼吸 |
 | 每章换一种画风 | 全书一个 style.md，章间一致 |
 | 手写 drawtext 滤镜 | 本机 ffmpeg 没编译 drawtext，会 "No such filter"。用脚本的 Pillow 路径 |
