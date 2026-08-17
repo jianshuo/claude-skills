@@ -2,16 +2,18 @@
 # Generate an abstract watercolor background image for a video via GPT Image 2.
 #
 # Usage:
-#   generate-bg.sh <article-folder> [theme]
+#   generate-bg.sh <article-folder> [theme] [size]
 #
 # theme options (picks color palette):
 #   personal | tech | reflection | warning | growth | abstract
 #
 # If theme omitted, defaults to "personal".
+# size defaults to 1088x1920 (portrait); pass 1920x1088 for landscape videos.
 set -euo pipefail
 
 ART="${1:-}"
 THEME="${2:-personal}"
+SIZE="${3:-1088x1920}"
 
 if [[ -z "$ART" || ! -d "$ART" ]]; then
   echo "usage: generate-bg.sh <article-folder> [personal|tech|reflection|warning|growth|abstract]" >&2
