@@ -133,18 +133,15 @@ Composition 骨架、bg-image/overlay 层、色彩系统、motion、`<audio>` �
 
 ### Step 7: SFX
 
-```bash
-~/.claude/skills/wjs-converting-text-to-video/scripts/synth-sfx.sh ~/code/book-videos/$SLUG/video
-```
-
-用法同 sibling Step 6。讲书片长，额外规则：**bell 只用在全片唯一的 climax**（通常是「我怎么用」章节的落点），章节切换用 tick。
+`video/sfx/{tick,chime,bell}.mp3` 已由 Step 0 bootstrap 生成，接入 timeline 的方法同 sibling Step 6。讲书片长，额外规则：**bell 只用在全片唯一的 climax**（通常是「我怎么用」章节的落点），章节切换用 tick。
 
 ### Step 8: Lint + Inspect + Render
 
 ```bash
-cd ~/code/book-videos/$SLUG/video
-npx hyperframes lint                                   # 0 errors
-npx hyperframes inspect --at 1,30,60,120,180,240,300   # 覆盖每个章节，0 errors
+cd $BOOK/video
+npx hyperframes lint            # 0 errors
+# inspect 的时间点从 timing.json 取：每个章节首 scene 的 start + 1s，全部列上
+npx hyperframes inspect --at <t1,t2,...>   # 0 errors
 npx hyperframes render --quality standard --fps 30 --output ../$SLUG.mp4
 ```
 
