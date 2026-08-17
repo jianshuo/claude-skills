@@ -220,5 +220,5 @@ python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir $BO
 
 同 `wjs-converting-text-to-video`（HyperFrames CLI / GPT Image 2 / Volcano TTS env / ffmpeg），外加：
 - **wjs-uploading-video** — 上传（Step 10），OAuth token `~/.config/youtube/token.json`
-- **pandoc** — EPUB 转文本（`brew install pandoc`，仅 EPUB 输入需要）
+- **pandoc** — EPUB 转文本；仅 EPUB 输入需要，且本机默认**未装**，用前先 `brew install pandoc`
 - **wangjianshuo-perspective** skill — Step 2 写稿语气
