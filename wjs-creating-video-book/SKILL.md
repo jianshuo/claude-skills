@@ -101,8 +101,9 @@ bootstrap 会复制 `tts_narration.py`、生成 `hyperframes.json` / `package.js
 ### Step 4: TTS
 
 ```bash
-cd ~/code/book-videos/$SLUG/video
-python3 tts_narration.py          # → narration.mp3 + timing.json
+cd $BOOK/video
+set -a && source ~/code/.env && set +a     # VOLC_TTS_APPID / VOLC_TTS_ACCESS_TOKEN
+uvx --with requests python tts_narration.py   # → narration.mp3 + timing.json
 ```
 
 声音选择、Volcano 的坑（不传 emotion、不用 kokoro、避开 jieshuonansheng）全部见 sibling Step 3。**长稿注意**：任何一段 chunk 出现 >3 字/秒的异常时长 = hallucinate，拆短重合成。
