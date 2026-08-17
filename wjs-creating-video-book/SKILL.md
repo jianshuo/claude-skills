@@ -152,26 +152,39 @@ npx hyperframes render --quality standard --fps 30 --output ../$SLUG.mp4
 用视频帧 + 大字，不另画 AI 插画（同封面约定）：
 
 ```bash
-# 挑立论 scene 的一帧（视觉最有代表性的时刻）
+cd $BOOK/video    # 以下命令都在 video/ 里跑
+# 挑立论 scene 的一帧（视觉最有代表性的时刻）；snapshot 输出到 snapshots/，文件名含时间戳，ls 确认
 npx hyperframes snapshot --at <t> .
-ffmpeg -y -i snapshots/<frame>.png -vf scale=1280:720 ../thumbnail.jpg
+ffmpeg -y -i snapshots/<刚生成的文件>.png -vf scale=1280:720 ../thumbnail.jpg
 ```
 
 如果帧本身文字不够大，就在 composition 里临时做一个 thumbnail 专用 scene（书名 + 一句钩子，字号拉满）再 snapshot。uploader 不支持 API 设缩略图 —— 提醒用户在 YouTube Studio 手动设置。
 
 ### Step 10: 写 `UPLOAD_META.md` + 上传
 
+**格式必须严格照抄下面这个骨架** — `upload_youtube.py` 的 `parse_meta_md()` 只认 `## NN · 文件名` 块头 + `**短标题**` / `**视频描述**` 小节 + 正文里的 `#tag`，别的格式解析出 0 个块直接退出：
+
 ```markdown
-# <slug>.mp4
-- title: 《书名》讲了什么？<一句话钩子>
-- description: <2-3 段：这本书是什么 + 视频讲了哪几个观点> + 章节 timestamps（00:00 开场 / 00:35 观点一 …，从 timing.json 换算）
-- tags: 讲书,书评,<书名>,<作者>,读书
+## 01 · <slug>.mp4
+
+**短标题**
+《书名》讲了什么？<一句话钩子>
+
+**视频描述**
+<2-3 段：这本书是什么 + 视频讲了哪几个观点>
+
+章节：
+00:00 开场
+00:35 观点一 …（从 timing.json 换算）
+
+#讲书 #书评 #<书名> #<作者> #读书
 ```
 
 ```bash
-python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py \
-  --video ~/code/book-videos/$SLUG/$SLUG.mp4 --meta ~/code/book-videos/$SLUG/UPLOAD_META.md
+python3 ~/.claude/skills/wjs-uploading-video/scripts/upload_youtube.py --dir $BOOK
 ```
+
+`--dir` 模式自动配对目录里的 mp4 和 `UPLOAD_META.md`（**不要用 `--video` + `--meta`** — `--meta` 只在 `--dir` 分支生效，`--video` 分支要求 `--title` 且忽略 meta 文件）。
 
 横屏 → 普通 video（标题不加 #shorts）。默认 public；上传完把视频链接回给用户，并提醒手动设缩略图。**不走** 文章视频那条 daily cron（那是给批量竖屏 Shorts 的）。
 
