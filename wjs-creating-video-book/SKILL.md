@@ -78,7 +78,7 @@ bootstrap 会复制 `tts_narration.py`、生成 `hyperframes.json` / `package.js
 
 ### Step 2: 写讲书稿 → `script.md`
 
-调 `wangjianshuo-perspective` 定语气。1600-2600 字（中文 TTS ≈ 4.5 字/秒 → 6-9.5 分钟音频，配动画节奏后 4-8 分钟成片）。
+调 `wangjianshuo-perspective` 定语气。**1100-2100 字**（中文 TTS ≈ 4.5 字/秒 → 4-8 分钟音频；成片 ≈ 音频长度 + 收尾缓冲，所以字数直接决定片长）。
 
 结构（这也是后面 scene 的章节骨架）：
 
