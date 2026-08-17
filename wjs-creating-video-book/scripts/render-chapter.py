@@ -44,8 +44,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("chapter_dir")
     ap.add_argument("--output")
-    ap.add_argument("--font", default="/System/Library/Fonts/PingFang.ttc")
+    ap.add_argument("--font", default=None)
     args = ap.parse_args()
+    if args.font is None:
+        for cand in ("/System/Library/Fonts/PingFang.ttc",
+                     "/System/Library/Fonts/Hiragino Sans GB.ttc",
+                     "/System/Library/Fonts/STHeiti Medium.ttc"):
+            if Path(cand).exists():
+                args.font = cand
+                break
+        else:
+            sys.exit("no Chinese font found — pass --font")
 
     cdir = Path(args.chapter_dir).resolve()
     audio = cdir / "audio.mp3"
