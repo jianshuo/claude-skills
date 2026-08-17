@@ -76,6 +76,10 @@ def split_chunks(text: str, limit: int = CHUNK):
                 cur = cand
         if cur:
             chunks.append(cur)
+    # a bare title-only first chunk joins the next section
+    if len(chunks) > 1 and len(chunks[0]) < 300 and len(chunks[0]) + len(chunks[1]) < limit:
+        chunks[1] = chunks[0] + "\n\n" + chunks[1]
+        chunks.pop(0)
     return chunks
 
 
