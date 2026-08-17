@@ -76,20 +76,28 @@ mkdir -p $BOOK/chapters/{01,02,...}   # 每章一个两位数目录
 
 ### Step 3: 每个中心思想一张画面（GPT Image 2）
 
-先给**全书**定一个风格底稿 `$BOOK/style.md`（只做一次）：媒介（如 水彩 / 胶片摄影 / 极简插画）、色调家族、光线气质，2-3 句。
+先给**全书**定一个风格底稿 `$BOOK/style.md`（只做一次）：**媒介必须是插画类**（editorial illustration / 水彩插画 / 极简扁平插画等，不用照片写实——插画在 Ken Burns 缓推和文字叠加下最耐看）、色调家族、光线气质，2-3 句。
 
-每张图的提示词 = 全书风格 + 该思想的**具象场景意象**：
+每张图的提示词按**视频友好插画模板**拼装 = 全书插画风格 + 该思想的具象场景 + 固定收尾：
 
 ```bash
 node ~/.claude/skills/gpt-image-2-skill/scripts/gpt_image_2_skill.cjs \
   --json --provider codex images generate \
-  --prompt "<全书风格>. <这个中心思想的具象场景>. No text, no words, no letters." \
+  --prompt "<全书插画风格>. <这个中心思想的具象场景>. Wide horizontal panoramic composition, landscape orientation, cinematic 16:9 framing. Generous negative space, calm lower left area for text overlay. Illustration, not a photograph. No text, no words, no letters." \
   --out $BOOK/chapters/NN/img-1.png --format png --size 1920x1088 --quality high
 ```
 
-- **提示词必须带 "No text, no words, no letters"** — 文字由 Step 4 叠加，AI 画中文必崩
+固定收尾三句缺一不可，各治一种实际踩过的坑：
+
+- **"Wide horizontal panoramic composition, landscape orientation"** — Codex 端 `--size` 只是参考，构图实际跟着提示词走；不写这句会返回方图甚至竖图（竖图被 16:9 居中裁剪后损失大半画面）。渲染脚本虽有兜底裁剪，但源头出横图才是正解
+- **"Generous negative space, calm lower left area"** — 左下角是中心思想大字的固定落位，画面主体必须避开
+- **"No text, no words, no letters" + "Illustration, not a photograph"** — 文字由渲染脚本 Pillow 叠加，AI 画中文必崩；照片写实风在缓推 + 大字下显廉价
+
+其余要求：
+
 - 画具象场景（人、物、光、空间），不画概念图解 / 图表 / 箭头
-- 同章多张图之间也要有视觉关联（同一空间的不同角度、同一天的不同时辰）
+- 同章多张图之间要有视觉关联（同一空间的不同角度、同一天的不同时辰）
+- 生成后检查尺寸：仍出竖图（高 > 宽）就换更明确的横向场景措辞重生成，不要将就
 
 ### Step 4: 合成本章视频
 
