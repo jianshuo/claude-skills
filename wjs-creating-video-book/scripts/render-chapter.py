@@ -96,8 +96,11 @@ def main():
         seg = durs[k] + (XFADE if k < n - 1 else 0)
         frames = int(seg * FPS)
         inputs += ["-loop", "1", "-t", f"{seg:.3f}", "-i", str(img)]
+        # force 16:9 by upscale + center-crop (codex images come in odd aspects;
+        # zoompan would squash any non-16:9 input)
         filters.append(
-            f"[{k}:v]scale=3840:-2,zoompan=z='min(zoom+{ZOOM_PER_FRAME},1.12)'"
+            f"[{k}:v]scale=3840:2160:force_original_aspect_ratio=increase,"
+            f"crop=3840:2160,zoompan=z='min(zoom+{ZOOM_PER_FRAME},1.12)'"
             f":d={frames}:s={W}x{H}:fps={FPS},setsar=1,format=yuv420p[v{k}]")
 
     # chain xfades between stills
