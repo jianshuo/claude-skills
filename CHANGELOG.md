@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-17]
+
+### Added
+
+- **`wjs-creating-video-book`** — new skill: turns a book into per-chapter YouTube videos, using VoiceDrop audiobook mp3s as the audio track (no re-synthesis). For each chapter the skill extracts 1–3 core ideas, generates an editorial-illustration image per idea with GPT Image 2, applies a Ken Burns zoom-pan and 1-second crossfade between images, and renders the central ideas as large-text overlays (≤12 characters + one-line caption, Pillow-composited). Output is a 1920×1080 16:9 MP4 per chapter at 30fps. A `style.md` enforces a consistent visual style across all chapters. After upload the full chapter transcript is posted as a pinned YouTube comment thread (one root comment + per-section replies). Includes a copyright check gate — the workflow stops to confirm user rights before publishing full-chapter readings of in-copyright books.
+
+### Changed
+
+- **`wjs-uploading-video`** — operational refinements including documented behaviour of `uvx`-based invocation as the workaround when Homebrew Python upgrades between major versions (3.13→3.14) wipe site-packages; `--dir` vs `--video` flag guidance clarified, and YouTube daily video-upload rate-limit (`429 rateLimitExceeded`) documented as a separate, per-project anti-abuse limit distinct from the API quota unit limit, with reset time (midnight US Pacific).
+- **`wjs-converting-text-to-video`** — iterative refinements to the scene design and HyperFrames composition workflow.
+
 ## [2026-08-15]
 
 ### Changed

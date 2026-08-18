@@ -91,6 +91,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-voicedrop-post-processing`](./wjs-voicedrop-post-processing/) | 新挖 VoiceDrop 文章后处理守护进程（launchd 每 5 分钟触发，无人值守） | `/wjs-voicedrop-post-processing <stem>` |
 | [`wjs-voicedrop-reading-aloud`](./wjs-voicedrop-reading-aloud/) | 文字转有声书 mp3（豆包 seed-tts-2.0 多声色编排朗读，先写脚本再合成） | `做成有声书` / `朗读出来` / `读给我听` / `/wjs-voicedrop-reading-aloud` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
+| [`wjs-creating-video-book`](./wjs-creating-video-book/) | 把一本书做成按章节的 YouTube 横屏视频：VoiceDrop 有声书 mp3 作音轨，GPT Image 2 生成配图，Ken Burns 缓推 + 中心思想大字叠加 | `书名/书架章节` → 每章一支 1920×1080 YouTube 视频 |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
 | [`wjs-dubbing-video`](./wjs-dubbing-video/) | 文本时间对齐 TTS 配音 | 视频 + 目标语 SRT → 配好音的视频 |
@@ -225,6 +226,18 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **YouTube 日推**：cron 每天 10:00 自动上传最多 5 个 MP4；portrait 自动标 `#Shorts`
 
 > 触发词：`把这篇文章做成视频` / `做一个解说视频` / `讲解视频` / `/wjs-converting-text-to-video`
+
+### [`wjs-creating-video-book`](./wjs-creating-video-book/)
+
+把一本书做成 **按章节的 1920×1080 横屏 YouTube 视频**，给"听书"的观众。
+
+- **听为主，看为辅**：音轨是 VoiceDrop 读书的完整章节 mp3（不重新 TTS）；每章提炼 1–3 个核心中心思想，配一张 GPT Image 2 插画（editorial illustration / 水彩）+ Ken Burns 缓推 + 段间 1s 交叉淡化。
+- **文字叠加**：每个中心思想大字（≤12 字）+ 一句阐释，Pillow 渲染后 1s 淡入淡出叠在画面上，落位左下角（留白预留）。
+- **全书一个视觉风格**：`style.md` 统一媒介、色调、光线气质，章与章之间画风一致。
+- **章节评论**：上传后把全文文稿以「置顶主评论 + 分节回复」的形式挂在视频下，供听众对照阅读。
+- **版权提示**：整章朗读原文仅适用于公版书或用户拥有权利的书；在版权书发布前会先向用户确认。
+
+> 触发词：`把这本书做成视频` / `有声书做成视频` / `讲书视频` / `book video` / `/wjs-creating-video-book <书名>`
 
 ---
 
