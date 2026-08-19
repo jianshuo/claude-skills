@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-19]
+
+### Changed
+
+- **`wjs-voicedrop`** — updated MCP tool count from 32 to 44, and added a new capability category: 书架读书与写书修书 (bookshelf read / write / edit). The description now reflects the full current surface of voicedrop.cn/mcp.
+
 ## [2026-08-17]
 
 ### Added

@@ -85,7 +85,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-wechat`](./wjs-publishing-wechat/) | 写 / 润色 / 发微信公众号 | 草稿文本 → 排版好的 HTML + 题图 + 解释图 + 上传草稿 |
 | [`wjs-mining-articles`](./wjs-mining-articles/) | 从视频字幕里挖公众号文章（独白或对谈） | SRT → N 篇独立公众号文章 + 微信草稿 |
 | [`wjs-mining-voicedrop`](./wjs-mining-voicedrop/) | VoiceDrop 语音备忘 → 转写 → 公众号文章草稿 | R2 收件箱 VoiceDrop-*.m4a → SRT → N 篇微信草稿 |
-| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop MCP 的入口：完成 6+4 手机配对登录，把你接上 voicedrop.cn/mcp 的 32 个工具（文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币等） | `voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `/wjs-voicedrop` |
+| [`wjs-voicedrop`](./wjs-voicedrop/) | VoiceDrop MCP 的入口：完成 6+4 手机配对登录，把你接上 voicedrop.cn/mcp 的 44 个工具（文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币、书架读书与写书修书等） | `voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `/wjs-voicedrop` |
 | [`wjs-evaling-voicedrop-prompts`](./wjs-evaling-voicedrop-prompts/) | 评估 VoiceDrop 挖矿 prompt 改版：用金标集对冠军和候选做盲评对决，输出胜率报告，人工确认后才晋级生产 | `评估 prompt` / `挖矿 prompt 改好了吗` / `eval prompt` / `/wjs-evaling-voicedrop-prompts` |
 | [`wjs-voicedrop-choosing-cover`](./wjs-voicedrop-choosing-cover/) | 判断 VoiceDrop 文章是否需要 AI 题图，并选定风格与生成可直接用的 prompt（比例 2.45:1 / 1568×640） | `这篇要不要配题图` / `选个题图风格` / `给这篇出个题图 prompt` / `/wjs-voicedrop-choosing-cover` |
 | [`wjs-voicedrop-post-processing`](./wjs-voicedrop-post-processing/) | 新挖 VoiceDrop 文章后处理守护进程（launchd 每 5 分钟触发，无人值守） | `/wjs-voicedrop-post-processing <stem>` |
@@ -159,11 +159,11 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 
 ### [`wjs-voicedrop`](./wjs-voicedrop/)
 
-VoiceDrop 的 MCP 接入入口。所有实际功能（文章、文风、挖矿、社区……）都在 voicedrop.cn/mcp 的 32 个 MCP 工具里；本 skill 唯一的工作是把你接上去。
+VoiceDrop 的 MCP 接入入口。所有实际功能（文章、文风、挖矿、社区……）都在 voicedrop.cn/mcp 的 44 个 MCP 工具里；本 skill 唯一的工作是把你接上去。
 
 - **接上了？直接用工具。** 会话里已有 `list_articles`、`read_style`、`community_feed`、`credit_balance` 等工具时，无需阅读 SKILL.md，直接调用。
 - **还没接上？走两步登录：** 用 MCP 的 `login` 工具完成 6+4 手机配对——先用手机 **设置 → 账户** 里的 6 位十六进制码发第一步，手机弹出 4 位数字码后发第二步，拿到 `anon_` 令牌后接进客户端。
-- **MCP 覆盖的 32 个工具**：文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币、算力余额与账单、分享 / 公众号 / 小红书等。工具说明以 MCP 自身描述为准。
+- **MCP 覆盖的 44 个工具**：文章读写与版本、文风与蒸馏、挖矿与重写、社区与投币、算力余额与账单、分享 / 公众号 / 小红书、书架读书与写书修书等。工具说明以 MCP 自身描述为准。
 
 > 触发词：`voicedrop` / `voicedrop 登录` / `接 voicedrop mcp` / `voicedrop token` / `/wjs-voicedrop`
 
