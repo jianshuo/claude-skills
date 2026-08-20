@@ -114,9 +114,15 @@ launchctl bootout gui/$(id -u)/com.jianshuo.wjs-publishing-books-to-x  # 停掉
 ```
 ~/.claude/skills/wjs-publishing-books-to-x/
 ├── SKILL.md
+├── daily.sh                  # launchd 每日入口（挑书→起草→校验→发→记录）
+├── com.jianshuo.wjs-publishing-books-to-x.plist.template
+├── scripts/
+│   ├── pick-next-book.sh     # 下一本没发过的我的书（新→旧）
+│   └── fetch-book.py         # 抓书素材（目录梗概+序章+前两章）→ 纯文本
 └── state/
-    ├── .gitignore        # history.jsonl 不进公开 repo
-    └── history.jsonl     # 每发一本记一行
+    ├── .gitignore            # history.jsonl / today-* 不进公开 repo
+    ├── history.jsonl         # 每发一本记一行
+    └── today-*.{txt,json,jpg}  # 当天工作文件
 ```
 
 ## Dependencies
