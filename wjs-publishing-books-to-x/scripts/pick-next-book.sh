@@ -3,10 +3,12 @@
 # 我的书 = author 是「王建硕」或空；跳过 history.jsonl 里已出现的 slug
 # （posted / posted_partial 都算发过），跳过 chapters==0 的老书（没法读正文）。
 # 顺序：createdAt 从新到旧。
+# 退出码：0 = 选中一本；3 = 全发完了；其他 = 出错。
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 exec python3 - "$HERE/state/history.jsonl" <<'PY'
 import json, sys, urllib.request
+UA = {"User-Agent": "Mozilla/5.0 wjs-publishing-books-to-x"}  # 裸 urllib UA 会被 CF 403
 hist = set()
 try:
     for line in open(sys.argv[1]):
