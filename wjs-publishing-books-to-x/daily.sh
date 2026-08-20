@@ -52,7 +52,7 @@ else
   SLUG=$(printf '%s' "$PICK" | cut -f1)
   TITLE=$(printf '%s' "$PICK" | cut -f2-)
 fi
-echo "Picked: $SLUG （$TITLE）"
+echo "Picked: ${SLUG} （${TITLE}）"
 
 # --- Step 2: 抓素材 ---
 MATERIAL="${STATE}/today-material.txt"
@@ -64,13 +64,13 @@ python3 "${HERE}/scripts/fetch-book.py" "$SLUG" "$MATERIAL" || {
 # --- Step 3: claude 起草 thread ---
 prompt=$(cat <<EOF
 读这本书的素材文件：$MATERIAL
-（这是王建硕在 VoiceDrop 上写的一本书，slug 是 $SLUG）
+（这是王建硕在 VoiceDrop 上写的一本书，slug 是 ${SLUG}）
 
 把这本书拆成一个 X (Twitter) thread，写成 JSON 字符串数组（每条 tweet 一个元素），用 Write 工具写到：
 $THREAD
 
 结构合同（总共 6-10 条）：
-- 第 1 条：钩子——书的核心断言或问题 + 书名《$TITLE》。不带链接。
+- 第 1 条：钩子——书的核心断言或问题 + 书名《${TITLE}》。不带链接。
 - 中间各条：按书的脉络每条讲透一个点，从素材的梗概/正文里抠具体内容（数字、比喻、反直觉的断言），不是报菜名式罗列章节标题。
 - 倒数第 2 条：全书免费读 https://voicedrop.cn/books/$SLUG/
 - 最后 1 条：讲这本书是怎么用 VoiceDrop 写出来的——丢一句中心思想（从素材推断这本书的 seed 是什么），整本书自己长出来、逐章补齐、不满意的地方一句话修书。落一句 voicedrop.cn。不写成广告词。
