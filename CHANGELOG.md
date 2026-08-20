@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-08-20]
+
+### Added
+
+- **`wjs-publishing-books-to-x`** — new skill: publishes 王建硕's own VoiceDrop books (`voicedrop.cn/books`) as X/Twitter threads, one book per thread. Filters the community bookshelf down to books authored by 王建硕 or unattributed (early books had no author field) so it never speaks for another community writer; deduplicates against `state/history.jsonl`. Thread structure is a fixed contract: tweet 1 is the hook plus the book cover image (uploaded via `xurl media upload --category tweet_image`), tweets 2…N-2 extract 6–10 concrete points from the book's chapter summaries and body (quotable numbers, metaphors, counter-intuitive claims — never a table of contents), tweet N-1 links the free full read at `voicedrop.cn/books/<slug>/`, and the final tweet describes how the book was actually written in VoiceDrop (seed idea → chapters grow → one-line edits). Per-tweet weight cap ≤280 (Chinese char = 2) buffered to ~120 Chinese chars; no hashtag / emoji / @; links only in the last two tweets. Posts via chained `xurl` `/2/tweets` replies with 5-second sleeps and grep-based id parsing (X returns raw newlines in `text` that `jq` rejects). Failure halts the chain rather than skipping a tweet (would break the reply chain). Includes a launchd daemon (`com.jianshuo.wjs-publishing-books-to-x`) that runs `daily.sh` every day at 10:10 to pick the newest unpublished book, draft via `claude -p`, validate weighted length, and post; `DRY_RUN=1` previews without posting. Multi-book runs are throttled to ≥4-hour spacing to avoid X's flood detection.
+
 ## [2026-08-19]
 
 ### Changed

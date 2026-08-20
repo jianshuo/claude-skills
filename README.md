@@ -105,6 +105,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-uploading-video`](./wjs-uploading-video/) | 批量上传 YouTube | MP4 (+ `UPLOAD_META.md`) → YouTube |
 | [`wjs-tweeting-from-articles`](./wjs-tweeting-from-articles/) | 从最近公众号文章萃取每日 X tweet，人工挑角度后真发 | article.md → X / Twitter |
 | [`wjs-syndicating-articles`](./wjs-syndicating-articles/) | 把最新公众号文章一键扇出到 X / Bluesky / Threads / LinkedIn + 手动平台待发件箱 | article.md → API 平台直发 + outbox |
+| [`wjs-publishing-books-to-x`](./wjs-publishing-books-to-x/) | 把 VoiceDrop 书架上「我写的书」逐本拆成 6–10 条 X thread 发出（首条带封面、末条讲这本书是怎么写的），launchd 每天 10:10 挑一本没发过的自动起草并发出 | `voicedrop.cn/books` → X thread（真发 + `history.jsonl` 去重） |
 | [`wjs-promoting-skills`](./wjs-promoting-skills/) | 每日自动推广 skill → X 帖 + 社区草稿 | `wjs-*` skills → X tweet + outbox drafts |
 | [`wjs-x-increasing-follower`](./wjs-x-increasing-follower/) | X 涨粉实验框架：带编号的 A/B 实验，以新增关注 ÷ 主页访问转化率为北极星 | X Analytics CSV → SCOREBOARD.md |
 | [`wjs-x-improving-content`](./wjs-x-improving-content/) | 迭代改 `prompt.md` 提升每条推的 impression：每版 prompt 是带假设的 git SHA 版本实验 | Content CSV → 版本对比 + 内容特征 |
@@ -365,6 +366,18 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - 可加 `--dry-run` 预览；`--mark <slug> <platform>` 手动标记已发；`--open` 交互模式开浏览器
 
 > 触发词：`分发文章到各平台` / `同步到社交平台` / `今天的文章发各平台` / `/wjs-syndicating-articles`
+
+### [`wjs-publishing-books-to-x`](./wjs-publishing-books-to-x/)
+
+把 VoiceDrop 书架（`voicedrop.cn/books`）上**王建硕自己写的书**逐本发成 X thread。一本一 thread，首条带封面 + 钩子，中间按书的脉络抠 6–10 条硬内容，最后一条讲「这本书是怎么用 VoiceDrop 写出来的」——不写营销词，讲真实过程。
+
+- **只发我的书**：`author == "王建硕"` 或 author 为空（早期未署名）算我的；社区书架上署名蜜蜡 / Dennis / sissi 等的书自动跳过，不替别人代言。
+- **结构合同**：首条 + 封面图 → 中间 N-2 条抠梗概 / 正文里的数字、比喻、反直觉断言 → 倒数第二条挂全书免费读链接 → 最后一条讲写作过程。硬约束：每条加权 ≤280（中文每字算 2），buffer 到 ~120 汉字，无 hashtag / emoji / @，链接只出现在最后两条。
+- **发送即幂等**：`state/history.jsonl` 记录每本书的 thread 首条 id，重跑自动跳过已发；任一条 tweet 失败就停在原地报错，绝不断链跳过。
+- **daily 自动化**：launchd `com.jianshuo.wjs-publishing-books-to-x` 每天 10:10 挑最新一本没发过的书 → `claude -p` 起草 → 校验长度 → 链式发出；书发完了自动歇着。`DRY_RUN=1 daily.sh` 预览不发。
+- **多本连发节流**：一次 session 默认一本；用户要「把书都发了」→ 每本间隔 ≥4 小时排期（避 X 刷屏判定）。
+
+> 触发词：`把书发到 X` / `发书的 thread` / `publish my book to X` / `书架的书发推` / `/wjs-publishing-books-to-x`
 
 ---
 
