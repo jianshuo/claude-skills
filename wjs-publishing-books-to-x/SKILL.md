@@ -86,6 +86,18 @@ jq -nc --arg date "$(date +%F)" --arg slug "$SLUG" --arg id "$FIRST_ID" --argjso
 
 一次 session 默认发**一本**。用户要「把书都发了」→ 每本间隔 ≥4 小时排期（一口气连发多个 thread 会被 X 判刷屏），机制照抄 `wjs-tweeting-from-articles` 的批量排期模式（队列 + cron 自节流）。
 
+## Daily 自动化（已装）
+
+launchd 每天 **10:10** 跑 `daily.sh`：自动挑最新一本没发过的（chapters=0 的老书跳过）→ `claude -p` 按上面结构合同起草 → 校验加权长度 → 链式发出 → 记 history。书发完了自动歇着。
+
+```bash
+DRY_RUN=1 bash ~/.claude/skills/wjs-publishing-books-to-x/daily.sh   # 起草不发
+FORCE_SLUG=<slug> bash .../daily.sh                                  # 指定书
+launchctl bootout gui/$(id -u)/com.jianshuo.wjs-publishing-books-to-x  # 停掉
+```
+
+日志：`~/Library/Logs/wjs-publishing-books-to-x/`。改时间：编辑 `~/Library/LaunchAgents/com.jianshuo.wjs-publishing-books-to-x.plist` 后 bootout + bootstrap。
+
 ## Anti-Patterns
 
 | 不要 | 原因 |
