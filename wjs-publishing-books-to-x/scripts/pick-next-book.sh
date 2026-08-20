@@ -29,6 +29,6 @@ mine = [b for b in d["books"]
         and b["slug"] not in hist]
 mine.sort(key=lambda b: -b.get("createdAt", 0))
 if not mine:
-    sys.exit(1)
+    sys.exit(3)
 print(f'{mine[0]["slug"]}\t{mine[0]["title"]}')
 PY

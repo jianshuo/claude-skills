@@ -12,9 +12,13 @@ from html import unescape
 BASE = "https://jianshuo.dev/voicedrop/books"
 
 
+UA = {"User-Agent": "Mozilla/5.0 wjs-publishing-books-to-x"}  # 裸 urllib UA 会被 CF 403
+
+
 def get(path):
     try:
-        with urllib.request.urlopen(f"{BASE}/{path}", timeout=30) as r:
+        req = urllib.request.Request(f"{BASE}/{path}", headers=UA)
+        with urllib.request.urlopen(req, timeout=30) as r:
             return r.read().decode("utf-8", "replace")
     except Exception:
         return ""
