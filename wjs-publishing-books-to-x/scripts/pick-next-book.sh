@@ -20,7 +20,8 @@ try:
                 pass
 except FileNotFoundError:
     pass
-with urllib.request.urlopen("https://jianshuo.dev/voicedrop/books?format=json", timeout=30) as r:
+req = urllib.request.Request("https://jianshuo.dev/voicedrop/books?format=json", headers=UA)
+with urllib.request.urlopen(req, timeout=30) as r:
     d = json.load(r)
 mine = [b for b in d["books"]
         if b.get("author") in ("王建硕", "")
