@@ -49,7 +49,8 @@ else
     echo "FATAL: pick-next-book failed (rc=$rc)"
     exit 1
   fi
-  SLUG="${PICK%%$'\t'*}"; TITLE="${PICK#*$'\t'}"
+  SLUG=$(printf '%s' "$PICK" | cut -f1)
+  TITLE=$(printf '%s' "$PICK" | cut -f2-)
 fi
 echo "Picked: $SLUG （$TITLE）"
 
