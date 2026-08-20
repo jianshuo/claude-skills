@@ -103,9 +103,8 @@ jq -nc --arg date "$(date +%F)" --arg slug "$SLUG" --arg id "$FIRST_ID" --argjso
 ~/.claude/skills/wjs-publishing-books-to-x/
 ├── SKILL.md
 └── state/
-    ├── .gitignore        # history.jsonl、mine.txt 不进公开 repo
-    ├── history.jsonl     # 每发一本记一行
-    └── mine.txt          # 空署名书中确认是我的 slug 白名单
+    ├── .gitignore        # history.jsonl 不进公开 repo
+    └── history.jsonl     # 每发一本记一行
 ```
 
 ## Dependencies
