@@ -41,9 +41,13 @@ record() { echo "$1" >> "$HIST"; }
 if [[ -n "${FORCE_SLUG:-}" ]]; then
   SLUG="$FORCE_SLUG"; TITLE="$FORCE_SLUG"
 else
-  if ! PICK=$("${HERE}/scripts/pick-next-book.sh"); then
+  PICK=$("${HERE}/scripts/pick-next-book.sh"); rc=$?
+  if [[ $rc -eq 3 ]]; then
     echo "没有可发的书了（全部发完）。"
     exit 0
+  elif [[ $rc -ne 0 ]]; then
+    echo "FATAL: pick-next-book failed (rc=$rc)"
+    exit 1
   fi
   SLUG="${PICK%%$'\t'*}"; TITLE="${PICK#*$'\t'}"
 fi
