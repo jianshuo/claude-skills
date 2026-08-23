@@ -25,9 +25,42 @@ Spoken audio in → timestamped SRT in the same language out. **This skill stops
 |---|---|---|
 | Chinese (zh-CN, zh-HK, zh-TW) | **Volcano (豆包) ASR** | Materially better accuracy than Whisper for Chinese — user's standing preference |
 | Any other (es, en, pt, fr, it, ja, ko, …) | **OpenAI Whisper API** with word-level granularity | Whisper's multilingual is strong; word timestamps let us assemble cues ourselves |
+| Explicit Atlas Cloud request | **Atlas Seed ASR 2.0** | Optional remote backend with word timestamps; never selected automatically |
 | Offline / no API access | Local `openai-whisper` (medium) | Quality floor; same loop/blob failure modes apply |
 
 For Chinese, do **not** default to Whisper unless the user explicitly asks for it or Volcano is unavailable. This is a deliberate routing decision — see user's memory on Chinese ASR priority.
+
+Atlas Cloud is opt-in only. Do not change the language-based Volcano/OpenAI defaults or use
+Atlas as an automatic fallback.
+
+## Atlas Cloud ASR path — explicit opt-in only
+
+Use this path only when the user explicitly selects Atlas Cloud. It accepts `mp3`, `wav`,
+`ogg`, or `raw` audio, so extract video audio first when needed:
+
+```bash
+ffmpeg -hide_banner -loglevel error -y -i input.mp4 -vn -ac 1 -ar 16000 -c:a libmp3lame -b:a 64k input.asr.mp3
+```
+
+The bundled client first checks the live model catalog, OpenAPI schema, and catalog price.
+Run it without `--yes` to preflight; this makes no generation request:
+
+```bash
+python3 scripts/atlas_asr.py input.asr.mp3 input.atlas.json --language <language-code>
+```
+
+Show the live quote and ask for explicit cost approval. Only after approval, repeat with
+`--yes`, then use the existing deterministic SRT builder:
+
+```bash
+python3 scripts/atlas_asr.py input.asr.mp3 input.atlas.json --language <language-code> --yes
+python3 scripts/build_srt_from_asr.py input.atlas.json input.srt --max-chars 18
+```
+
+Use Atlas language codes such as `zh-CN`, `en-US`, or `es-MX`. The client submits exactly one
+`POST /api/v1/model/generateAudio` request and never retries it. Only the read-only prediction
+GET uses bounded exponential backoff. Credentials come from `ATLASCLOUD_API_KEY` (or
+`ATLAS_CLOUD_API_KEY`); never print the value or send it outside `api.atlascloud.ai`.
 
 ## OpenAI Whisper API path (non-Chinese, and Chinese fallback)
 
