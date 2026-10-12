@@ -114,6 +114,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
+| [`wjs-explaining-tv-slang`](./wjs-explaining-tv-slang/) | 解释美剧/英剧台词、口头语、俚语和梗：给出实际用途、语气分量、中文对应说法、使用场景，并追加记录到个人生词本 | `美剧口头语` / `台词什么意思` / `这是什么梗` / `/wjs-explaining-tv-slang` |
 | [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/) | WordPress → Hugo 静态站迁移，老链接不断 | WXR .xml + uploads/ → Hugo + GitHub Pages |
 | [`wjs-publishing-hugo`](./wjs-publishing-hugo/) | Hugo 博客的对话式后台：说一句就发文/改文件/管类目，无需 CMS 或服务器 | `发一篇博客` / `博客后台` / `/wjs-publishing-hugo` |
 | [`wjs-looping-feedback`](./wjs-looping-feedback/) | 给任意网站装「提个建议→Issue→Claude 自动改代码→部署」反馈闭环 | `给网站加个反馈对话框` / `feedback loop` / `/wjs-looping-feedback` |
@@ -406,6 +407,17 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - 如果该词在库里没有片段，脚本直接退出并提示用户换一个更常用的词
 
 > 触发词：`teach <word>` / `讲讲 <word>` / `学英语 <word>` / `把 <word> 做成视频` / `/wjs-teaching-english <word>`
+
+### [`wjs-explaining-tv-slang`](./wjs-explaining-tv-slang/)
+
+解释美剧/英剧台词、口头语、俚语和梗，让用户真正懂「这句话在那一刻干了什么」——而不只是字面意思。
+
+- **10 节完整格式**：字面 vs 实际用法 → 来源/为什么这么说 → 语气与分量（正式度/冒犯度/情绪/地域/时代感）→ 你能不能用 → 中文对应说法 → 例句 → 剧里的上下文 → 怎么接话 → 近义/变体/容易混淆 → 发音（连读/吞音）
+- **批量/SRT 模式**：扫字幕文件，跳过普通词汇，逐条速查格式输出 + 末尾汇总表
+- **事实纪律**：剧集出处先 WebSearch 核实，2023 年后网络俚语也先查再答，不确定直说
+- **生词本**：每次解释后自动追加到 `~/code/tv-slang/notebook.md`；用户说「复习」时随机抽题考察
+
+> 触发词：`美剧口头语` / `台词什么意思` / `这是什么梗` / `这个口头语怎么用` / `/wjs-explaining-tv-slang`
 
 ---
 

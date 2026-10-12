@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-12]
+
+### Added
+
+- **`wjs-explaining-tv-slang`** — new skill: explains American/British TV show lines, catchphrases, idioms, and slang in a way that goes beyond the literal translation — the goal is to understand what the line is *doing* in that moment (teasing, refusing, backing down, being sarcastic). Structured as a 10-section deep-dive per expression: literal vs. actual meaning, etymology / why people say it this way, tone & offensiveness table (formality / offensiveness / emotion / regional/demographic / era), whether and when a non-native speaker can safely use it, natural Chinese equivalents (how a Chinese speaker would say the same thing in the same situation, not word-for-word), example sentences covering different registers with stress/intonation guidance, in-show context analysis, how to respond, near-synonyms/variants/easily-confused words, and pronunciation (contractions, reductions, connected speech). Also includes a **batch/SRT mode**: scans a subtitle file, skips ordinary vocabulary, and outputs each slang term in a compact one-line quick-lookup format with a final summary table. Fact discipline is built in: episode citations require WebSearch verification before stating them; Gen Z / post-2023 internet slang is also checked live before answering. Explanations are always logged to a personal notebook at `~/code/tv-slang/notebook.md` (append-only) for review later; the skill also supports a quiz/review mode that randomly samples notebook entries, presents scene contexts, and reveals answers after the user guesses. Triggers: `美剧口头语` / `台词什么意思` / `这是什么梗` / `这个口头语怎么用` / `what does 'X' mean in this show` / `/wjs-explaining-tv-slang`.
+- **README** — added `wjs-explaining-tv-slang` to the skills summary table and as a new subsection in section 7 "英语教学 / English Teaching".
+
 ## [2026-08-20]
 
 ### Added
