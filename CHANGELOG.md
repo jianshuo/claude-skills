@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-15]
+
+### Added
+
+- **`wjs-fetching-movie`** — new skill: turns a movie list into Relisten-ready HEVC mp4 files filed under `~/Movies/Relisten/`. For each film the skill confirms the IMDb identity, finds a legal source (in order: a DRM-free file the user already owns on this Mac → Internet Archive public-domain / openly-licensed copies → official free full-length uploads on YouTube/similar platforms via `yt-dlp`), fetches English and Chinese subtitles (first from the source itself, then OpenSubtitles hash-matched, then Whisper-transcribed + translated as a fallback), and repackages with `hevc_videotoolbox` (`-q:v 55`, `hvc1` tag, AAC 128k stereo downmix, `+faststart`) targeting ~1–2 GB per 90-minute film. Two embedded subtitle tracks are labelled `eng`/English (default) and `chi`/中文 so Relisten can display them. An automatic QA pass (`ffprobe` track-language check + 3-point subtitle/audio alignment spot-check) runs before delivery. Companion scripts: `ia_search.py` (Internet Archive discovery), `opensubs.py` (OpenSubtitles API with moviehash precision), `pack.sh` (encode + mux). Hard-coded legal boundary: torrents, magnet links, link-aggregator sites, and DRM-bypass (Apple TV / Netflix purchases) are explicitly off-limits; if no legal downloadable source exists the skill reports why and suggests legitimate purchase/rip paths. Triggers: `找电影` / `下载这几部电影` / `给 relisten 准备片子` / `电影列表` / `/wjs-fetching-movie`.
+- **README** — added `wjs-fetching-movie` to the skills summary table and as a new subsection under section 7 "英语教学 / English Teaching".
+
 ## [2026-10-12]
 
 ### Added

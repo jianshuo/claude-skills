@@ -115,6 +115,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
 | [`wjs-explaining-tv-slang`](./wjs-explaining-tv-slang/) | 解释美剧/英剧台词、口头语、俚语和梗：给出实际用途、语气分量、中文对应说法、使用场景，并追加记录到个人生词本 | `美剧口头语` / `台词什么意思` / `这是什么梗` / `/wjs-explaining-tv-slang` |
+| [`wjs-fetching-movie`](./wjs-fetching-movie/) | 把电影清单变成 Relisten 可直接导入的 HEVC mp4（含英/中内封字幕），只用合法片源（Internet Archive 公版片、官方免费放映等） | `找电影` / `给 relisten 准备片子` / `电影列表` / `/wjs-fetching-movie` |
 | [`wjs-converting-wp-to-hugo`](./wjs-converting-wp-to-hugo/) | WordPress → Hugo 静态站迁移，老链接不断 | WXR .xml + uploads/ → Hugo + GitHub Pages |
 | [`wjs-publishing-hugo`](./wjs-publishing-hugo/) | Hugo 博客的对话式后台：说一句就发文/改文件/管类目，无需 CMS 或服务器 | `发一篇博客` / `博客后台` / `/wjs-publishing-hugo` |
 | [`wjs-looping-feedback`](./wjs-looping-feedback/) | 给任意网站装「提个建议→Issue→Claude 自动改代码→部署」反馈闭环 | `给网站加个反馈对话框` / `feedback loop` / `/wjs-looping-feedback` |
@@ -418,6 +419,18 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **生词本**：每次解释后自动追加到 `~/code/tv-slang/notebook.md`；用户说「复习」时随机抽题考察
 
 > 触发词：`美剧口头语` / `台词什么意思` / `这是什么梗` / `这个口头语怎么用` / `/wjs-explaining-tv-slang`
+
+### [`wjs-fetching-movie`](./wjs-fetching-movie/)
+
+把一份电影清单变成 Relisten 可直接导入的 HEVC mp4 文件，每部归档到 `~/Movies/Relisten/<片名> (<年份>)/`，内封英文（默认）+ 中文字幕轨。
+
+- **只用合法片源**（硬规则，按顺序找）：① 本机已有的无 DRM 文件；② Internet Archive 上有 publicdomain / CC 授权的公版片；③ 片方/发行方自己在 YouTube 等平台免费公开的完整版（`yt-dlp` 下载）。找不到合法片源就如实报告，给正规获取路径，绝不走种子 / 磁力 / 破解 DRM。
+- **字幕三级兜底**：片源自带 → OpenSubtitles（moviehash 精确匹配，需要 API key）→ Whisper 转写 + 翻译。中文字幕网络找到但非 hash 匹配时抽查开头/中段/结尾三处时间轴。
+- **压制到 Relisten 最优规格**：1080p 上限、`hevc_videotoolbox -q:v 55`、`hvc1` tag（QuickTime/AVPlayer 直接播）、AAC 128k 双声道（避免 5.1 丢中置对白），目标 90 分钟片约 1–2GB。
+- **自动验收**：`ffprobe` 确认轨道语言 + 时长一致；抽 3 个时间点核对字幕和语音对齐。
+- 配套脚本：`ia_search.py`（Internet Archive 搜索）/ `opensubs.py`（OpenSubtitles 精确匹配）/ `pack.sh`（压制 + 封装）。
+
+> 触发词：`找电影` / `下载这几部电影` / `给 relisten 准备片子` / `电影列表` / `/wjs-fetching-movie`
 
 ---
 
