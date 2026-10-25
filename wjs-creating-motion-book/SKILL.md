@@ -28,6 +28,8 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 | 9 HTML 交付 | 打包公用播放器 | `node $S/build_html.mjs <项目>` → Mac 发 Artifact（`files` 用 `html/artifact_files.json`）；VPS 把 `html/` 整个目录传到静态站 | 任意 |
 | 10 MP4（要才做） | 按章分段渲、可续跑、≤2 进程；deliver 门禁 | `python3 $S/render_chunks.py <项目> <项目>/成片/成片_vN.mp4`；`uv run ~/.claude/skills/huashu-art-motion/scripts/deliver.py <mp4> --project <项目>/代码工程 --qa <qa 目录> --root <项目> --vertical yes --out <项目>/output/` | Mac |
 
+**顺序是硬的：步 4 先拿到听书 mp3，步 5 的画面全部按这份 mp3 的 ASR 句时间切镜。** 音频只有这一个来源；全流程唯一可能花 TTS 钱的地方是步 4 里听书缓存没命中的章（一章只一次，之后永久缓存）。
+
 只改了几镜：改 `chNN.js` → 重跑步 9（HTML 不到 1 秒）；MP4 删掉 `成片_vN_chunks/chNN.mp4` 重跑步 10，其余章复用。
 
 ## 省时间的关键

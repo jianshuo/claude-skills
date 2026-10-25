@@ -78,7 +78,7 @@ window.GLOBAL_OVERLAY = (c, t) => {
 // ---------- 段落表 ----------
 fs.writeFileSync(path.join(Bd, 'meta.js'), `window.BOOK_META = ${JSON.stringify({ title: B.title, chapters: B.chapters })};\n`);
 const extra = (B.extra_libs || []).map(f => `scenes/book/${f}`);   // 本书另有的共用场景文件
-const ph = missing.map(ch => `SCENES['ph_${ch}'] = { draw(c, lt, t) { K.bg(c, t, {}); K.text(c, '${ch} 待制作', 540, 900, { size: 90 }); } };\n`).join('');
+const ph = missing.length ? 'window.SCENES = window.SCENES || {};   // 占位镜头比场景文件先加载\n' + missing.map(ch => `SCENES['ph_${ch}'] = { draw(c, lt, t) { K.bg(c, t, {}); K.text(c, '${ch} 待制作', 540, 900, { size: 90 }); } };\n`).join('') : '';
 const lines = []; for (let k = 0; k < shots.length; k += 4) lines.push('  ' + shots.slice(k, k + 4).map(s => JSON.stringify(s).replace(/,/g, ', ')).join(', '));
 const [W, H] = B.size || [1080, 1920];
 fs.writeFileSync(path.join(E, 'eras_book.js'), `// 《${B.title}》：assemble.mjs 生成，别手改（改各章 音频/chNN.shots.json 后重跑）
