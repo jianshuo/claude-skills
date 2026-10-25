@@ -84,7 +84,7 @@ RULES="- **子 agent 一律前台并行**：在同一条消息里同时发出多
 PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 Chromium，全程无人值守：没有人回答问题，不要停下来问）。
 用 wjs-voicedrop-creating-motion-book skill 把书架上的《$TITLE》（slug $slug）做成竖屏 HTML 动画版${ONLY:+，只做 $ONLY 这几章（试看版，总装用 assemble.mjs --only $ONLY）}。
 - 项目目录 ~/art-films/$slug。取书用 node $S/fetch_book.mjs $slug ~/art-films/章名.txt（这台机器没有 VoiceDrop MCP），再 new_book.mjs、narrate.mjs。
-$([ $RESUMED = 1 ] && echo "- 项目目录里已经有上一轮做了一半的东西：先照样跑 new_book.mjs 把引擎装上（它不覆盖已有文件，book.json 里的画风沿用）；口播/ASR 已齐的章 narrate.mjs 会跳过；已有 chNN_x.js 和对应 shots.json、且冒烟通过的段不要重做，只补缺的段。")
+$([ $RESUMED = 1 ] && echo "- 项目目录里已经有上一轮做了一半的东西：先照样跑 new_book.mjs 把引擎装上（它不覆盖已有文件，book.json 里的画风沿用）；口播/ASR 已齐的章 narrate.mjs 会跳过；已有 chNN_x.js 和对应 shots.json、且冒烟通过的段不要重做，只补缺的段。" || true)
 - 画风按 references/选画风.md 自己定：可以出主镜头对比，评委用子 agent，定了就往下走。
 - 分章制作派子 agent 并行；单个 agent 负责的口播不超过约 4 分钟，长章拆成 chNN_a / chNN_b（assemble 会自动按字母顺序拼）。渲染命令一律 bash $S/render_lock.sh 前缀（RENDER_SLOTS=4）。
 $RULES
