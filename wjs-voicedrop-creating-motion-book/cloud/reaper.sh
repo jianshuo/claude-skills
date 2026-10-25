@@ -1,9 +1,10 @@
 #!/bin/bash
 # 兜底清理：打了 motion-book 标签、开了超过 MAX_HOURS（默认 6）小时的 Vultr 机器一律删除（run_book.sh 被杀、断网、VPS 重启时的保险）。
-# Tokyo VPS root 的 crontab：*/30 * * * * bash /root/motion-book/claude-skills/wjs-voicedrop-creating-motion-book/cloud/reaper.sh >> /root/motion-book/reaper.log 2>&1
+# lab 服务（/api/video-book）每 10 分钟调一次；手动用 root 跑也行。MB_ROOT 同 run_book.sh。
+# 时限要比 run_book.sh 的 --max-hours（整本缺省 12）宽一点，否则会把正常在做的书杀掉。
 set -euo pipefail
-MAXH=${MAX_HOURS:-6}
-K=$(grep -E "^(export )?VULTR_API_KEY=" /root/motion-book/secrets.env | head -1 | sed -E "s/^(export )?VULTR_API_KEY=//; s/^[\"']//; s/[\"']\$//")
+MAXH=${MAX_HOURS:-13}
+K=$(grep -E "^(export )?VULTR_API_KEY=" "${MB_ROOT:-/root/motion-book}/secrets.env" | head -1 | sed -E "s/^(export )?VULTR_API_KEY=//; s/^[\"']//; s/[\"']\$//")
 curl -4 -sS --fail-with-body -H "Authorization: Bearer $K" "https://api.vultr.com/v2/instances?tag=motion-book&per_page=100" | python3 -c "
 import json,sys,datetime
 now=datetime.datetime.now(datetime.timezone.utc)
