@@ -123,7 +123,7 @@ F.doc = (c, x, y, w, h, o = {}) => { const { title = '', rows = 8, hl = [], rot 
   c.restore(); };
 F.CHAPTER_NAMES = (window.BOOK_META || {}).chapters || [];   // 章名来自 book.json
 // 通用接口：章节卡＝一张票面；中央椭圆画本书贯穿物，可在 props.js 里改 F.cardCenter = (c, lt, t) => {…}
-F.cardCenter = F.cardCenter || ((c, lt, t) => F.coin(c, W / 2, 890, 150, { rot: Math.sin(t * 0.8) * 0.08, glint: (t * 0.25) % 1 }));
+F.cardCenter = F.cardCenter || ((c, lt, t) => F.coin(c, F.W / 2, 890, 150, { rot: Math.sin(t * 0.8) * 0.08, glint: (t * 0.25) % 1 }));
 F.chapterCard = (c, lt, t, n, title) => F.noteCard(c, lt, t, n, title, F.cardCenter);
 })();
 // 字幕（assemble.py 生成的 subs.js 调它）：票面绿底＋内框，字幕带 y≈1480
