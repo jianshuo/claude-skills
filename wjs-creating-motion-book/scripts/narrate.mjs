@@ -63,7 +63,7 @@ async function tts(text) {
     }
     if (!ok) throw new Error('合成失败：' + err);
   }
-  return { mp3: Buffer.concat(audio.map(a => a.buf)), words };
+  return { mp3: Buffer.concat(audio.flatMap(a => mp3Frames(a.buf).frames)), words };   // 只留音频帧：分段合成的每段都带 ID3 头，夹在中间 ASR 会报 Invalid audio format
 }
 
 // ---------- ASR（大模型流式识别；直接推 mp3 字节，不用解码）----------
@@ -103,7 +103,8 @@ async function one(ch) {
     if (!fs.existsSync(asrf) || !fs.statSync(asrf).size) {
       try { fs.writeFileSync(asrf, JSON.stringify(await asr(mp3), null, 1)); } catch (e) { src = `TTS 时间戳（ASR 失败：${e.message}）`; }
     }
-    res = alignPhrases(src === 'ASR' ? JSON.parse(fs.readFileSync(asrf, 'utf8')) : ttsWordsAsAsr(JSON.parse(fs.readFileSync(mp3f + '.words.json', 'utf8'))), text);
+    const spoken = text.replace(ANNOT, '');   // 【表演标注】不念，也不进句时间和字幕
+    res = alignPhrases(src === 'ASR' ? JSON.parse(fs.readFileSync(asrf, 'utf8')) : ttsWordsAsAsr(JSON.parse(fs.readFileSync(mp3f + '.words.json', 'utf8'))), spoken);
     fs.writeFileSync(path.join(A, `${ch}.句时间.txt`), formatRows(res.rows));
     return `${ch} ${mp3Frames(mp3).dur.toFixed(1).padStart(6)}s  句时间来自 ${src}，对上 ${Math.round(res.ratio * 100)}% 的字`;
   } catch (e) { return `✗ ${ch} ${e.message}`; }
