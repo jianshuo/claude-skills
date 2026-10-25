@@ -20,9 +20,13 @@ for (const m of mp3) if (m.key !== fmt.key) throw new Error(`各章 MP3 格式�
 const offs = {}, shots = [], libs = [], missing = []; let t = 0; const tail = [];
 CH.forEach((ch, ci) => {
   const d = mp3[ci].dur; offs[ch] = r3(t); let clen = d + GAP;
+  // 一章可以整章一份（chNN.js + chNN.shots.json），也可以拆成几段给不同的人做（chNN_a / chNN_b …，各自用章内局部时间，按字母顺序首尾相接）
+  const parts = fs.readdirSync(A).filter(f => new RegExp(`^${ch}_[a-z]\\.shots\\.json$`).test(f)).sort().map(f => f.slice(ch.length + 1, ch.length + 2));
+  const ids = parts.length ? parts.map(p => `${ch}_${p}`) : [ch];
   const sj = path.join(A, `${ch}.shots.json`);
-  if (fs.existsSync(sj) && fs.existsSync(path.join(Bd, `${ch}.js`))) {
-    const rows = readJSON(sj), end = rows.at(-1)[2]; libs.push(`scenes/book/${ch}.js`);
+  if (ids.every(id => fs.existsSync(path.join(A, `${id}.shots.json`)) && fs.existsSync(path.join(Bd, `${id}.js`)))) {
+    const rows = ids.flatMap(id => readJSON(path.join(A, `${id}.shots.json`))), end = rows.at(-1)[2]; ids.forEach(id => libs.push(`scenes/book/${id}.js`));
+    for (let i = 1; i < rows.length; i++) if (Math.abs(rows[i][1] - rows[i - 1][2]) > 0.05) console.log(`⚠ ${ch} 第 ${i} 镜 ${rows[i][0]} 开始 ${rows[i][1]}，上一镜结束 ${rows[i - 1][2]}（几段没接上）`);
     if (Math.abs(end - (d + GAP)) > 0.6 && ci < CH.length - 1) console.log(`⚠ ${ch} 最后一镜结束 ${end.toFixed(2)}，音频+GAP=${(d + GAP).toFixed(2)}`);
     if (ci === CH.length - 1) clen = Math.max(d + GAP, end);   // 最后一章允许片尾多留（片名停留），其余章严格 = 音频＋GAP
     rows.forEach((r, i) => shots.push([r[0], r3(t + r[1]), r3(t + (i === rows.length - 1 ? clen : r[2])), ...(r[3] === 'seamless' ? ['seamless'] : [])]));
