@@ -37,6 +37,8 @@ for k, v in {'{{TITLE}}': book['title'], '{{TOTAL}}': f'{total:.2f}', '{{MMSS}}'
     page = page.replace(k, v)
 (OUT / 'index.html').write_text(page)
 (OUT / '_test.html').write_text('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + page + '</body></html>')
+pub = {str(p.relative_to(OUT)): str(p) for p in sorted(OUT.rglob('*')) if p.is_file() and p.name not in ('index.html', '_test.html', 'artifact_files.json')}
+(OUT / 'artifact_files.json').write_text(json.dumps(pub, ensure_ascii=False, indent=0))   # Artifact 发布时原样传给 files
 size = sum(p.stat().st_size for p in OUT.rglob('*') if p.is_file() and p.name != '_test.html')
 big = [(p.name, p.stat().st_size) for p in OUT.rglob('*') if p.is_file() and p.stat().st_size > 15e6]
 print(f"《{book['title']}》：{len(scene_libs)} 个场景文件，字体 {used}，{len(chars)} 字，时长 {mmss}，总大小 {size / 1e6:.1f}MB -> {OUT}" + (f'\n⚠ 超过 Artifact 单文件 15MB：{big}' if big else ''))
