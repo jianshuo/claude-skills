@@ -42,6 +42,7 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 - 云端没有 VoiceDrop MCP：取书用 `node $S/fetch_book.mjs <slug> 章名.txt`（读书架公开的 `_src/book.json`，要做的章没写完就退出，不开机）。
 - Vultr API key 有 IP 白名单：Tokyo VPS 的 IPv4 要在控制台 Account → API → Access Control 里放行，curl 用 `-4`。
 - **线上入口（像听书）**：任何人打开 `voicedrop.cn/books/<slug>/video/`，没做过就自动下单；lab 服务 `GET|POST https://lab.jianshuo.dev/api/video-book?slug=`（下单）/ `…/status?slug=`（只查）用 systemd-run 起 `video-<slug>` 单元跑 `run_book.sh`（`MB_ROOT=/opt/claude-agent/motion-book`）。闸：只做写完的书、一次 1 本、每天最多开工 2 本（实现在 jianshuo.dev 仓库 `claude-agent/src/video-book.ts`）。书架已有 `video/` 时接口答 done，不会重做——要重做整本先删 R2 `books/<slug>/video/`。
+- **书架标志**：`publish_video.mjs` 发布成功后往线上 `_src/book.json` 合并 `video: {url, publishedAt, duration, chapters}`（chapters 少于全书章数＝试看版）；写书的 build.mjs 每次整份发布会把它从线上接回来，修书不会抹掉。
 
 ## 省时间的关键
 
