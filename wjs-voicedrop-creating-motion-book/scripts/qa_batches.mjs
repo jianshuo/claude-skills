@@ -12,13 +12,15 @@ const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf('--
 const N = +opt('size', 70), idsOnly = opt('ids'), FILM = opt('film', 'book');
 const P = path.resolve(args[0]), OUT = path.resolve(args[1]); fs.mkdirSync(OUT, { recursive: true });
 const QA = path.join(os.homedir(), '.claude/skills/huashu-art-motion/scripts/qa.py');
+// 画幅按 book.json：qa.py 不给 --width/--height 时按 1920×1080 截图，竖屏会被压扁成横图（2026-10-26 炮声里的股市）。上游 qa.py 的这两个参数是本地补的
+const [W, H] = JSON.parse(fs.readFileSync(path.join(P, 'book.json'), 'utf8')).size || [1080, 1920];
 const ids = idsOnly ? idsOnly.split(',') : [...fs.readFileSync(path.join(P, `代码工程/eras_${FILM}.js`), 'utf8').matchAll(/\["(\w+)", [\d.]+, [\d.]+/g)].map(m => m[1]);
 const batches = []; for (let i = 0; i < ids.length; i += N) batches.push(ids.slice(i, i + N));
 const qaJson = k => path.join(OUT, `b${k}`, 'qa.json');
 batches.forEach((b, k) => {
   for (let attempt = 0; attempt < 3 && !fs.existsSync(qaJson(k)); attempt++) {
     const log = fs.openSync(path.join(OUT, `b${k}.log`), 'w');
-    spawnSync('uv', ['run', QA, '--project', path.join(P, '代码工程'), '--film', FILM, '--fps', '30', '--sub-band', '0.74', '--ids', b.join(','), '--out', path.join(OUT, `b${k}`)],
+    spawnSync('uv', ['run', QA, '--project', path.join(P, '代码工程'), '--film', FILM, '--fps', '30', '--sub-band', '0.74', '--width', String(W), '--height', String(H), '--ids', b.join(','), '--out', path.join(OUT, `b${k}`)],
       { stdio: ['ignore', log, log], env: { ...process.env, PYTHONUNBUFFERED: '1' } });
     fs.closeSync(log);
   }
