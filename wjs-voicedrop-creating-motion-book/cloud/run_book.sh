@@ -24,14 +24,26 @@ ROOT=${MB_ROOT:-/root/motion-book}; CLAUDE_ENV=${MB_CLAUDE_ENV:-/opt/claude-agen
 export VOICEDROP_CREDENTIALS=${VOICEDROP_CREDENTIALS:-/opt/claude-agent/.config/voicedrop/credentials}
 OUT=$ROOT/books/$slug; mkdir -p "$OUT"; exec > >(tee -a "$OUT/cloud.log") 2>&1
 STARTED=$(date +%s); ID=""; STATE=booting
-st() {   # st <state> <step> [url] [error]：写 state.json（接口读它答进度）
+st() {   # st <state> <step> [url] [内部日志尾]：写 state.json（接口读它答进度），并把 step 记进对外日志 events.json
   STATE=$1; python3 - "$OUT/state.json" "$1" "$2" "${3:-}" "${4:-}" "$STARTED" "$ONLY" "$ID" <<'PY'
-import json,sys,time
-f,state,step,url,err,started,only,inst=sys.argv[1:]
-d={'state':state,'step':step,'startedAt':int(started)*1000,'updatedAt':int(time.time()*1000),'only':only,'instance':inst}
+import json,sys,time,os
+f,state,step,url,tail,started,only,inst=sys.argv[1:]
+now=int(time.time()*1000)
+d={'state':state,'step':step,'startedAt':int(started)*1000,'updatedAt':now,'only':only,'instance':inst}
 if url: d['url']=url
-if err: d['error']=err
-json.dump(d,open(f+'.tmp','w'),ensure_ascii=False); __import__('os').replace(f+'.tmp',f)
+if tail: d['logTail']=tail          # 内部排查用，接口不往外给（可能带路径）
+json.dump(d,open(f+'.tmp','w'),ensure_ascii=False); os.replace(f+'.tmp',f)
+ev(os.path.join(os.path.dirname(f),'events.json'),now,step)
+PY
+}
+# 对外日志：只记「时间＋一句中文步骤」，不写路径、IP、机器 ID；同一句不重复记；最多留 300 条
+ev() { python3 - "$OUT/events.json" "$1" <<'PY'
+import json,sys,time,os
+f,text=sys.argv[1:]
+try: L=json.load(open(f))
+except Exception: L=[]
+if not L or L[-1]['text']!=text: L.append({'t':int(time.time()*1000),'text':text})
+json.dump(L[-300:],open(f+'.tmp','w'),ensure_ascii=False); os.replace(f+'.tmp',f)
 PY
 }
 st booting "检查书和凭据"
