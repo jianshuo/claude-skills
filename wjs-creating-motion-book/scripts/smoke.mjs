@@ -7,7 +7,7 @@
 //   ④ 框景：半截字（被画面边缘切掉）、进字幕带、叠字——qa.py 同一套判据，持续 ≥0.3s 才报
 // 查不到：画面好不好看、图形（非文字）出画/进字幕带、近空白、确定性。这些要 Mac 上的 qa.py / 审片。
 // 字宽用估算（汉字 1em、拉丁 0.56em），离边缘差几像素的半截字判断会有出入；线索要去看那一帧再定。
-// 用法：node smoke.mjs <项目目录> [--out <目录，默认 <项目>/qa/smoke>] [--fps 10] [--ids c02_a,c02_b] [--sub-band 0.74]
+// 用法：node smoke.mjs <项目目录> [--film book（章节自测用 chNN：读 eras_chNN.js）] [--out <目录，默认 <项目>/qa/smoke>] [--fps 10] [--ids c02_a,c02_b] [--sub-band 0.74]
 // 产物：smoke.json、框景线索.txt（格式同 qa_batches.py，Mac 上可直接接 framing_sheet.py）。有 ①②③ 退出码 1。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,7 +15,7 @@ import vm from 'node:vm';
 
 const argv = process.argv.slice(2), opt = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 ? argv[i + 1] : d; };
 const P = path.resolve(argv[0]), E = path.join(P, '代码工程'), OUT = path.resolve(opt('out', path.join(P, 'qa/smoke')));
-const FPS = +opt('fps', 10), BAND = +opt('sub-band', 0.74), IDS = opt('ids') ? new Set(opt('ids').split(',')) : null;
+const FILM = opt('film', 'book'), FPS = +opt('fps', 10), BAND = +opt('sub-band', 0.74), IDS = opt('ids') ? new Set(opt('ids').split(',')) : null;
 fs.mkdirSync(OUT, { recursive: true });
 
 // ---------- 假 DOM / Canvas ----------
@@ -130,9 +130,9 @@ const run = f => vm.runInContext(fs.readFileSync(path.join(E, f), 'utf8'), G, { 
 
 // ---------- 启动 ----------
 const LIBS = ['fonts', 'util', 'paint', 'brush', 'render', 'post', 'rig', 'rig_huashu', 'kit', 'medium', 'motion', 'camera', 'diagram', 'typo', 'chart', 'ui', 'collage', 'media', 'toon'];
-const report = { project: P, fps: FPS, boot: null, errors: [], glyphs: [], framing: [], shots: 0, frames: 0 };
+const report = { project: P, film: FILM, fps: FPS, boot: null, errors: [], glyphs: [], framing: [], shots: 0, frames: 0 };
 const finish = code => { fs.writeFileSync(path.join(OUT, 'smoke.json'), JSON.stringify(report, null, 1)); process.exit(code); };
-try { for (const n of LIBS) run(`lib/${n}.js`); run('eras_book.js'); run('transitions.js'); run('scenes/index.js'); run('engine.js'); }
+try { for (const n of LIBS) run(`lib/${n}.js`); run(`eras_${FILM}.js`); run('transitions.js'); run('scenes/index.js'); run('engine.js'); }
 catch (e) { report.boot = String(e && e.stack || e).split('\n').slice(0, 4).join('\n'); console.log('✗ 启动失败：' + report.boot); finish(1); }
 for (let k = 0; k < 600 && !sandbox.__ready && !sandbox.__bootFailed; k++) await new Promise(r => setTimeout(r, 50));
 if (!sandbox.__ready) { report.boot = sandbox.__bootFailed || consoleErr.join('\n') || '引擎 30 秒内没有就绪'; console.log('✗ 启动失败：\n' + report.boot); finish(1); }
@@ -165,13 +165,15 @@ function frameIssues(tb) {
   }
   return out;
 }
+// 字幕层（GLOBAL_OVERLAY）不进框景判定（qa.py 也是逐镜画、不画字幕）；另画在草稿画布上，只查它报不报错
+const OV = sandbox.GLOBAL_OVERLAY, scratch = new Canvas(VW, VH).getContext('2d'); sandbox.GLOBAL_OVERLAY = null;
 const step = 1 / FPS, runs = [];
 for (const e of ERAS) {
   if (IDS && !IDS.has(e.id)) continue; report.shots++;
   const t1 = Math.min(e.t1, sandbox.__total), skip = Math.max(0.35, e.transition ? e.transition.dur + (e.transition.delay || 0) : 0), open = new Map(); let err = null;
   for (let t = e.t0 + Math.min(skip, (t1 - e.t0) / 2); t < t1 - 1e-6; t += step) {
     cur = { id: e.id, t }; main.__tb = [];
-    try { sandbox.renderFrame(t); } catch (x) { if (!err) err = { id: e.id, t: +t.toFixed(2), error: String(x && x.stack || x).split('\n').slice(0, 3).join(' | ') }; continue; }
+    try { sandbox.renderFrame(t); if (OV) OV(scratch, t); } catch (x) { if (!err) err = { id: e.id, t: +t.toFixed(2), error: String(x && x.stack || x).split('\n').slice(0, 3).join(' | ') }; continue; }
     report.frames++;
     const tb = (main.__tb || []).map(([s, xs, ys, c]) => [s, xs.map(v => v / main.width), ys.map(v => v / main.height), c]);
     const now = new Set(frameIssues(tb).map(x => x.join('\u0001')));

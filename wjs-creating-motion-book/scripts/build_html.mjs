@@ -10,7 +10,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { SK, book } from './common.mjs';
 
-const P = path.resolve(process.argv[2]), OUT = path.resolve(process.argv[3] || path.join(P, 'html')), E = path.join(P, '代码工程'), B = book(P);
+const P0 = path.resolve(process.argv[2]), smokeF = path.join(P0, 'qa/smoke/smoke.json');
+if (!fs.existsSync(smokeF)) console.log('⚠ 还没跑冒烟检查：node smoke.mjs <项目>（运行时报错会让 HTML 播到那一镜卡住）');
+else { const r = JSON.parse(fs.readFileSync(smokeF, 'utf8')); if (r.boot || r.errors.length || r.glyphs.length) console.log(`⚠ 冒烟检查有问题没修：启动 ${r.boot ? '失败' : '正常'}、运行时报错 ${r.errors.length}、缺字形 ${r.glyphs.length}（qa/smoke/smoke.json）`);
+  else if (fs.statSync(smokeF).mtimeMs < fs.statSync(path.join(P0, '代码工程/eras_book.js')).mtimeMs) console.log('⚠ 冒烟检查比最近一次总装旧，重跑 node smoke.mjs <项目>'); }
+const P = P0, OUT = path.resolve(process.argv[3] || path.join(P, 'html')), E = path.join(P, '代码工程'), B = book(P);
 const LIBS = ['util', 'paint', 'brush', 'render', 'post', 'rig', 'rig_huashu', 'kit', 'medium', 'motion', 'camera', 'diagram', 'typo', 'chart', 'ui', 'collage', 'media', 'toon'];
 const eras = fs.readFileSync(path.join(E, 'eras_book.js'), 'utf8');
 const sceneLibs = JSON.parse(eras.match(/window\.SCENE_LIBS = (\[.*?\]);/)[1]);
