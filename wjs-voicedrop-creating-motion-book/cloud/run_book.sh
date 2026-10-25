@@ -63,21 +63,23 @@ CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 
 # 要做的章都写完了才开机（不然白花钱）
 STEP_DESC="取书"; node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" ${ONLY:+--only $ONLY} > "$OUT/book_meta.json"
+NCH=$(python3 -c "import json;print(json.load(open('$OUT/book_meta.json'))['chapters'])")
+ev "读到书：《$(python3 -c "import json;print(json.load(open('$OUT/book_meta.json'))['title'])")》共 $NCH 章${ONLY:+，这次只做 $(echo $ONLY | tr ',' ' ')}"
 
 KD=$(mktemp -d); ssh-keygen -q -t ed25519 -N '' -f "$KD/id" -C "motion-book-$slug"
 UD=$(sed "s#__PUBKEY__#$(cat "$KD/id.pub")#" "$SK/cloud/cloud-init.sh" | base64 -w0)
 STEP_DESC="开机"; ID=$(api -X POST https://api.vultr.com/v2/instances -d "{\"region\":\"nrt\",\"plan\":\"$PLAN\",\"os_id\":2284,\"label\":\"motion-book-$slug\",\"hostname\":\"motion-book\",\"tags\":[\"motion-book\"],\"backups\":\"disabled\",\"user_data\":\"$UD\"}" | J 'd["instance"]["id"]')
-echo "开机 $ID"; st booting "开机中"
+echo "开机 $ID"; st booting "申请制作机（8 核 16GB）"
 
 IP=""; for i in $(seq 90); do read -r s ip < <(api "https://api.vultr.com/v2/instances/$ID" | J 'd["instance"]["status"]+" "+d["instance"]["main_ip"]')
   [ "$s" = active ] && [ "$ip" != 0.0.0.0 ] && { IP=$ip; break; }; sleep 10; done
 [ -n "$IP" ] || { STEP_DESC="开机超时"; echo "开机超时"; exit 1; }
 SSHO="-i $KD/id -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o ServerAliveInterval=30 -o LogLevel=ERROR"
 R() { ssh $SSHO "mb@$IP" "$@"; }
-echo "IP $IP，等装环境（约 5–10 分钟）"; st setup "装环境（约 5 分钟）"
+echo "IP $IP，等装环境（约 5–10 分钟）"; ev "制作机已开机"; st setup "安装制作环境（约 5 分钟）"
 for i in $(seq 120); do R test -f .ready 2>/dev/null && break; sleep 15; done
-R test -f .ready || { STEP_DESC="装环境超时"; echo "装环境超时"; exit 1; }
-echo "环境就绪 $(date -u +%T)"
+R test -f .ready || { STEP_DESC="安装制作环境超时"; echo "装环境超时"; exit 1; }
+echo "环境就绪 $(date -u +%T)"; ev "制作环境就绪（Node、Chromium、Claude Code、动画引擎）"
 printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=4\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
 
 if [ $DRY = 1 ]; then   # 演习：只验证环境（Node、Claude Code、Chromium 出一张静帧）
@@ -96,18 +98,38 @@ PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 C
 printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'
 # 注意是「cd …;」不是「cd … &&」：「a && b &」会把整串放进一个后台子 shell，它攥着 ssh 的管道不放，ssh 一直不返回（2026-10-25 第一单就卡在这）
 R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose > claude.jsonl 2> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
-echo "Claude 开工 $(date -u +%T)"; st making "Claude 开工"; STEP_DESC="制作中"
+echo "Claude 开工 $(date -u +%T)"; st making "Claude 开始制作"; STEP_DESC="制作中"
 
+# 进度：每 2 分钟用 probe.py 读一次做书机，里程碑记进对外日志（只记变化），state.json 的 step 是一句总括
 deadline=$(( STARTED + MAXH * 3600 - 1200 ))
 while ! R test -f art-films/exit.code 2>/dev/null; do
-  [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; break; }
+  [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; ev "到了时限还没做完，收工"; break; }
   sleep 120
-  p=$(R "ls ~/art-films/$slug/音频/ch??.mp3 2>/dev/null | wc -l; ls ~/art-films/$slug/代码工程/scenes/book/ch*.js 2>/dev/null | wc -l; [ -f ~/art-films/$slug/html/index.html ] && echo html || echo -" 2>/dev/null | tr '\n' ' ' || true)
-  echo "$(date -u +%T) $p（口播章数、章节代码文件数、html）"
-  set -- $p; st making "口播 ${1:-0} 章、场景文件 ${2:-0} 个${3:+$([ "$3" = html ] && echo '、HTML 已打包')}"
+  pj=$(R "python3 - $slug" < "$SK/cloud/probe.py" 2>/dev/null || true); echo "$(date -u +%T) $pj"
+  [ -n "$pj" ] || continue
+  summary=$(python3 - "$pj" "$NCH" "$SK/kits" <<'PY'
+import json,sys,os
+p,nch,kits=json.loads(sys.argv[1]),sys.argv[2],sys.argv[3]
+def kitname(k):
+    try: return json.load(open(os.path.join(kits,k,'kit.json')))['label'].split('（')[0]
+    except Exception: return k
+lines=[]
+if p['mp3']: lines.append(f"取口播（书架听书）：{p['mp3']}/{nch} 章")
+if p['asr']: lines.append(f"识别口播、对齐句子：{p['asr']}/{nch} 章")
+if p['kit']: lines.append(f"选定画风：{kitname(p['kit'])}")
+if p['shots']: lines.append(f"分章制作：已交稿 {p['shots']} 段")
+s=p.get('smoke')
+if s: lines.append(f"整本冒烟检查：{s['shots']} 个镜头，报错 {s['errors']}，缺字 {s['glyphs']}，框景线索 {s['framing']}")
+if p['html']: lines.append("打包网页版完成")
+if p['result']: lines.append("写好制作说明")
+print('\n'.join(lines))
+PY
+)
+  while IFS= read -r line; do [ -n "$line" ] && ev "$line"; done <<< "$summary"
+  last=$(printf '%s\n' "$summary" | tail -1); st making "${last:-Claude 制作中}"
 done
 echo "Claude 退出码：$(R cat art-films/exit.code 2>/dev/null || echo 无)"
-STEP_DESC="拉回产物"
+STEP_DESC="取回成品"; ev "制作完成，取回成品"
 rsync -az -e "ssh $SSHO" --exclude '代码工程/lib/' --exclude '代码工程/demos/' --exclude '代码工程/reference_films/' --exclude '代码工程/examples/' --exclude '静帧/' \
   "mb@$IP:art-films/$slug/" "$OUT/" || true
 rsync -az -e "ssh $SSHO" "mb@$IP:art-films/claude.jsonl" "mb@$IP:art-films/claude.err" "$OUT/" 2>/dev/null || true
@@ -115,5 +137,5 @@ if [ $PUBLISH = 1 ] && [ -f "$OUT/html/index.html" ]; then
   st publishing "发布到书架"; STEP_DESC="发布"
   node "$SK/scripts/publish_video.mjs" "$OUT"
   st done "已发布" "https://voicedrop.cn/books/$slug/video/"
-else STEP_DESC="没有做出 HTML（看 cloud.log / claude.err）"; echo "没有发布（--no-publish 或没有 html/index.html）"; [ $PUBLISH = 0 ] && st done "完成（未发布）"; fi
+else STEP_DESC="这次没做出动画版"; echo "没有发布（--no-publish 或没有 html/index.html）"; [ $PUBLISH = 0 ] && st done "完成（未发布）"; fi
 echo "=== 结束 $(date -u +%FT%TZ)，产物 $OUT"
