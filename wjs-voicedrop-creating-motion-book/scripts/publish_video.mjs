@@ -3,6 +3,7 @@
 // 写入走 files API（PUT /files/api/upload/books/…），要书架发布账号的令牌（和 build.mjs 发书同一份 ~/.config/voicedrop/credentials，
 // 或用 VOICEDROP_CREDENTIALS 指向别的文件）。公开路由按上传时的 Content-Type 回，所以每个文件都要带对类型。
 // 入口页加一行「补结尾斜杠」：/video 不带斜杠时相对路径会解析到 /books/<slug>/lib/…，全部 404。
+// 跳转前浏览器的预加载会先按错路径请求几个脚本（无害的 404），跳过去之后一切正常；实测带不带斜杠都能播。
 // 用法：node publish_video.mjs <项目目录> [--dry]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -18,7 +19,7 @@ const SKIP = new Set(['_test.html', 'artifact_files.json']);
 const files = []; const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); e.isDirectory() ? walk(f) : SKIP.has(e.name) || files.push(f); } };
 if (!fs.existsSync(path.join(H, 'index.html'))) { console.error('没有 html/index.html：先跑 build_html.mjs'); process.exit(1); }
 walk(H);
-const SLASH = `<script>if(!/\\/$/.test(location.pathname))location.replace(location.pathname+'/'+location.search+location.hash)</script>\n`;
+const SLASH = `<script>if(!/\\/$/.test(location.pathname))location.replace(location.pathname+'/'+location.search+location.hash)</script>   <!-- 别加 window.stop()：它会把这次跳转也取消 -->\n`;
 const base = `books/${B.slug}/video/`, site = `https://voicedrop.cn/books/${B.slug}/video/`;
 let bytes = 0;
 await pool(files, 6, async f => {
