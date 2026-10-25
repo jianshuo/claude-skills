@@ -33,10 +33,20 @@ st booting "检查书和凭据"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
 J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
-KD=""; VULTR_API_KEY=""
-destroy() { set +e   # 退出一律走这里：销毁机器、删临时密钥、没成功就把 state.json 落成 failed
+KD=""; VULTR_API_KEY=""; LEASE=""; RURL=""; RTOK=""
+# engine-router 租约（见 engine-router/README「接入方」）：lease <额外 JSON 字段> → 「租约id 账号id」，挑不出是「- -」
+rt() { curl -4 -sS -m 10 -H "Authorization: Bearer $RTOK" -H 'Content-Type: application/json' -X POST "$RURL/v1/leases$1" -d @- 2>/dev/null; }
+lease() { echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000$1}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
+lease_done() {   # 回报并释放；没成功就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
+  [ -n "$LEASE" ] || return 0
+  local err=""; [ "$STATE" = done ] || err=$(tail -c 400 "$OUT/claude.err" 2>/dev/null || true)
+  OK=$([ "$STATE" = done ] && echo true || echo false) ERR="$err" node -e 'process.stdout.write(JSON.stringify({ok:process.env.OK==="true",engine_used:"claude",error:process.env.ERR}))' \
+    | rt "/$LEASE/complete" >/dev/null || true
+  LEASE=""; }
+destroy() { set +e   # 退出一律走这里：销毁机器、删临时密钥、交还租约、没成功就把 state.json 落成 failed
   if [ -n "$ID" ]; then if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && { echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; ev "制作机已销毁"; }; fi; fi
   [ -n "$KD" ] && rm -rf "$KD"
+  lease_done
   case $STATE in done) ;; *) st failed "${STEP_DESC:-中途退出}" "" "$(tail -3 "$OUT/cloud.log" | tr '\n' ' ' | cut -c1-300)";; esac; }
 trap destroy EXIT
 getenv() { [ -r "$2" ] || return 0; grep -E "^(export )?$1=" "$2" | head -1 | sed -E "s/^(export )?$1=//; s/^[\"']//; s/[\"']\$//" || true; }
@@ -48,6 +58,19 @@ CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 STEP_DESC="取书"; node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" ${ONLY:+--only $ONLY} > "$OUT/book_meta.json"
 NCH=$(J 'd.chapters' < "$OUT/book_meta.json"); TITLE=$(J 'd.title' < "$OUT/book_meta.json")
 ev "读到书：《$TITLE》共 $NCH 章${ONLY:+，这次只做 $(echo $ONLY | tr ',' ' ')}"
+
+# Claude 账号由 engine-router 挑：先按配速和红线问，挑不出再 force（无视配速和红线，只躲撞墙/冷却）。
+# router 只回账号名，令牌取 secrets.env 的 CLAUDE_TOKEN_<账号 id，- 换 _>。
+# router 不通 / 挑不出 / 没有这个账号的令牌 → 用 CLAUDE_TK（lab .env 那个 = claude-1）照做，不因此停工。
+RURL=$(getenv ROUTER_URL "$CLAUDE_ENV"); RTOK=$(getenv ROUTER_TOKEN "$CLAUDE_ENV"); ACCT="缺省令牌（claude-1）"; A=""
+if [ -n "$RURL" ] && [ -n "$RTOK" ]; then
+  read -r LEASE A <<< "$(lease)" || true
+  if [ "${LEASE:--}" = - ]; then read -r LEASE A <<< "$(lease ',"force":true')" || true; fi
+  if [ "${LEASE:--}" = - ]; then LEASE=""; fi
+  T=""; if [ -n "$LEASE" ]; then T=$(getenv "CLAUDE_TOKEN_${A//-/_}" $ROOT/secrets.env); fi
+  if [ -n "$T" ]; then CLAUDE_TK=$T; ACCT=$A; else echo "router 没给出能用的账号（${LEASE:-无租约} ${A:-}），用缺省令牌"; lease_done; fi
+fi
+echo "Claude 账号：${ACCT}${LEASE:+（租约 $LEASE）}"
 
 KD=$(mktemp -d); ssh-keygen -q -t ed25519 -N '' -f "$KD/id" -C "motion-book-$slug"
 UD=$(sed "s#__PUBKEY__#$(cat "$KD/id.pub")#" "$SK/cloud/cloud-init.sh" | base64 -w0)
