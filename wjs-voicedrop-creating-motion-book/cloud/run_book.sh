@@ -82,7 +82,8 @@ PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 C
 - 每章交稿前冒烟检查零报错零缺字；总装后整本冒烟检查，再 build_html.mjs。不要发布、不要上传到任何地方（编排机会拉回去发布），不要 git push。
 - 全部完成后写 ~/art-films/$slug/RESULT.md：画风和理由、章节、镜头数、时长、冒烟结果、你知道的遗留问题。"
 printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'
-R "cd ~/art-films && nohup bash -lc 'source ~/code/.env; claude -p \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose > claude.jsonl 2> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
+# 注意是「cd …;」不是「cd … &&」：「a && b &」会把整串放进一个后台子 shell，它攥着 ssh 的管道不放，ssh 一直不返回（2026-10-25 第一单就卡在这）
+R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose > claude.jsonl 2> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
 echo "Claude 开工 $(date -u +%T)"; st making "Claude 开工"; STEP_DESC="制作中"
 
 deadline=$(( STARTED + MAXH * 3600 - 1200 ))
