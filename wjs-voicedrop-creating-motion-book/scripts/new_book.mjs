@@ -17,7 +17,8 @@ const names = fs.readFileSync(chf, 'utf8').split('\n').map(s => s.trim()).filter
 const E = path.join(P, '代码工程'), Bd = path.join(E, 'scenes/book');
 
 for (const d of ['稿', '音频', '镜头表', '静帧', '审片', 'qa', 'output', 'html']) fs.mkdirSync(path.join(P, d), { recursive: true });
-if (!fs.existsSync(E)) { fs.cpSync(ENGINE, E, { recursive: true, filter: s => !s.includes('__pycache__') }); console.log('引擎 ->', E); }
+// 看 engine.js 而不是看目录：续做时 代码工程/scenes/book/ 里已有上一轮的章节文件，目录在但引擎不在。force:false 不覆盖已有文件
+if (!fs.existsSync(path.join(E, 'engine.js'))) { fs.cpSync(ENGINE, E, { recursive: true, force: false, filter: s => !s.includes('__pycache__') }); console.log('引擎 ->', E); }
 fs.mkdirSync(Bd, { recursive: true });
 fs.copyFileSync(path.join(KIT, 'lib.js'), path.join(Bd, 'lib.js'));
 if (!fs.existsSync(path.join(Bd, 'props.js'))) fs.writeFileSync(path.join(Bd, 'props.js'),
