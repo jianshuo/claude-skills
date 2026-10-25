@@ -104,7 +104,7 @@ echo "Claude 开工 $(date -u +%T)"; st making "Claude 开始制作"; STEP_DESC=
 
 # 进度：每 2 分钟在做书机上跑一次 probe.mjs（开机时随 skill 克隆过去了），里程碑记进对外日志（只记变化），state.json 的 step 是一句总括。
 # Claude 退出了但还没做出网页版 → 续跑（最多 MAXROUND 轮）；到时限就收工。
-deadline=$(( STARTED + MAXH * 3600 - 1200 )); TIMEUP=0
+deadline=$(( STARTED + MAXH * 3600 - 1200 )); TIMEUP=0; prevsum=""
 while :; do
   while ! R test -f art-films/exit.code 2>/dev/null; do
     [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; ev "到了时限还没做完，收工"; TIMEUP=1; break; }
@@ -112,7 +112,7 @@ while :; do
     pj=$(R "node ~/.claude/skills/wjs-voicedrop-creating-motion-book/cloud/probe.mjs $slug" 2>/dev/null || true); echo "$(date -u +%T) $pj"
     [ -n "$pj" ] || continue
     summary=$(node "$MB" summary "$pj" "$NCH" "$SK/kits") || true   # 进度显示出错不能连累制作（set -e 会直接退出并销毁机器）
-    while IFS= read -r line; do [ -n "$line" ] && ev "$line"; done <<< "$summary"
+    while IFS= read -r line; do [ -n "$line" ] && ! grep -qxF -- "$line" <<< "$prevsum" && ev "$line"; done <<< "$summary"; prevsum=$summary   # 只记跟上一轮比变了的行
     last=$(printf '%s\n' "$summary" | tail -1); st making "${last:-Claude 制作中}"
   done
   echo "第 $ROUND 轮 Claude 退出码：$(R cat art-films/exit.code 2>/dev/null || echo 无)"
