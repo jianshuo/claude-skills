@@ -8,6 +8,7 @@
 // 本地自测：输出目录里的 _test.html（补了 <meta charset>）用任意静态服务器打开。发布：Artifact 的 files 用 artifact_files.json；或整个目录传到 R2 / 静态站。
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { SK, book } from './common.mjs';
 
 const P0 = path.resolve(process.argv[2]), smokeF = path.join(P0, 'qa/smoke/smoke.json');
@@ -33,6 +34,11 @@ let page = fs.readFileSync(path.join(SK, 'player/template.html'), 'utf8');
 for (const [k, v] of Object.entries({ TITLE: B.title, TOTAL: total.toFixed(2), MMSS: mmss, ERAS: 'eras_book.js', FONTS: fonts,
   LIBTAGS: LIBS.slice(1).map(n => `<script charset="utf-8" src="lib/${n}.js"></script>`).join('\n'),
   SCENETAGS: sceneLibs.map(f => `<script charset="utf-8" src="${f}"></script>`).join('\n') })) page = page.replaceAll(`{{${k}}}`, v);
+// 指纹：入口页里每个引用（脚本、字体、口播）带 ?v=<内容哈希>。voicedrop.cn 的 EdgeOne 把 js/字体/mp3 缓存在国内边缘（mp3 30 天），
+// 改镜重发后入口页（不缓存）指向新地址，边缘的旧文件自然不再被请求，不会出现新画面配旧口播。
+const hash = f => crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex').slice(0, 8);
+page = page.replace(/(["'])((?:lib|scenes|fonts)\/[^"'?]+|transitions\.js|engine\.js|eras_book\.js|narration\.mp3)\1/g,
+  (m, q, f) => fs.existsSync(path.join(OUT, f)) ? `${q}${f}?v=${hash(path.join(OUT, f))}${q}` : m);
 fs.writeFileSync(path.join(OUT, 'index.html'), page);
 fs.writeFileSync(path.join(OUT, '_test.html'), '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + page + '</body></html>');
 const files = []; const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); e.isDirectory() ? walk(f) : files.push(f); } }; walk(OUT);
