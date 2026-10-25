@@ -33,6 +33,14 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 
 只改了几镜：改 `chNN.js` → 重跑步 9（HTML 不到 1 秒）；MP4 删掉 `成片_vN_chunks/chNN.mp4` 重跑步 10，其余章复用。
 
+## 云端一次性机器（Tokyo VPS 上一条命令，做完销毁）
+
+`bash cloud/run_book.sh <slug> [--only ch01,ch02,ch03]`（Tokyo VPS root）：Vultr 开一台 `vhp-8c-16gb-amd`（$0.132/时，东京）→ `cloud/cloud-init.sh` 装 Node 22 / uv / Chromium / Claude Code / 引擎 / 本 skill → 无人值守 `claude -p` 按本 skill 从取书做到 HTML → 拉回 `/root/motion-book/books/<slug>/` → `scripts/publish_video.mjs` 发到书架 **voicedrop.cn/books/<slug>/video/** → 销毁。退出必销毁（`--keep` 除外）；`cloud/reaper.sh` 每 30 分钟删掉开了超过 6 小时的 motion-book 机器。`--dry` 只验环境不派 Claude。
+
+- 凭据只读不复制：Vultr key 与火山 ASR 在 `/root/motion-book/secrets.env`；Claude 用写书引擎 `/opt/claude-agent/.env` 的 `CLAUDE_CODE_OAUTH_TOKEN`（setup-token 长期令牌，不轮换，多机共用不互踢；但和写书引擎的 Claude 腿共用订阅额度）；书架发布用 `/opt/claude-agent/.config/voicedrop/credentials`。
+- 云端没有 VoiceDrop MCP：取书用 `node $S/fetch_book.mjs <slug> 章名.txt`（读书架公开的 `_src/book.json`，要做的章没写完就退出，不开机）。
+- Vultr API key 有 IP 白名单：Tokyo VPS 的 IPv4 要在控制台 Account → API → Access Control 里放行，curl 用 `-4`。
+
 ## 省时间的关键
 
 - **口播零成本复用**：听书缓存命中就不花 TTS 的钱；ASR 推 mp3 约 40 倍速，几章并发一两分钟完。
