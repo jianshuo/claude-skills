@@ -33,8 +33,8 @@ d={'state':state,'step':step,'startedAt':int(started)*1000,'updatedAt':now,'only
 if url: d['url']=url
 if tail: d['logTail']=tail          # 内部排查用，接口不往外给（可能带路径）
 json.dump(d,open(f+'.tmp','w'),ensure_ascii=False); os.replace(f+'.tmp',f)
-ev(os.path.join(os.path.dirname(f),'events.json'),now,step)
 PY
+  ev "$2"
 }
 # 对外日志：只记「时间＋一句中文步骤」，不写路径、IP、机器 ID；同一句不重复记；最多留 300 条
 ev() { python3 - "$OUT/events.json" "$1" <<'PY'
