@@ -71,30 +71,56 @@ if [ $DRY = 1 ]; then   # 演习：只验证环境（Node、Claude Code、Chromi
 fi
 
 S='~/.claude/skills/wjs-voicedrop-creating-motion-book/scripts'
+# 续做：上一轮拉回来的半成品（口播、ASR、句时间、已交稿的分镜和场景、稿、book.json）先传上去，Claude 只补缺的
+RESUMED=0
+if ls "$OUT"/音频/ch??.mp3 >/dev/null 2>&1; then
+  R "mkdir -p ~/art-films/$slug"
+  rsync -az -e "ssh $SSHO" --exclude 'html/' --exclude 'qa/' --exclude 'output/' --exclude '*.json.tmp' --exclude 'state.json' --exclude 'events.json' \
+    --exclude 'cloud.log' --exclude 'claude.*' --exclude 'book_meta.json' --exclude '章名.txt' --exclude 'dry.txt' --exclude 'RESULT.md' "$OUT/" "mb@$IP:art-films/$slug/" && RESUMED=1
+  [ $RESUMED = 1 ] && ev "接着上一轮的半成品做（口播 $(ls "$OUT"/音频/ch??.mp3 | wc -l | tr -d ' ') 章、分镜 $(ls "$OUT"/音频/*.shots.json 2>/dev/null | wc -l | tr -d ' ') 段已在）"
+fi
+RULES="- **子 agent 一律前台并行**：在同一条消息里同时发出多个 Agent 调用（一条消息别超过 10 个），不要用 run_in_background / 后台 agent，也不要说「等通知」就结束回合。这是 claude -p 无人值守模式：你一结束回合，进程就退出，还在跑的后台 agent 会被一起杀掉。一批全部返回后再派下一批。
+- 不写完 ~/art-films/$slug/RESULT.md 不要结束回合。"
 PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 Chromium，全程无人值守：没有人回答问题，不要停下来问）。
 用 wjs-voicedrop-creating-motion-book skill 把书架上的《$TITLE》（slug $slug）做成竖屏 HTML 动画版${ONLY:+，只做 $ONLY 这几章（试看版，总装用 assemble.mjs --only $ONLY）}。
 - 项目目录 ~/art-films/$slug。取书用 node $S/fetch_book.mjs $slug ~/art-films/章名.txt（这台机器没有 VoiceDrop MCP），再 new_book.mjs、narrate.mjs。
+$([ $RESUMED = 1 ] && echo "- 项目目录里已经有上一轮做了一半的东西：先照样跑 new_book.mjs 把引擎装上（它不覆盖已有文件，book.json 里的画风沿用）；口播/ASR 已齐的章 narrate.mjs 会跳过；已有 chNN_x.js 和对应 shots.json、且冒烟通过的段不要重做，只补缺的段。")
 - 画风按 references/选画风.md 自己定：可以出主镜头对比，评委用子 agent，定了就往下走。
 - 分章制作派子 agent 并行；单个 agent 负责的口播不超过约 4 分钟，长章拆成 chNN_a / chNN_b（assemble 会自动按字母顺序拼）。渲染命令一律 bash $S/render_lock.sh 前缀（RENDER_SLOTS=4）。
+$RULES
 - 每章交稿前冒烟检查零报错零缺字；总装后整本冒烟检查，再 build_html.mjs。不要发布、不要上传到任何地方（编排机会拉回去发布），不要 git push。
 - 全部完成后写 ~/art-films/$slug/RESULT.md：画风和理由、章节、镜头数、时长、冒烟结果、你知道的遗留问题。"
-printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'
-# 注意是「cd …;」不是「cd … &&」：「a && b &」会把整串放进一个后台子 shell，它攥着 ssh 的管道不放，ssh 一直不返回（2026-10-25 第一单就卡在这）
-R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose > claude.jsonl 2> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
+PROMPT_CONT="你上一轮在子 agent 还没全部交稿时就结束了回合，进程退出，那时还在跑的 agent 都被杀了。现在接着做《$TITLE》：
+先看项目 ~/art-films/$slug 里已经有什么（各段 shots.json、代码工程/scenes/book/chNN*.js、qa/smoke），只补缺的段，然后总装、整本冒烟检查、build_html.mjs、写 RESULT.md。
+$RULES"
+# 起一轮 Claude。注意是「cd …;」不是「cd … &&」：「a && b &」会把整串放进一个后台子 shell，它攥着 ssh 的管道不放，ssh 一直不返回（2026-10-25 第一单就卡在这）
+launch() {   # launch <第几轮>：第 1 轮用 PROMPT，之后 --continue 接着同一个会话、用 PROMPT_CONT
+  local flag=""; if [ "$1" -gt 1 ]; then flag="--continue"; printf '%s' "$PROMPT_CONT" | R 'cat > ~/art-films/prompt.txt'; else printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'; fi
+  R "rm -f ~/art-films/exit.code"
+  R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p $flag \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose >> claude.jsonl 2>> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
+}
+ROUND=1; MAXROUND=3; launch 1
 echo "Claude 开工 $(date -u +%T)"; st making "Claude 开始制作"; STEP_DESC="制作中"
 
-# 进度：每 2 分钟在做书机上跑一次 probe.mjs（开机时随 skill 克隆过去了），里程碑记进对外日志（只记变化），state.json 的 step 是一句总括
-deadline=$(( STARTED + MAXH * 3600 - 1200 ))
-while ! R test -f art-films/exit.code 2>/dev/null; do
-  [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; ev "到了时限还没做完，收工"; break; }
-  sleep 120
-  pj=$(R "node ~/.claude/skills/wjs-voicedrop-creating-motion-book/cloud/probe.mjs $slug" 2>/dev/null || true); echo "$(date -u +%T) $pj"
-  [ -n "$pj" ] || continue
-  summary=$(node "$MB" summary "$pj" "$NCH" "$SK/kits") || true   # 进度显示出错不能连累制作（set -e 会直接退出并销毁机器）
-  while IFS= read -r line; do [ -n "$line" ] && ev "$line"; done <<< "$summary"
-  last=$(printf '%s\n' "$summary" | tail -1); st making "${last:-Claude 制作中}"
+# 进度：每 2 分钟在做书机上跑一次 probe.mjs（开机时随 skill 克隆过去了），里程碑记进对外日志（只记变化），state.json 的 step 是一句总括。
+# Claude 退出了但还没做出网页版 → 续跑（最多 MAXROUND 轮）；到时限就收工。
+deadline=$(( STARTED + MAXH * 3600 - 1200 )); TIMEUP=0
+while :; do
+  while ! R test -f art-films/exit.code 2>/dev/null; do
+    [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; ev "到了时限还没做完，收工"; TIMEUP=1; break; }
+    sleep 120
+    pj=$(R "node ~/.claude/skills/wjs-voicedrop-creating-motion-book/cloud/probe.mjs $slug" 2>/dev/null || true); echo "$(date -u +%T) $pj"
+    [ -n "$pj" ] || continue
+    summary=$(node "$MB" summary "$pj" "$NCH" "$SK/kits") || true   # 进度显示出错不能连累制作（set -e 会直接退出并销毁机器）
+    while IFS= read -r line; do [ -n "$line" ] && ev "$line"; done <<< "$summary"
+    last=$(printf '%s\n' "$summary" | tail -1); st making "${last:-Claude 制作中}"
+  done
+  echo "第 $ROUND 轮 Claude 退出码：$(R cat art-films/exit.code 2>/dev/null || echo 无)"
+  [ $TIMEUP = 1 ] && break
+  R test -f "art-films/$slug/html/index.html" 2>/dev/null && break
+  [ $ROUND -ge $MAXROUND ] && { ev "续跑 $MAXROUND 轮仍没做完，收工"; break; }
+  ROUND=$((ROUND + 1)); ev "Claude 中途停了，第 $ROUND 轮接着做"; launch $ROUND
 done
-echo "Claude 退出码：$(R cat art-films/exit.code 2>/dev/null || echo 无)"
 STEP_DESC="取回成品"; ev "制作完成，取回成品"
 rsync -az -e "ssh $SSHO" --exclude '代码工程/lib/' --exclude '代码工程/demos/' --exclude '代码工程/reference_films/' --exclude '代码工程/examples/' --exclude '静帧/' \
   "mb@$IP:art-films/$slug/" "$OUT/" || true
