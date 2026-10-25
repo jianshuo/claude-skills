@@ -1,0 +1,111 @@
+<title>{{TITLE}}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 公用放映厅（wjs-creating-motion-book/player）：深墨单一外观，片子是主角、页面退后。画面 9:16 居中，下面控制条＋章节跳转。
+   时间永远取口播 <audio> 的 currentTime，画面每帧实时画（不经 MP4）。 */
+:root {
+  --bg: #0c1215; --panel: #172226; --ink: #f2efe8; --sub: #8fa3a0; --amber: #f2b33d; --line: #2a3a3f;
+  --ui: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflow: hidden; }
+.stage { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box; }
+.frame { position: relative; height: calc(100% - 104px); aspect-ratio: 9 / 16; max-width: 100%; max-height: calc((100vw - 32px) * 16 / 9); border-radius: 14px; overflow: hidden; background: #10181b; box-shadow: 0 0 0 1px var(--line); }
+#c { width: 100%; height: 100%; display: block; }
+.cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: rgba(12,18,21,.72); cursor: pointer; border: 0; color: var(--ink); font: inherit; }
+.cover .big { width: 84px; height: 84px; border-radius: 50%; background: var(--amber); display: grid; place-items: center; }
+.cover .big::after { content: ""; border-left: 26px solid #10181b; border-top: 16px solid transparent; border-bottom: 16px solid transparent; margin-left: 7px; }
+.cover .t { font-size: 22px; font-weight: 700; letter-spacing: .04em; }
+.cover .s { font-size: 13px; color: var(--sub); text-align: center; padding-inline: 16px; }
+.cover:focus-visible { outline: 3px solid var(--amber); outline-offset: -6px; }
+.bar { width: 100%; max-width: min(560px, 100%); display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--sub); font-variant-numeric: tabular-nums; }
+.bar button { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 15px; cursor: pointer; }
+.bar button:focus-visible, .chapters button:focus-visible { outline: 2px solid var(--amber); }
+.bar input[type=range] { flex: 1; min-width: 0; accent-color: var(--amber); }
+.fps { flex: none; min-width: 52px; text-align: right; }
+.fps.warn { color: var(--amber); }
+.chapters { width: 100%; max-width: min(560px, 100%); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chapters::-webkit-scrollbar { display: none; }
+.chapters button { flex: none; border: 1px solid var(--line); background: var(--panel); color: var(--sub); border-radius: 999px; padding: 6px 12px; font: 12px var(--ui); cursor: pointer; white-space: nowrap; }
+.chapters button.on { color: #10181b; background: var(--amber); border-color: var(--amber); font-weight: 700; }
+</style>
+
+<div class="stage">
+  <div class="frame">
+    <canvas id="c" width="1080" height="1920"></canvas>
+    <button class="cover" id="cover" type="button" aria-label="播放">
+      <span class="big"></span>
+      <span class="t">{{TITLE}}</span>
+      <span class="s" id="status">正在加载画面和口播…</span>
+    </button>
+  </div>
+  <div class="bar">
+    <button id="pp" type="button" aria-label="播放或暂停">▶</button>
+    <input id="seek" type="range" min="0" max="{{TOTAL}}" step="0.01" value="0" aria-label="进度">
+    <span id="time">0:00 / {{MMSS}}</span>
+    <span class="fps" id="fps" title="浏览器实时画画面的帧率">— fps</span>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="章节"></nav>
+  <div hidden><input id="scrub" type="range"><span id="tt"></span><button id="play" type="button"></button></div>
+</div>
+
+<script>window.FONT_FACES = [];</script>
+<script charset="utf-8" src="lib/util.js"></script>
+<script>U.loadCmaps = async () => {}; U.assertGlyphs = () => true;</script>
+{{LIBTAGS}}
+<script charset="utf-8" src="{{ERAS}}"></script>
+<script>window.SCENE_LIBS = []; window.SCENES = window.SCENES || {};</script>
+<script charset="utf-8" src="transitions.js"></script>
+{{SCENETAGS}}
+<script charset="utf-8" src="scenes/index.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const cover = $('cover'), status = $('status'), pp = $('pp'), seek = $('seek'), time = $('time'), fpsEl = $('fps'), nav = $('chapters');
+  const audio = new Audio(); audio.preload = 'auto';
+  const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  let total = {{TOTAL}}, ready = false, playing = false, seeking = false, wake = null, chips = [];
+
+  const loadFonts = Promise.all({{FONTS}}.map(async ([fam, url]) => { const buf = await (await fetch(url)).arrayBuffer(); const f = new FontFace(fam, buf); await f.load(); document.fonts.add(f); }));
+  const loadAudio = fetch('narration.mp3').then(r => r.blob()).then(b => { audio.src = URL.createObjectURL(b); });
+
+  // 章节跳转：段落表里的 CHAPTER_OFFSETS（ch00 = 开场），章名取 book.json（scenes/book/meta.js）
+  const buildChapters = () => { const offs = window.CHAPTER_OFFSETS; if (!offs) { nav.hidden = true; return; }
+    const names = (window.BOOK_META || {}).chapters || [];
+    chips = Object.entries(offs).map(([k, t], i) => { const b = document.createElement('button'); b.type = 'button';
+      b.textContent = i === 0 ? '开场' : `${i} · ${names[i - 1] || '第 ' + i + ' 章'}`; b.addEventListener('click', () => jump(t)); nav.appendChild(b); return [t, b]; }); };
+  const markChapter = t => { let k = 0; chips.forEach(([t0], i) => { if (t >= t0 - 0.05) k = i; }); chips.forEach(([, b], i) => b.classList.toggle('on', i === k)); };
+
+  Promise.all([loadFonts, loadAudio]).then(() => {
+    const s = document.createElement('script'); s.charset = 'utf-8'; s.src = 'engine.js'; document.body.appendChild(s);
+    const wait = () => { if (window.__bootFailed) { status.textContent = '画面加载失败：' + String(window.__bootFailed).slice(0, 120); return; }
+      if (!window.__ready) return requestAnimationFrame(wait);
+      ready = true; total = window.__total || total; seek.max = total; time.textContent = `0:00 / ${fmt(total)}`;
+      buildChapters(); markChapter(0); status.textContent = '点一下开始播放（有声音）'; window.renderFrame(0.6); };
+    wait();
+  }).catch(e => { status.textContent = '加载失败：' + e.message; });
+
+  let frames = 0, lastFps = performance.now();
+  const show = t => { time.textContent = `${fmt(t)} / ${fmt(total)}`; markChapter(t); };
+  const loop = () => {
+    if (!playing) return;
+    const t = Math.min(audio.currentTime, total - 0.01); window.renderFrame(t); frames++;
+    if (!seeking) seek.value = t; show(t);
+    const now = performance.now(); if (now - lastFps > 1000) { const f = frames * 1000 / (now - lastFps); fpsEl.textContent = `${f.toFixed(0)} fps`; fpsEl.classList.toggle('warn', f < 24); frames = 0; lastFps = now; }
+    if (audio.ended || audio.currentTime >= total - 0.02) { pause(); window.renderFrame(total - 0.01); return; }
+    requestAnimationFrame(loop);
+  };
+  const play = async () => { if (!ready) return; try { await audio.play(); } catch (e) { status.textContent = '浏览器没有允许播放声音，请再点一次'; return; }
+    playing = true; cover.hidden = true; pp.textContent = '❚❚'; lastFps = performance.now(); frames = 0; requestAnimationFrame(loop);
+    try { wake = await navigator.wakeLock?.request('screen'); } catch (e) {} };
+  const pause = () => { playing = false; audio.pause(); pp.textContent = '▶'; try { wake?.release(); } catch (e) {} wake = null; };
+  const jump = t => { audio.currentTime = t; seek.value = t; show(t); if (ready && !playing) window.renderFrame(t); };
+  cover.addEventListener('click', play);
+  pp.addEventListener('click', () => playing ? pause() : play());
+  seek.addEventListener('input', () => { seeking = true; jump(+seek.value); });
+  seek.addEventListener('change', () => { seeking = false; });
+  document.addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); playing ? pause() : play(); } });
+})();
+</script>
