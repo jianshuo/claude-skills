@@ -8,7 +8,7 @@
 // 查不到：画面好不好看、图形（非文字）出画/进字幕带、近空白、确定性。这些要 Mac 上的 qa.py / 审片。
 // 字宽用估算（汉字 1em、拉丁 0.56em），离边缘差几像素的半截字判断会有出入；线索要去看那一帧再定。
 // 用法：node smoke.mjs <项目目录> [--film book（章节自测用 chNN：读 eras_chNN.js）] [--out <目录，默认 <项目>/qa/smoke>] [--fps 10] [--ids c02_a,c02_b] [--sub-band 0.74]
-// 产物：smoke.json、框景线索.txt（格式同 qa_batches.py，Mac 上可直接接 framing_sheet.py）。有 ①②③ 退出码 1。
+// 产物：smoke.json、框景线索.txt（格式同 qa_batches.mjs，Mac 上可直接接 framing_sheet.mjs）。有 ①②③ 退出码 1。
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
