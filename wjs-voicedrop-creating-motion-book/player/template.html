@@ -20,6 +20,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 .cover .t { font-size: 22px; font-weight: 700; letter-spacing: .04em; }
 .cover .s { font-size: 13px; color: var(--sub); text-align: center; padding-inline: 16px; }
 .cover:focus-visible { outline: 3px solid var(--amber); outline-offset: -6px; }
+.cover[hidden] { display: none; }   /* 上面 display:flex 会盖过浏览器默认的 [hidden]，不写这行点了播放遮罩也不消失 */
 .bar { width: 100%; max-width: min(560px, 100%); display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--sub); font-variant-numeric: tabular-nums; }
 .bar button { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 15px; cursor: pointer; }
 .bar button:focus-visible, .chapters button:focus-visible { outline: 2px solid var(--amber); }

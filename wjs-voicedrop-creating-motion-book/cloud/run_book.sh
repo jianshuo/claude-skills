@@ -1,55 +1,76 @@
 #!/bin/bash
-# 云端做一本书：在 Tokyo VPS 上跑（root）。开一台一次性 Vultr 机器 → 装环境 → 无人值守 Claude Code 按本 skill 做完 HTML 版
-# → 拉回 → 发布到书架 voicedrop.cn/books/<slug>/video/ → 销毁机器。不管成功失败，退出时都销毁（--keep 除外）；
-# 另有 reaper.sh 兜底：打 motion-book 标签、开了超过 6 小时的机器一律删。
+# 云端做一本书：在 Tokyo VPS 上跑（root，或 lab 服务的 claude-agent 用户——/api/video-book 就是用 systemd-run 起它）。
+# 开一台一次性 Vultr 机器 → 装环境 → 无人值守 Claude Code 按本 skill 做完 HTML 版 → 拉回 → 发布到书架
+# voicedrop.cn/books/<slug>/video/ → 销毁机器。不管成功失败，退出时都销毁（--keep 除外）；reaper.sh 兜底删开太久的机器。
 #
-# 用法：bash run_book.sh <slug> [--only ch01,ch02,ch03] [--plan vhp-8c-16gb-amd] [--max-hours 6] [--keep] [--no-publish] [--dry]
-#   --dry：不派 Claude，只验证开机、装环境、Chromium 能出图、拉回、销毁（几美分）
-# 凭据（只读，不复制进别人的目录）：
-#   /root/motion-book/secrets.env      VULTR_API_KEY、VOLC_ASR_APPID、VOLC_ASR_ACCESS_TOKEN（600）
-#   /opt/claude-agent/.env             CLAUDE_CODE_OAUTH_TOKEN（写书引擎同一个 setup-token 长期令牌，不轮换，可多机共用）
-#   /opt/claude-agent/.config/voicedrop/credentials   书架发布令牌（build.mjs 发书同一份）
-# 产物：/root/motion-book/books/<slug>/（html/、稿、句时间、镜头表、qa、RESULT.md、cloud.log、claude.jsonl）
+# 用法：bash run_book.sh <slug> [--only ch01,ch02,ch03] [--plan vhp-8c-16gb-amd] [--max-hours 12] [--keep] [--no-publish] [--dry]
+#   --dry：不派 Claude，只验证开机、装环境、Chromium 能出图、销毁（几美分）
+#   --max-hours：缺省整本 12、试看版（--only）6；到点收工（拉回已有的东西、不发布）
+# 路径（环境变量可改，lab 服务用 MB_ROOT=/opt/claude-agent/motion-book）：
+#   $MB_ROOT/secrets.env            VULTR_API_KEY、VOLC_ASR_APPID、VOLC_ASR_ACCESS_TOKEN（600）
+#   $MB_CLAUDE_ENV                  CLAUDE_CODE_OAUTH_TOKEN（缺省 /opt/claude-agent/.env：写书引擎同一个 setup-token 长期令牌，不轮换，可多机共用）
+#   $VOICEDROP_CREDENTIALS          书架发布令牌（缺省 /opt/claude-agent/.config/voicedrop/credentials，build.mjs 发书同一份）
+# 产物：$MB_ROOT/books/<slug>/（html/、稿、句时间、镜头表、qa、RESULT.md、cloud.log、claude.jsonl、state.json）
+# state.json：{state: booting|setup|making|publishing|done|failed, step, startedAt, updatedAt, only, instance, url?, error?}
 set -euo pipefail
 SK="$(cd "$(dirname "$0")/.." && pwd)"
 slug=${1:?用法：bash run_book.sh <slug> [--only …]}; shift
-ONLY=""; PLAN=vhp-8c-16gb-amd; MAXH=6; KEEP=0; PUBLISH=1; DRY=0
+ONLY=""; PLAN=vhp-8c-16gb-amd; MAXH=""; KEEP=0; PUBLISH=1; DRY=0
 while [ $# -gt 0 ]; do case $1 in
   --only) ONLY=$2; shift 2;; --plan) PLAN=$2; shift 2;; --max-hours) MAXH=$2; shift 2;;
   --keep) KEEP=1; shift;; --no-publish) PUBLISH=0; shift;; --dry) DRY=1; PUBLISH=0; shift;; *) echo "不认识的参数 $1"; exit 2;; esac; done
-ROOT=/root/motion-book; OUT=$ROOT/books/$slug; mkdir -p "$OUT"; exec > >(tee -a "$OUT/cloud.log") 2>&1
+[ -n "$MAXH" ] || { [ -n "$ONLY" ] && MAXH=6 || MAXH=12; }
+ROOT=${MB_ROOT:-/root/motion-book}; CLAUDE_ENV=${MB_CLAUDE_ENV:-/opt/claude-agent/.env}
+export VOICEDROP_CREDENTIALS=${VOICEDROP_CREDENTIALS:-/opt/claude-agent/.config/voicedrop/credentials}
+OUT=$ROOT/books/$slug; mkdir -p "$OUT"; exec > >(tee -a "$OUT/cloud.log") 2>&1
+STARTED=$(date +%s); ID=""; STATE=booting
+st() {   # st <state> <step> [url] [error]：写 state.json（接口读它答进度）
+  STATE=$1; python3 - "$OUT/state.json" "$1" "$2" "${3:-}" "${4:-}" "$STARTED" "$ONLY" "$ID" <<'PY'
+import json,sys,time
+f,state,step,url,err,started,only,inst=sys.argv[1:]
+d={'state':state,'step':step,'startedAt':int(started)*1000,'updatedAt':int(time.time()*1000),'only':only,'instance':inst}
+if url: d['url']=url
+if err: d['error']=err
+json.dump(d,open(f+'.tmp','w'),ensure_ascii=False); __import__('os').replace(f+'.tmp',f)
+PY
+}
+st booting "检查书和凭据"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
 getenv() { grep -E "^(export )?$1=" "$2" | head -1 | sed -E "s/^(export )?$1=//; s/^[\"']//; s/[\"']\$//"; }
 VULTR_API_KEY=$(getenv VULTR_API_KEY $ROOT/secrets.env); ASR_ID=$(getenv VOLC_ASR_APPID $ROOT/secrets.env); ASR_TK=$(getenv VOLC_ASR_ACCESS_TOKEN $ROOT/secrets.env)
-CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN /opt/claude-agent/.env)
-[ -n "$VULTR_API_KEY" ] && [ -n "$ASR_ID" ] && [ -n "$ASR_TK" ] && [ -n "$CLAUDE_TK" ] || { echo "凭据不全"; exit 2; }
+CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
 J() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
+KD=""
+destroy() { set +e
+  if [ -n "$ID" ]; then if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; fi; fi
+  [ -n "$KD" ] && rm -rf "$KD"
+  case $STATE in done) ;; *) st failed "${STEP_DESC:-中途退出}" "" "$(tail -3 "$OUT/cloud.log" | tr '\n' ' ' | cut -c1-300)";; esac; }
+trap destroy EXIT
+[ -n "$VULTR_API_KEY" ] && [ -n "$ASR_ID" ] && [ -n "$ASR_TK" ] && [ -n "$CLAUDE_TK" ] || { STEP_DESC="凭据不全"; echo "凭据不全"; exit 2; }
 
 # 要做的章都写完了才开机（不然白花钱）
-node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" ${ONLY:+--only $ONLY} > "$OUT/book_meta.json"
+STEP_DESC="取书"; node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" ${ONLY:+--only $ONLY} > "$OUT/book_meta.json"
 
 KD=$(mktemp -d); ssh-keygen -q -t ed25519 -N '' -f "$KD/id" -C "motion-book-$slug"
 UD=$(sed "s#__PUBKEY__#$(cat "$KD/id.pub")#" "$SK/cloud/cloud-init.sh" | base64 -w0)
-ID=$(api -X POST https://api.vultr.com/v2/instances -d "{\"region\":\"nrt\",\"plan\":\"$PLAN\",\"os_id\":2284,\"label\":\"motion-book-$slug\",\"hostname\":\"motion-book\",\"tags\":[\"motion-book\"],\"backups\":\"disabled\",\"user_data\":\"$UD\"}" | J 'd["instance"]["id"]')
-echo "开机 $ID"
-destroy() { set +e; if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; fi; rm -rf "$KD"; }
-trap destroy EXIT
+STEP_DESC="开机"; ID=$(api -X POST https://api.vultr.com/v2/instances -d "{\"region\":\"nrt\",\"plan\":\"$PLAN\",\"os_id\":2284,\"label\":\"motion-book-$slug\",\"hostname\":\"motion-book\",\"tags\":[\"motion-book\"],\"backups\":\"disabled\",\"user_data\":\"$UD\"}" | J 'd["instance"]["id"]')
+echo "开机 $ID"; st booting "开机中"
 
-IP=""; for i in $(seq 90); do read -r st ip < <(api "https://api.vultr.com/v2/instances/$ID" | J 'd["instance"]["status"]+" "+d["instance"]["main_ip"]')
-  [ "$st" = active ] && [ "$ip" != 0.0.0.0 ] && { IP=$ip; break; }; sleep 10; done
-[ -n "$IP" ] || { echo "开机超时"; exit 1; }
+IP=""; for i in $(seq 90); do read -r s ip < <(api "https://api.vultr.com/v2/instances/$ID" | J 'd["instance"]["status"]+" "+d["instance"]["main_ip"]')
+  [ "$s" = active ] && [ "$ip" != 0.0.0.0 ] && { IP=$ip; break; }; sleep 10; done
+[ -n "$IP" ] || { STEP_DESC="开机超时"; echo "开机超时"; exit 1; }
 SSHO="-i $KD/id -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o ServerAliveInterval=30 -o LogLevel=ERROR"
 R() { ssh $SSHO "mb@$IP" "$@"; }
-echo "IP $IP，等装环境（约 5–10 分钟）"
+echo "IP $IP，等装环境（约 5–10 分钟）"; st setup "装环境（约 5 分钟）"
 for i in $(seq 120); do R test -f .ready 2>/dev/null && break; sleep 15; done
-R test -f .ready || { echo "装环境超时"; exit 1; }
+R test -f .ready || { STEP_DESC="装环境超时"; echo "装环境超时"; exit 1; }
 echo "环境就绪 $(date -u +%T)"
 printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=4\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
 
-if [ $DRY = 1 ]; then   # 演习：只验证环境（Node、Claude Code、Chromium 出一张静帧、冒烟检查）
+if [ $DRY = 1 ]; then   # 演习：只验证环境（Node、Claude Code、Chromium 出一张静帧）
   R 'bash -lc "set -e; node --version; claude --version; cd ~/code/huashu-art-motion/scripts/engine && uv run --with playwright python render.py --film gallery --solo 01_cave --stills 1.0 --no-counter --out /tmp/dry && ls -la /tmp/dry"' | tee "$OUT/dry.txt"
-  exit 0
+  st done "演习完成"; exit 0
 fi
 
 S='~/.claude/skills/wjs-voicedrop-creating-motion-book/scripts'
@@ -62,19 +83,24 @@ PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 C
 - 全部完成后写 ~/art-films/$slug/RESULT.md：画风和理由、章节、镜头数、时长、冒烟结果、你知道的遗留问题。"
 printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'
 R "cd ~/art-films && nohup bash -lc 'source ~/code/.env; claude -p \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose > claude.jsonl 2> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
-echo "Claude 开工 $(date -u +%T)"
+echo "Claude 开工 $(date -u +%T)"; st making "Claude 开工"; STEP_DESC="制作中"
 
-deadline=$(( $(date +%s) + MAXH * 3600 - 1200 ))
+deadline=$(( STARTED + MAXH * 3600 - 1200 ))
 while ! R test -f art-films/exit.code 2>/dev/null; do
   [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; break; }
   sleep 120
-  echo "$(date -u +%T) $(R "ls ~/art-films/$slug/代码工程/scenes/book/ch*.js 2>/dev/null | wc -l; ls ~/art-films/$slug/音频/*.mp3 2>/dev/null | wc -l" 2>/dev/null | tr '\n' ' ') （章节代码文件数、口播章数）"
+  p=$(R "ls ~/art-films/$slug/音频/ch??.mp3 2>/dev/null | wc -l; ls ~/art-films/$slug/代码工程/scenes/book/ch*.js 2>/dev/null | wc -l; [ -f ~/art-films/$slug/html/index.html ] && echo html || echo -" 2>/dev/null | tr '\n' ' ' || true)
+  echo "$(date -u +%T) $p（口播章数、章节代码文件数、html）"
+  set -- $p; st making "口播 ${1:-0} 章、场景文件 ${2:-0} 个${3:+$([ "$3" = html ] && echo '、HTML 已打包')}"
 done
 echo "Claude 退出码：$(R cat art-films/exit.code 2>/dev/null || echo 无)"
+STEP_DESC="拉回产物"
 rsync -az -e "ssh $SSHO" --exclude '代码工程/lib/' --exclude '代码工程/demos/' --exclude '代码工程/reference_films/' --exclude '代码工程/examples/' --exclude '静帧/' \
   "mb@$IP:art-films/$slug/" "$OUT/" || true
 rsync -az -e "ssh $SSHO" "mb@$IP:art-films/claude.jsonl" "mb@$IP:art-films/claude.err" "$OUT/" 2>/dev/null || true
 if [ $PUBLISH = 1 ] && [ -f "$OUT/html/index.html" ]; then
-  VOICEDROP_CREDENTIALS=/opt/claude-agent/.config/voicedrop/credentials node "$SK/scripts/publish_video.mjs" "$OUT"
-else echo "没有发布（--no-publish 或没有 html/index.html）"; fi
+  st publishing "发布到书架"; STEP_DESC="发布"
+  node "$SK/scripts/publish_video.mjs" "$OUT"
+  st done "已发布" "https://voicedrop.cn/books/$slug/video/"
+else STEP_DESC="没有做出 HTML（看 cloud.log / claude.err）"; echo "没有发布（--no-publish 或没有 html/index.html）"; [ $PUBLISH = 0 ] && st done "完成（未发布）"; fi
 echo "=== 结束 $(date -u +%FT%TZ)，产物 $OUT"
