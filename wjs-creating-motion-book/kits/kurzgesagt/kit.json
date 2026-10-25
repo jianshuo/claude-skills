@@ -7,6 +7,6 @@
   "from_book": "一颗药的诞生（new-drugs-ai）",
   "fonts": [],
   "palette": "底 #10181B｜面 #1D2B2F｜字 #F2EFE8｜琥珀 #F2B33D｜珊瑚 #E8604C｜青 #4FB3A5",
-  "api": "D.bg D.flat D.glow D.text D.popText D.callout D.capsule D.mol D.person D.humanSil D.mouseSil D.monkeySil D.hand D.switch D.syringe D.personSprite D.world D.finish D.chapterCard D.cardToken D.subtitle",
+  "api": "D.bg D.flat D.glow D.text D.popText D.callout D.capsule D.mol D.person D.humanSil D.mouseSil D.monkeySil D.hand D.switch D.syringe D.personSprite D.world D.finish D.chapterCard D.cardToken D.subtitle D.GLYPHS（字体子集里没有的符号如 ≠，D.text 遇到就用路径手画；缺别的符号往这里加）",
   "placeholder_bg": "K.bg(c, t, {})"
 }

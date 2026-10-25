@@ -74,7 +74,13 @@ D.tone = col => ({ [C.teal]: [C.teal, C.tealD, C.tealHi], [C.coral]: [C.coral, C
 
 // ---------- 文字 ----------
 D.text = (c, s, x, y, o = {}) => { const { size = 64, fam = 'PuHui-Heavy', col = C.ink, align = 'center', alpha = 1, scale = 1, track = 0 } = o;
-  c.save(); c.globalAlpha *= alpha; c.translate(x, y); c.scale(scale, scale); c.font = `${size}px "${fam}"`; c.fillStyle = col; c.textAlign = align; c.textBaseline = 'middle'; if (track) c.letterSpacing = track + 'px'; c.fillText(s, 0, 0); c.restore(); };
+  c.save(); c.globalAlpha *= alpha; c.translate(x, y); c.scale(scale, scale);
+  if (D.GLYPHS[s]) { D.GLYPHS[s](c, size, col, align); c.restore(); return; }   // 字体子集里没有的符号：路径手画（否则浏览器静默回退系统字体）
+  c.font = `${size}px "${fam}"`; c.fillStyle = col; c.textAlign = align; c.textBaseline = 'middle'; if (track) c.letterSpacing = track + 'px'; c.fillText(s, 0, 0); c.restore(); };
+// 手画符号：GB2312 子集里没有的（≠ 等）；按字号画，中心对齐到字的中线
+D.GLYPHS = { '≠': (c, s, col, align) => { const w = s * 0.56, th = s * 0.075, dx = align === 'left' ? w / 2 : align === 'right' ? -w / 2 : 0;
+  c.translate(dx, 0); c.fillStyle = col; c.fillRect(-w / 2, -s * 0.13 - th / 2, w, th); c.fillRect(-w / 2, s * 0.13 - th / 2, w, th);
+  c.strokeStyle = col; c.lineWidth = th; c.lineCap = 'round'; c.beginPath(); c.moveTo(s * 0.15, -s * 0.33); c.lineTo(-s * 0.15, s * 0.33); c.stroke(); } };
 // 弹出的大字/数字（backOut 过冲）
 D.popText = (c, s, x, y, lt, at, o = {}) => { const p = D.pop(lt, at, o.dur || 0.5); if (p <= 0) return;
   if (o.plate) { c.save(); c.font = `${o.size || 64}px "${o.fam || 'PuHui-Heavy'}"`; const w = c.measureText(s).width + (o.size || 64) * 0.9, h = (o.size || 64) * 1.45; c.translate(x, y); c.scale(p, p); c.globalAlpha *= clamp(p * 2) * (o.alpha ?? 1); c.fillStyle = DG.rgba(C.bg, 0.88); c.fill(D.round(-w / 2, -h / 2, w, h, h / 2)); c.restore(); }

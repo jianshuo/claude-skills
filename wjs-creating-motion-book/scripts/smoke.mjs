@@ -140,7 +140,7 @@ consoleErr.length = 0;
 
 // ---------- 逐帧 ----------
 const ERAS = sandbox.ERAS, [VW, VH] = sandbox.__size, U = sandbox.U, glyphSeen = new Set(); let cur = null;
-HOOK.glyph = (font, text) => { const miss = U.missingGlyphs(font, text); if (!miss.length) return; const fam = U.fontFamily(font), key = fam + miss.join('');
+HOOK.glyph = (font, text) => { const miss = U.missingGlyphs(font, text); if (!miss.length) return; const fam = U.fontFamily(font), key = fam + miss.join('') + (cur && cur.id);   // 每一镜各报一次（同一个字在别的镜头里也要改）
   if (glyphSeen.has(key)) return; glyphSeen.add(key); report.glyphs.push({ font: fam, chars: miss.join(''), text: text.slice(0, 30), id: cur && cur.id, t: cur && +cur.t.toFixed(2) }); };
 function frameIssues(tb) {
   const out = [], vis = [];
