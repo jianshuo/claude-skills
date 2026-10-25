@@ -22,11 +22,23 @@ const stemOf = ch => (AB.stems || [])[+ch.slice(2) - 1] || ch.slice(2);   // 听
 // ---------- 听书音频 ----------
 async function audiobookMp3(ch) {
   const url = `${AB.base}/${encodeURIComponent(B.slug)}/${encodeURIComponent(stemOf(ch))}`;
-  const h = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(30000) });
-  const r = await fetch(url, { signal: AbortSignal.timeout(900000) });   // 没缓存时 8 分钟音频约 1 分钟合成完
+  const head = () => fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(30000) }).catch(() => ({ status: 0, headers: new Headers() }));
+  const h = await head(), hit = h.status === 200;
+  let r = await fetch(url, { signal: AbortSignal.timeout(900000) });   // 没缓存时这一下触发合成（8 分钟音频约 1 分钟合成完）
   if (!r.ok) throw new Error(`听书接口 ${r.status}：${url}`);
-  const buf = Buffer.from(await r.arrayBuffer());
-  return { mp3: Buffer.concat(mp3Frames(buf).frames), hit: h.status === 200 };   // 只留音频帧：多段朗读每段都带 ID3 头，夹在中间 ASR 会报 Invalid audio format
+  let buf = Buffer.from(await r.arrayBuffer());
+  // 没缓存时拿到的是边合成边推的流，可能中途断（2026-10-25《炮声里的股市》第 8 章只拿到 72 秒）。
+  // 听书接口会在后台合成完整章写进 R2，所以等缓存出现，再取缓存里那份完整的。
+  if (!hit) {
+    let cl = 0;
+    for (let k = 0; k < 60; k++) { const hh = await head(); cl = +(hh.headers.get('content-length') || 0); if (hh.status === 200 && cl > 0) break; await new Promise(s => setTimeout(s, 10000)); }
+    if (!cl) throw new Error(`听书缓存 10 分钟还没写好：${url}`);
+    r = await fetch(url, { signal: AbortSignal.timeout(300000) });
+    if (!r.ok) throw new Error(`取听书缓存 ${r.status}：${url}`);
+    buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length < cl * 0.98) throw new Error(`听书缓存没取全：${buf.length}/${cl} 字节`);
+  }
+  return { mp3: Buffer.concat(mp3Frames(buf).frames), hit };   // 只留音频帧：多段朗读每段都带 ID3 头，夹在中间 ASR 会报 Invalid audio format
 }
 
 // ---------- ASR（大模型流式识别）----------
