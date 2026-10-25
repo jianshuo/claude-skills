@@ -36,10 +36,10 @@ J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
 KD=""; VULTR_API_KEY=""; LEASE=""; RURL=""; RTOK=""
 # engine-router 租约（见 engine-router/README「接入方」）：lease <额外 JSON 字段> → 「租约id 账号id」，挑不出是「- -」
 rt() { curl -4 -sS -m 10 -H "Authorization: Bearer $RTOK" -H 'Content-Type: application/json' -X POST "$RURL/v1/leases$1" -d @- 2>/dev/null; }
-lease() { echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000$1}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
-lease_done() {   # 回报并释放；没成功就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
+lease() { echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000${1:-}}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
+lease_done() {   # 回报并释放；本轮起过 Claude 又没成功，就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
   [ -n "$LEASE" ] || return 0
-  local err=""; [ "$STATE" = done ] || err=$(tail -c 400 "$OUT/claude.err" 2>/dev/null || true)
+  local err=""; if [ "$STATE" != done ] && [ -n "${ROUND:-}" ]; then err=$(tail -c 400 "$OUT/claude.err" 2>/dev/null || true); fi
   OK=$([ "$STATE" = done ] && echo true || echo false) ERR="$err" node -e 'process.stdout.write(JSON.stringify({ok:process.env.OK==="true",engine_used:"claude",error:process.env.ERR}))' \
     | rt "/$LEASE/complete" >/dev/null || true
   LEASE=""; }
