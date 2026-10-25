@@ -41,4 +41,18 @@ for (const [rel, want] of [['', 'text/html'], ['engine.js', 'javascript'], ['nar
   const r = await fetch(site + rel + `?_=${Date.now()}`, { method: rel === 'narration.mp3' ? 'HEAD' : 'GET' }), ct = r.headers.get('content-type') || '';
   console.log(`${r.ok && ct.includes(want) ? '✓' : '✗'} ${site}${rel}  ${r.status} ${ct}`);
 }
+// 书架标志：线上 _src/book.json 合并 video 字段（读—改—写，其余字段原样）。写书的 build.mjs 每次发布整份 PUT 时会把它从线上接回来。
+// chapters＝动画版做了几章（试看版少于全书章数），duration 秒。
+const srcUrl = `https://jianshuo.dev/voicedrop/books/${encodeURIComponent(B.slug)}/_src/book.json`;
+const live = await fetch(`${srcUrl}?_=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
+if (!live?.slug) console.log(`⚠ 读不到线上 book.json，没写动画版标志：${srcUrl}`);
+else {
+  const total = +(fs.readFileSync(path.join(H, 'index.html'), 'utf8').match(/let total = ([\d.]+)/) || [])[1] || 0;
+  const offs = fs.readFileSync(path.join(H, 'eras_book.js'), 'utf8').match(/CHAPTER_OFFSETS\s*=\s*(\{[^}]*\})/);
+  const chapters = offs ? Object.keys(JSON.parse(offs[1])).filter(k => k !== 'ch00').length : undefined;
+  live.video = { url: site, publishedAt: new Date().toISOString(), duration: Math.round(total), ...(chapters ? { chapters } : {}) };
+  const r = await fetch(`https://jianshuo.dev/files/api/upload/books/${encodeURIComponent(B.slug)}/_src/book.json`,
+    { method: 'PUT', headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(live, null, 2) + '\n' });
+  console.log(r.ok ? `✓ 书架 book.json 已标上动画版：${JSON.stringify(live.video)}` : `✗ 写 book.json 失败：${r.status} ${(await r.text()).slice(0, 200)}`);
+}
 console.log(`公开地址：${site}`);
