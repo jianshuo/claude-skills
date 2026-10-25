@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-25]
+
+### Added
+
+- **`wjs-voicedrop-creating-motion-book`** — new skill (renamed and significantly expanded from `wjs-creating-motion-book`): turns a whole VoiceDrop 书架 book into a chaptered explainer animation. Narration comes directly from the book's own audiobook mp3 (书架「听本章」) — no new TTS spending, no new script writing; ASR provides the sentence-level timestamps that drive every scene cut. Default output is a vertical 1080×1920@30 (视频号 9:16) HTML player; MP4 rendering is optional and macOS-only. The 10-step pipeline covers: fetching book metadata and chapter list from VoiceDrop MCP → art-style selection (scoring candidates on 7 dimensions, reusing kit library `kurzgesagt` / `banknote` where fit-gap ≤ 2) → project scaffolding (`new_book.mjs`) → audiobook fetch + ASR (`narrate.mjs`) → parallel chapter animation agents → final assembly (`assemble.mjs`) → mandatory smoke check (`smoke.mjs`, zero-pixel, ~15s on Mac / ~2 min on VPS) → review agent → QA (`qa_batches.mjs`, `framing_sheet.mjs`) → HTML build (`build_html.mjs`) and optional MP4 chunked render (`render_chunks.mjs`). Headless cloud path: `bash cloud/run_book.sh <slug>` spins up a Tokyo Vultr `vhp-8c-16gb-amd` ($0.132/hr), runs the full pipeline via `claude -p`, publishes to `voicedrop.cn/books/<slug>/video/`, then destroys the machine (a `reaper.sh` cron force-destroys any motion-book machine open > 6 hours). A public web entry point (`lab.jianshuo.dev/api/video-book?slug=`) auto-triggers on first visit and returns status on subsequent checks; bookshelf gate limits to one concurrent build and at most 2 per day. The `--continue` recovery path lets a resumed session pick up half-finished work on a new machine. Key constraint for headless mode: sub-agents must all be launched in the same message as foreground agents (no background agents, no "wait for notification" turns) — `claude -p` kills the process on turn end.
+
+### Removed
+
+- **`wjs-creating-motion-book`** — deleted; the skill has been renamed to `wjs-voicedrop-creating-motion-book` (see Added above) and the marketplace entry updated accordingly.
+
+### Changed
+
+- **README** — added `wjs-voicedrop-creating-motion-book` to the skills summary table and as a new subsection at the end of section 2 "Article to Video"; removed the deleted `wjs-creating-motion-book` entry.
+
 ## [2026-10-15]
 
 ### Added

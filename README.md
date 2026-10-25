@@ -92,6 +92,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-voicedrop-reading-aloud`](./wjs-voicedrop-reading-aloud/) | 文字转有声书 mp3（豆包 seed-tts-2.0 多声色编排朗读，先写脚本再合成） | `做成有声书` / `朗读出来` / `读给我听` / `/wjs-voicedrop-reading-aloud` |
 | [`wjs-converting-text-to-video`](./wjs-converting-text-to-video/) | 把公众号文章做成竖屏解说短视频 | `article.md` → 1080×1920 MP4（TTS + 水彩背景 + GSAP 动画） |
 | [`wjs-creating-video-book`](./wjs-creating-video-book/) | 把一本书做成按章节的 YouTube 横屏视频：VoiceDrop 有声书 mp3 作音轨，GPT Image 2 生成配图，Ken Burns 缓推 + 中心思想大字叠加 | `书名/书架章节` → 每章一支 1920×1080 YouTube 视频 |
+| [`wjs-voicedrop-creating-motion-book`](./wjs-voicedrop-creating-motion-book/) | 把 VoiceDrop 书架整本书做成分章解说动画（口播＝书架听书 mp3，无需重新 TTS），竖屏 9:16 默认，画风自动选型，交付 HTML 播放器 + 可选 MP4；支持 Tokyo VPS 一命令无人值守渲染后销毁 | `把这本书做成动画` / `做成艺术动画片` / `motion book` / `/wjs-voicedrop-creating-motion-book <书名>` |
 | [`wjs-transcribing-audio`](./wjs-transcribing-audio/) | 音视频转字幕（原语言） | 视频/音频 → 同语言 SRT |
 | [`wjs-translating-subtitles`](./wjs-translating-subtitles/) | 字幕翻译 + 标点重切 | A 语言 SRT → B 语言 SRT（或双语 SRT） |
 | [`wjs-dubbing-video`](./wjs-dubbing-video/) | 文本时间对齐 TTS 配音 | 视频 + 目标语 SRT → 配好音的视频 |
@@ -241,6 +242,18 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **版权提示**：整章朗读原文仅适用于公版书或用户拥有权利的书；在版权书发布前会先向用户确认。
 
 > 触发词：`把这本书做成视频` / `有声书做成视频` / `讲书视频` / `book video` / `/wjs-creating-video-book <书名>`
+
+### [`wjs-voicedrop-creating-motion-book`](./wjs-voicedrop-creating-motion-book/)
+
+把 VoiceDrop 书架上的整本书做成**分章解说动画**。口播直接用书架「听本章」那份完整朗读 mp3（不另写稿、不新花 TTS 钱），画面由 Canvas 逐帧动画引擎生成，画风按书的内容气质自动选型（已有套件 `kurzgesagt` / `banknote` 可直接复用）。
+
+- **默认竖屏 1080×1920@30（视频号 9:16），交付 HTML 播放器**；用户要 MP4 才渲（macOS 本地）。
+- **10 步流水线**：取书 → 选画风 → 建工程 → 取口播/ASR → 分章并行制作 → 总装 → 冒烟检查 → 审片 → QA → HTML/MP4 交付。
+- **Tokyo VPS 一键无人值守**：`bash cloud/run_book.sh <slug>` 开 Vultr 机器 → Claude Code 自动做到 HTML → 发布到书架 `/books/<slug>/video/` → 销毁机器，整本约 1–2 小时。
+- **线上入口**：任何人打开 `voicedrop.cn/books/<slug>/video/` 会自动触发后台下单，书架已有时直接播放；`lab.jianshuo.dev/api/video-book?slug=` 可查进度。
+- **口播零成本复用**：听书缓存命中不花钱；只改了几镜时 HTML 重打包不到 1 秒。
+
+> 触发词：`把这本书做成动画` / `做成艺术动画片` / `读书动画` / `听书配动画` / `motion book` / `/wjs-voicedrop-creating-motion-book <书名>`
 
 ---
 
