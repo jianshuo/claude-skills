@@ -24,32 +24,15 @@ ROOT=${MB_ROOT:-/root/motion-book}; CLAUDE_ENV=${MB_CLAUDE_ENV:-/opt/claude-agen
 export VOICEDROP_CREDENTIALS=${VOICEDROP_CREDENTIALS:-/opt/claude-agent/.config/voicedrop/credentials}
 OUT=$ROOT/books/$slug; mkdir -p "$OUT"; exec > >(tee -a "$OUT/cloud.log") 2>&1
 STARTED=$(date +%s); ID=""; STATE=booting
-st() {   # st <state> <step> [url] [内部日志尾]：写 state.json（接口读它答进度），并把 step 记进对外日志 events.json
-  STATE=$1; python3 - "$OUT/state.json" "$1" "$2" "${3:-}" "${4:-}" "$STARTED" "$ONLY" "$ID" <<'PY'
-import json,sys,time,os
-f,state,step,url,tail,started,only,inst=sys.argv[1:]
-now=int(time.time()*1000)
-d={'state':state,'step':step,'startedAt':int(started)*1000,'updatedAt':now,'only':only,'instance':inst}
-if url: d['url']=url
-if tail: d['logTail']=tail          # 内部排查用，接口不往外给（可能带路径）
-json.dump(d,open(f+'.tmp','w'),ensure_ascii=False); os.replace(f+'.tmp',f)
-PY
-  ev "$2"
-}
-# 对外日志：只记「时间＋一句中文步骤」，不写路径、IP、机器 ID；同一句不重复记；最多留 300 条
-ev() { python3 - "$OUT/events.json" "$1" <<'PY'
-import json,sys,time,os
-f,text=sys.argv[1:]
-try: L=json.load(open(f))
-except Exception: L=[]
-if not L or L[-1]['text']!=text: L.append({'t':int(time.time()*1000),'text':text})
-json.dump(L[-300:],open(f+'.tmp','w'),ensure_ascii=False); os.replace(f+'.tmp',f)
-PY
-}
+MB="$SK/cloud/mb.mjs"   # JSON 小活都交给它（以前是内嵌 python，2026-10-25 统一成 Node）
+# st <state> <step> [url] [内部日志尾]：写 state.json（接口读它答进度；logTail 只内部用），并把 step 记进对外日志
+st() { STATE=$1; node "$MB" state "$OUT/state.json" "$1" "$2" "${3:-}" "${4:-}" "$STARTED" "$ONLY" "$ID"; ev "$2"; }
+# 对外日志 events.json：只记「时间＋一句中文步骤」，不写路径、IP、机器 ID；同一句不连着重复记
+ev() { node "$MB" event "$OUT/events.json" "$1"; }
 st booting "检查书和凭据"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
-J() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
+J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
 KD=""; VULTR_API_KEY=""
 destroy() { set +e   # 退出一律走这里：销毁机器、删临时密钥、没成功就把 state.json 落成 failed
   if [ -n "$ID" ]; then if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && { echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; ev "制作机已销毁"; }; fi; fi
@@ -63,15 +46,15 @@ CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 
 # 要做的章都写完了才开机（不然白花钱）
 STEP_DESC="取书"; node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" ${ONLY:+--only $ONLY} > "$OUT/book_meta.json"
-NCH=$(python3 -c "import json;print(json.load(open('$OUT/book_meta.json'))['chapters'])")
-ev "读到书：《$(python3 -c "import json;print(json.load(open('$OUT/book_meta.json'))['title'])")》共 $NCH 章${ONLY:+，这次只做 $(echo $ONLY | tr ',' ' ')}"
+NCH=$(J 'd.chapters' < "$OUT/book_meta.json"); TITLE=$(J 'd.title' < "$OUT/book_meta.json")
+ev "读到书：《$TITLE》共 $NCH 章${ONLY:+，这次只做 $(echo $ONLY | tr ',' ' ')}"
 
 KD=$(mktemp -d); ssh-keygen -q -t ed25519 -N '' -f "$KD/id" -C "motion-book-$slug"
 UD=$(sed "s#__PUBKEY__#$(cat "$KD/id.pub")#" "$SK/cloud/cloud-init.sh" | base64 -w0)
-STEP_DESC="开机"; ID=$(api -X POST https://api.vultr.com/v2/instances -d "{\"region\":\"nrt\",\"plan\":\"$PLAN\",\"os_id\":2284,\"label\":\"motion-book-$slug\",\"hostname\":\"motion-book\",\"tags\":[\"motion-book\"],\"backups\":\"disabled\",\"user_data\":\"$UD\"}" | J 'd["instance"]["id"]')
+STEP_DESC="开机"; ID=$(api -X POST https://api.vultr.com/v2/instances -d "{\"region\":\"nrt\",\"plan\":\"$PLAN\",\"os_id\":2284,\"label\":\"motion-book-$slug\",\"hostname\":\"motion-book\",\"tags\":[\"motion-book\"],\"backups\":\"disabled\",\"user_data\":\"$UD\"}" | J 'd.instance.id')
 echo "开机 $ID"; st booting "申请制作机（8 核 16GB）"
 
-IP=""; for i in $(seq 90); do read -r s ip < <(api "https://api.vultr.com/v2/instances/$ID" | J 'd["instance"]["status"]+" "+d["instance"]["main_ip"]')
+IP=""; for i in $(seq 90); do read -r s ip < <(api "https://api.vultr.com/v2/instances/$ID" | J 'd.instance.status+" "+d.instance.main_ip')
   [ "$s" = active ] && [ "$ip" != 0.0.0.0 ] && { IP=$ip; break; }; sleep 10; done
 [ -n "$IP" ] || { STEP_DESC="开机超时"; echo "开机超时"; exit 1; }
 SSHO="-i $KD/id -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o ServerAliveInterval=30 -o LogLevel=ERROR"
@@ -89,7 +72,7 @@ fi
 
 S='~/.claude/skills/wjs-voicedrop-creating-motion-book/scripts'
 PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 Chromium，全程无人值守：没有人回答问题，不要停下来问）。
-用 wjs-voicedrop-creating-motion-book skill 把书架上的《$(python3 -c "import json;print(json.load(open('$OUT/book_meta.json'))['title'])")》（slug $slug）做成竖屏 HTML 动画版${ONLY:+，只做 $ONLY 这几章（试看版，总装用 assemble.mjs --only $ONLY）}。
+用 wjs-voicedrop-creating-motion-book skill 把书架上的《$TITLE》（slug $slug）做成竖屏 HTML 动画版${ONLY:+，只做 $ONLY 这几章（试看版，总装用 assemble.mjs --only $ONLY）}。
 - 项目目录 ~/art-films/$slug。取书用 node $S/fetch_book.mjs $slug ~/art-films/章名.txt（这台机器没有 VoiceDrop MCP），再 new_book.mjs、narrate.mjs。
 - 画风按 references/选画风.md 自己定：可以出主镜头对比，评委用子 agent，定了就往下走。
 - 分章制作派子 agent 并行；单个 agent 负责的口播不超过约 4 分钟，长章拆成 chNN_a / chNN_b（assemble 会自动按字母顺序拼）。渲染命令一律 bash $S/render_lock.sh 前缀（RENDER_SLOTS=4）。
@@ -100,31 +83,14 @@ printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'
 R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose > claude.jsonl 2> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
 echo "Claude 开工 $(date -u +%T)"; st making "Claude 开始制作"; STEP_DESC="制作中"
 
-# 进度：每 2 分钟用 probe.py 读一次做书机，里程碑记进对外日志（只记变化），state.json 的 step 是一句总括
+# 进度：每 2 分钟在做书机上跑一次 probe.mjs（开机时随 skill 克隆过去了），里程碑记进对外日志（只记变化），state.json 的 step 是一句总括
 deadline=$(( STARTED + MAXH * 3600 - 1200 ))
 while ! R test -f art-films/exit.code 2>/dev/null; do
   [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; ev "到了时限还没做完，收工"; break; }
   sleep 120
-  pj=$(R "python3 - $slug" < "$SK/cloud/probe.py" 2>/dev/null || true); echo "$(date -u +%T) $pj"
+  pj=$(R "node ~/.claude/skills/wjs-voicedrop-creating-motion-book/cloud/probe.mjs $slug" 2>/dev/null || true); echo "$(date -u +%T) $pj"
   [ -n "$pj" ] || continue
-  summary=$(python3 - "$pj" "$NCH" "$SK/kits" <<'PY'
-import json,sys,os
-p,nch,kits=json.loads(sys.argv[1]),sys.argv[2],sys.argv[3]
-def kitname(k):
-    try: return json.load(open(os.path.join(kits,k,'kit.json')))['label'].split('（')[0]
-    except Exception: return k
-lines=[]
-if p['mp3']: lines.append(f"取口播（书架听书）：{p['mp3']}/{nch} 章")
-if p['asr']: lines.append(f"识别口播、对齐句子：{p['asr']}/{nch} 章")
-if p['kit']: lines.append(f"选定画风：{kitname(p['kit'])}")
-if p['shots']: lines.append(f"分章制作：已交稿 {p['shots']} 段")
-s=p.get('smoke')
-if s: lines.append(f"整本冒烟检查：{s['shots']} 个镜头，报错 {s['errors']}，缺字 {s['glyphs']}，框景线索 {s['framing']}")
-if p['html']: lines.append("打包网页版完成")
-if p['result']: lines.append("写好制作说明")
-print('\n'.join(lines))
-PY
-) || true   # 进度显示出错不能连累制作（set -e 会直接退出并销毁机器）
+  summary=$(node "$MB" summary "$pj" "$NCH" "$SK/kits") || true   # 进度显示出错不能连累制作（set -e 会直接退出并销毁机器）
   while IFS= read -r line; do [ -n "$line" ] && ev "$line"; done <<< "$summary"
   last=$(printf '%s\n' "$summary" | tail -1); st making "${last:-Claude 制作中}"
 done
