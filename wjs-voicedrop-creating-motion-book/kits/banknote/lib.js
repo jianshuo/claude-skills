@@ -5,6 +5,12 @@
 (() => {
 const W = 1080, H = 1920, TAU = Math.PI * 2, { clamp, lerp } = U, P = PAINT;
 const F = window.K = { W, H, TAU };
+// 兜底：pop 的回弹起步段会让「r - 线宽」之类算成负数，canvas 遇负半径直接抛错、整段渲染失败（30fps 才撞上，10fps 冒烟漏过）。负半径一律按 0 画。
+for (const proto of [CanvasRenderingContext2D.prototype, Path2D.prototype]) {
+  const arc = proto.arc, ell = proto.ellipse; if (typeof arc !== 'function' || typeof ell !== 'function') continue;
+  proto.arc = function (x, y, r, ...rest) { return arc.call(this, x, y, r > 0 ? r : 0, ...rest); };
+  proto.ellipse = function (x, y, rx, ry, ...rest) { return ell.call(this, x, y, rx > 0 ? rx : 0, ry > 0 ? ry : 0, ...rest); };
+}
 const C = F.C = {
   paper: '#EFE8D2', paper2: '#E4DABC', paper3: '#D6C9A4',
   ink: '#1F4A3A', ink2: '#2F6B52', inkL: '#8FA593', red: '#9C2E24', redL: '#C2574A',

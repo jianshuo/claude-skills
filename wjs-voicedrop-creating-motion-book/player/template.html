@@ -92,7 +92,10 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
   let total = {{TOTAL}}, ready = false, playing = false, dragging = false, wake = null;
 
   const loadFonts = Promise.all({{FONTS}}.map(async ([fam, url]) => { const buf = await (await fetch(url)).arrayBuffer(); const f = new FontFace(fam, buf); await f.load(); document.fonts.add(f); }));
-  const loadAudio = fetch('narration.mp3').then(r => r.blob()).then(b => { audio.src = URL.createObjectURL(b); });
+  // 口播边下边播：直接给 <audio> 地址，浏览器按 Range 先取开头就能播、拖进度条只取那一段（2026-10-26 前是整个 30–40MB 下完才开播）。
+  // 书架路由要回 206（functions/voicedrop/books/[[path]].js），否则浏览器只能顺序下载、拖不动。
+  audio.src = 'narration.mp3';
+  const loadAudio = Promise.resolve();
 
   const show = t => { const p = Math.min(1, t / total) * 100 + '%'; done.style.width = p; knob.style.left = p;
     cur.textContent = fmt(t); remain.textContent = '-' + fmt(total - t); track.setAttribute('aria-valuenow', t.toFixed(0)); };

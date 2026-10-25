@@ -45,6 +45,7 @@ const DEF = { fillStyle: '#000000', strokeStyle: '#000000', lineWidth: 1, global
 let HOOK = { glyph: null };   // 每次 fillText 查缺字（引擎 U 就绪后挂上）
 const emSize = font => +(/([\d.]+)px/.exec(font) || [0, 10])[1];
 const charW = ch => { const c = ch.codePointAt(0); return c >= 0x2E80 || (c >= 0xFF00 && c <= 0xFFEF) || (c >= 0x3000 && c <= 0x303F) ? 1 : ch === ' ' ? 0.3 : /[A-Z0-9]/.test(ch) ? 0.62 : 0.52; };
+const negR = (...r) => { if (r.some(v => v < 0)) { const e = new Error(`Failed to execute 'arc': The radius provided (${r.find(v => v < 0)}) is negative.`); e.name = 'IndexSizeError'; throw e; } };
 class Ctx2D {
   constructor(canvas) { this.canvas = canvas; Object.assign(this, DEF); this._m = [1, 0, 0, 1, 0, 0]; this._st = []; this._clip = false; this._dash = []; }
   save() { const s = { m: [...this._m], clip: this._clip, dash: this._dash }; for (const k of STATE) s[k] = this[k]; this._st.push(s); }
@@ -58,6 +59,7 @@ class Ctx2D {
   resetTransform() { this._m = [1, 0, 0, 1, 0, 0]; }
   getTransform() { return new DOMMatrix(this._m); }
   clip() { this._clip = true; }
+  arc(x, y, r) { negR(r); } ellipse(x, y, rx, ry) { negR(rx, ry); }   // 浏览器遇负半径抛 IndexSizeError，整段渲染失败
   setLineDash(d) { this._dash = d || []; } getLineDash() { return [...this._dash]; }
   createLinearGradient() { return { addColorStop() {} }; } createRadialGradient() { return { addColorStop() {} }; } createConicGradient() { return { addColorStop() {} }; }
   createPattern() { return { setTransform() {} }; }
@@ -106,7 +108,7 @@ class Canvas {
   getContext() { return this._ctx || (this._ctx = absorb(new Ctx2D(this))); }
   toDataURL() { return 'data:,'; } toBlob(cb) { cb && cb(new Blob([])); } addEventListener() {} getBoundingClientRect() { return { left: 0, top: 0, width: this._w, height: this._h }; }
 }
-class Path2D { constructor() { return absorb(this); } }
+class Path2D { constructor() { return absorb(this); } arc(x, y, r) { negR(r); } ellipse(x, y, rx, ry) { negR(rx, ry); } }
 class Image { constructor() { this.width = 1; this.height = 1; this.complete = true; } set src(v) { this._src = v; setTimeout(() => this.onload && this.onload(), 0); } get src() { return this._src; } decode() { return Promise.resolve(); } addEventListener() {} }
 class FontFace { constructor(family) { this.family = family; } load() { return Promise.resolve(this); } }
 const el = () => absorb({ value: '0', style: {}, textContent: '', classList: { add() {}, remove() {}, toggle() {} }, addEventListener() {}, appendChild() {}, setAttribute() {} });
