@@ -36,17 +36,17 @@ PY
 }
 st booting "检查书和凭据"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
-getenv() { grep -E "^(export )?$1=" "$2" | head -1 | sed -E "s/^(export )?$1=//; s/^[\"']//; s/[\"']\$//"; }
-VULTR_API_KEY=$(getenv VULTR_API_KEY $ROOT/secrets.env); ASR_ID=$(getenv VOLC_ASR_APPID $ROOT/secrets.env); ASR_TK=$(getenv VOLC_ASR_ACCESS_TOKEN $ROOT/secrets.env)
-CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
 J() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
-KD=""
-destroy() { set +e
+KD=""; VULTR_API_KEY=""
+destroy() { set +e   # 退出一律走这里：销毁机器、删临时密钥、没成功就把 state.json 落成 failed
   if [ -n "$ID" ]; then if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; fi; fi
   [ -n "$KD" ] && rm -rf "$KD"
   case $STATE in done) ;; *) st failed "${STEP_DESC:-中途退出}" "" "$(tail -3 "$OUT/cloud.log" | tr '\n' ' ' | cut -c1-300)";; esac; }
 trap destroy EXIT
+getenv() { [ -r "$2" ] || return 0; grep -E "^(export )?$1=" "$2" | head -1 | sed -E "s/^(export )?$1=//; s/^[\"']//; s/[\"']\$//" || true; }
+VULTR_API_KEY=$(getenv VULTR_API_KEY $ROOT/secrets.env); ASR_ID=$(getenv VOLC_ASR_APPID $ROOT/secrets.env); ASR_TK=$(getenv VOLC_ASR_ACCESS_TOKEN $ROOT/secrets.env)
+CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 [ -n "$VULTR_API_KEY" ] && [ -n "$ASR_ID" ] && [ -n "$ASR_TK" ] && [ -n "$CLAUDE_TK" ] || { STEP_DESC="凭据不全"; echo "凭据不全"; exit 2; }
 
 # 要做的章都写完了才开机（不然白花钱）
