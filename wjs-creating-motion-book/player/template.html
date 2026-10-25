@@ -74,8 +74,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
   // 章节跳转：段落表里的 CHAPTER_OFFSETS（ch00 = 开场），章名取 book.json（scenes/book/meta.js）
   const buildChapters = () => { const offs = window.CHAPTER_OFFSETS; if (!offs) { nav.hidden = true; return; }
     const names = (window.BOOK_META || {}).chapters || [];
-    chips = Object.entries(offs).map(([k, t], i) => { const b = document.createElement('button'); b.type = 'button';
-      b.textContent = i === 0 ? '开场' : `${i} · ${names[i - 1] || '第 ' + i + ' 章'}`; b.addEventListener('click', () => jump(t)); nav.appendChild(b); return [t, b]; }); };
+    chips = Object.entries(offs).map(([k, t]) => { const b = document.createElement('button'); b.type = 'button';
+      const n = +k.slice(2); b.textContent = n === 0 ? '开场' : `${n} · ${names[n - 1] || '第 ' + n + ' 章'}`; b.addEventListener('click', () => jump(t)); nav.appendChild(b); return [t, b]; }); };
   const markChapter = t => { let k = 0; chips.forEach(([t0], i) => { if (t >= t0 - 0.05) k = i; }); chips.forEach(([, b], i) => b.classList.toggle('on', i === k)); };
 
   Promise.all([loadFonts, loadAudio]).then(() => {

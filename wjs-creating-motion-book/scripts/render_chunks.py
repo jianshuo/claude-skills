@@ -32,6 +32,6 @@ if any(r.startswith('✗') for r in res): sys.exit('有段落渲染失败，修�
 lst = cdir / 'list.txt'; lst.write_text(''.join(f"file '{cdir / (k + '.mp4')}'\n" for k, _, _ in bounds))
 noaud = cdir / 'all.noaudio.mp4'
 subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', str(lst), '-c', 'copy', str(noaud)], check=True)
-subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(noaud), '-i', str(P / '音频' / '全片口播.wav'), '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', str(out)], check=True)
+subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(noaud), '-i', str(P / '音频' / '全片口播.mp3'), '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', str(out)], check=True)
 d = subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(out)]).decode().strip()
 print(f'完成 -> {out}（{d}s，段落表 {total:.1f}s）', flush=True)

@@ -10,7 +10,7 @@ export const ENGINE = process.env.HUASHU_ENGINE || path.join(os.homedir(), '.cla
 export const readJSON = f => JSON.parse(fs.readFileSync(f, 'utf8'));
 export const writeJSON = (f, o) => fs.writeFileSync(f, JSON.stringify(o, null, 1) + '\n');
 export const book = P => readJSON(path.join(P, 'book.json'));
-export const chapterIds = b => Array.from({ length: b.chapters.length + 1 }, (_, i) => `ch${String(i).padStart(2, '0')}`);
+export const chapterIds = b => b.chapters.map((_, i) => `ch${String(i + 1).padStart(2, '0')}`);   // ch01…chNN（口播是听书整章，没有另写的开场段）
 
 // 凭据：环境变量优先，其次 ~/code/.env（Mac）或 $BOOK_ENV 指定的文件（VPS）
 export function loadEnv() {
@@ -116,8 +116,6 @@ export function alignPhrases(asr, text) {
 }
 export const formatRows = rows => rows.map(([a, b, p]) => `${a.toFixed(2).padStart(6)}-${b.toFixed(2).padStart(6)}  ${p}`).join('\n') + '\n';
 export const parseRows = s => s.split('\n').map(l => l.match(/^\s*([\d.]+)-\s*([\d.]+)\s+(.*)$/)).filter(Boolean).map(m => [+m[1], +m[2], m[3].trim()]);
-// TTS 字级时间戳（秒）→ 和 ASR 同形状，ASR 失败时的退路（停顿后的句首会晚 0.5s 左右）
-export const ttsWordsAsAsr = words => ({ result: { utterances: [{ words: words.map(w => ({ text: w.word, start_time: w.startTime * 1000, end_time: w.endTime * 1000 })) }] } });
 
 // 简单并发池
 export async function pool(items, n, fn) {

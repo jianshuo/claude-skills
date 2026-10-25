@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 总装：各段口播（ch00 开场 + ch01…chNN）各自计时 → 全片时间轴。纯 Node，不要 ffmpeg。
+// 总装：各章口播（听书整章 ch01…chNN）各自计时 → 全片时间轴。纯 Node，不要 ffmpeg。
 // - 音轨：各章 MP3 按帧首尾相接，章间插全零静音帧（GAP，按帧取整）→ 音频/全片口播.mp3；章偏移按帧数精确算
 // - 段落表：各章 音频/chNN.shots.json（章内局部时间）加章偏移 → 代码工程/eras_book.js
 // - 字幕：句时间（ASR 对齐）→ ≤17 字合并、>18 字拆、数字量词不拆、<0.8s 并或延、空条不出 → scenes/book/subs.js（调套件 K.subtitle）、音频/全片.srt
