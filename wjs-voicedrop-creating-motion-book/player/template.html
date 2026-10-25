@@ -92,8 +92,6 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
   const audio = new Audio(); audio.preload = 'metadata';
   const fmt = s => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   let total = {{TOTAL}}, ready = false, playing = false, dragging = false, wake = null;
-  const autoplay = new URLSearchParams(location.search).has('autoplay');
-
   const loadFonts = Promise.all({{FONTS}}.map(async ([fam, url]) => { const buf = await (await fetch(url)).arrayBuffer(); const f = new FontFace(fam, buf); await f.load(); document.fonts.add(f); }));
   // 口播边下边播：直接给 <audio> 地址，浏览器按 Range 先取开头就能播、拖进度条只取那一段（2026-10-26 前是整个 30–40MB 下完才开播）。
   // 书架路由要回 206（functions/voicedrop/books/[[path]].js），否则浏览器只能顺序下载、拖不动。
@@ -108,8 +106,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
     const wait = () => { if (window.__bootFailed) { status.textContent = '画面加载失败：' + String(window.__bootFailed).slice(0, 120); return; }
       if (!window.__ready) return requestAnimationFrame(wait);
       ready = true; total = window.__total || total; track.setAttribute('aria-valuemax', total.toFixed(0)); show(0);
-      status.textContent = ''; window.renderFrame(0.6);
-      if (autoplay) play(); };   // 目录页首屏点了播放才嵌进来（?autoplay=1）：就绪即播；浏览器不放行声音时留着大播放键再点一次
+      status.textContent = ''; window.renderFrame(0.6); };
     wait();
   }).catch(e => { status.textContent = '加载失败：' + e.message; });
 
