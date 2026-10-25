@@ -1,16 +1,22 @@
 {
-  "name": "banknote",
-  "label": "美元钞票凹版风（米黄钞纸、墨绿雕版细线、玫瑰花纹、印章红只给关键数字）",
-  "grammar": "y1_kurzgesagt＋t3_finance_chart（凹版图表语法）",
-  "fits": "货币、央行、金融制度、经济史、财务与投资、法律与契约",
-  "avoid": "生物医学、自然科学（纸面凹版和题材无关）；需要大量发光/尺度穿行的镜头",
-  "from_book": "读懂美联储（read-the-fed）",
-  "fonts": [
-    {"family": "Songti-Black", "file": "SongtiSC-Black.woff", "ttc": "/System/Library/Fonts/Supplemental/Songti.ttc", "index": 0},
-    {"family": "Songti-Regular", "file": "SongtiSC-Regular.woff", "ttc": "/System/Library/Fonts/Supplemental/Songti.ttc", "index": 6}
-  ],
-  "fonts_note": "macOS 自带宋体，只在本机抽 GB2312 子集用于渲染，不随 skill 分发",
-  "palette": "纸 #EFE8D2｜纸2 #E4DABC｜墨绿 #1F4A3A｜绿2 #2F6B52｜灰绿 #8FA593｜印章红 #9C2E24",
-  "api": "F.bg F.engrave F.hatch F.rosette F.cartouche F.stamp F.ribbon F.axis F.tag F.bust F.figure F.coin F.doc F.noteCard F.text F.popText F.callout F.world F.finish F.chapterCard F.cardCenter F.subtitle",
-  "placeholder_bg": "K.bg(c, t, {})"
+ "name": "banknote",
+ "label": "美元钞票凹版风（米黄钞纸、墨绿雕版细线、玫瑰花纹、印章红只给关键数字）",
+ "grammar": "y1_kurzgesagt＋t3_finance_chart（凹版图表语法）",
+ "fits": "货币、央行、金融制度、经济史、财务与投资、法律与契约",
+ "avoid": "生物医学、自然科学（纸面凹版和题材无关）；需要大量发光/尺度穿行的镜头",
+ "from_book": "读懂美联储（read-the-fed）",
+ "fonts": [
+  {
+   "family": "Songti-Black",
+   "file": "NotoSerifSC-Black.woff"
+  },
+  {
+   "family": "Songti-Regular",
+   "file": "NotoSerifSC-Regular.woff"
+  }
+ ],
+ "fonts_note": "思源宋体 Noto Serif SC（SIL OFL 1.1，见 fonts/OFL.txt）的 GB2312 子集，随套件分发；family 名沿用 Songti-*",
+ "palette": "纸 #EFE8D2｜纸2 #E4DABC｜墨绿 #1F4A3A｜绿2 #2F6B52｜灰绿 #8FA593｜印章红 #9C2E24",
+ "api": "F.bg F.engrave F.hatch F.rosette F.cartouche F.stamp F.ribbon F.axis F.tag F.bust F.figure F.coin F.doc F.noteCard F.text F.popText F.callout F.world F.finish F.chapterCard F.cardCenter F.subtitle",
+ "placeholder_bg": "K.bg(c, t, {})"
 }
