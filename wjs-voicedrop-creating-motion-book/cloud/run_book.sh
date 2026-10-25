@@ -52,7 +52,7 @@ api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -
 J() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
 KD=""; VULTR_API_KEY=""
 destroy() { set +e   # 退出一律走这里：销毁机器、删临时密钥、没成功就把 state.json 落成 failed
-  if [ -n "$ID" ]; then if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; fi; fi
+  if [ -n "$ID" ]; then if [ $KEEP = 1 ]; then echo "保留机器 $ID（--keep），记得手动删"; else api -X DELETE "https://api.vultr.com/v2/instances/$ID" >/dev/null && { echo "=== 已销毁 $ID $(date -u +%FT%TZ)"; ev "制作机已销毁"; }; fi; fi
   [ -n "$KD" ] && rm -rf "$KD"
   case $STATE in done) ;; *) st failed "${STEP_DESC:-中途退出}" "" "$(tail -3 "$OUT/cloud.log" | tr '\n' ' ' | cut -c1-300)";; esac; }
 trap destroy EXIT
@@ -124,7 +124,7 @@ if p['html']: lines.append("打包网页版完成")
 if p['result']: lines.append("写好制作说明")
 print('\n'.join(lines))
 PY
-)
+) || true   # 进度显示出错不能连累制作（set -e 会直接退出并销毁机器）
   while IFS= read -r line; do [ -n "$line" ] && ev "$line"; done <<< "$summary"
   last=$(printf '%s\n' "$summary" | tail -1); st making "${last:-Claude 制作中}"
 done
