@@ -87,7 +87,9 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 (() => {
   const $ = id => document.getElementById(id);
   const frame = $('frame'), cover = $('cover'), status = $('status'), pp = $('pp'), track = $('track'), done = $('done'), knob = $('knob'), cur = $('cur'), remain = $('remain');
-  const audio = new Audio(); audio.preload = 'auto';
+  // preload=metadata：只取头信息。auto 会让 Safari 开播前就把整个 30–40MB 用 bytes=0- 一路拉完（2026-10-26 截图），
+  // metadata 下点播放才开始取、边播边取，拖进度条从新位置重新取。
+  const audio = new Audio(); audio.preload = 'metadata';
   const fmt = s => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   let total = {{TOTAL}}, ready = false, playing = false, dragging = false, wake = null;
 
