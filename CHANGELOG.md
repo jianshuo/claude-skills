@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-26]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — MP4 rendering improvements and online gateway updates following the first full production run:
+  - **Auto cover title card**: `render_chunks.mjs` now automatically invokes the new `add_cover.mjs` script after render completes, prepending a 1-second book-cover title frame to the full-book MP4 and embedding it as cover thumbnail metadata. Pass `--no-cover` to skip; the script is idempotent (won't double-add).
+  - **Per-chapter MP4 splits**: new `split_chapters.mjs` script splits the finished full-book MP4 into individual chapter files under `成片/分章/NN_章名.mp4`, reusing already-rendered segment video and re-cutting the audiobook audio track — no re-render needed. Chapter splits omit the cover title card by default; pass `--cover` to include it.
+  - **Online gateway limits raised**: concurrent builds raised from 1 to 2, daily cap from 2 to 5 per 24 hours, now configurable via `VIDEO_MAX_CONCURRENT` / `VIDEO_MAX_PER_DAY` environment variables in `/opt/claude-agent/.env` (code built-in defaults remain 1 / 2 until the new config is deployed).
+  - **Kit and reference updates**: `kits/kurzgesagt/lib.js` and `kits/banknote/lib.js` refined; `references/踩坑.md` updated with production lessons from the 2026-10-25 first full VPS run.
+
 ## [2026-10-25]
 
 ### Added

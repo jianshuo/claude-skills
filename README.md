@@ -247,7 +247,7 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 
 把 VoiceDrop 书架上的整本书做成**分章解说动画**。口播直接用书架「听本章」那份完整朗读 mp3（不另写稿、不新花 TTS 钱），画面由 Canvas 逐帧动画引擎生成，画风按书的内容气质自动选型（已有套件 `kurzgesagt` / `banknote` 可直接复用）。
 
-- **默认竖屏 1080×1920@30（视频号 9:16），交付 HTML 播放器**；用户要 MP4 才渲（macOS 本地）。
+- **默认竖屏 1080×1920@30（视频号 9:16），交付 HTML 播放器**；用户要 MP4 才渲（macOS 本地）；MP4 渲完自动加 1 秒书封片头，可用 `split_chapters.mjs` 拆成分章文件供单章下载。
 - **10 步流水线**：取书 → 选画风 → 建工程 → 取口播/ASR → 分章并行制作 → 总装 → 冒烟检查 → 审片 → QA → HTML/MP4 交付。
 - **Tokyo VPS 一键无人值守**：`bash cloud/run_book.sh <slug>` 开 Vultr 机器 → Claude Code 自动做到 HTML → 发布到书架 `/books/<slug>/video/` → 销毁机器，整本约 1–2 小时。
 - **线上入口**：任何人打开 `voicedrop.cn/books/<slug>/video/` 会自动触发后台下单，书架已有时直接播放；`lab.jianshuo.dev/api/video-book?slug=` 可查进度。
