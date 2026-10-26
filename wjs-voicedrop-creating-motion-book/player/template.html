@@ -129,11 +129,11 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
     requestAnimationFrame(loop);
   };
   const play = async () => { if (!ready) return; try { await audio.play(); } catch (e) { status.textContent = '浏览器没有允许播放声音，请再点一次'; return; }
-    playing = true; cover.hidden = true; status.textContent = ''; pp.classList.add('on'); requestAnimationFrame(loop);
+    playing = true; cover.hidden = true; unposter(); status.textContent = ''; pp.classList.add('on'); requestAnimationFrame(loop);
     try { wake = await navigator.wakeLock?.request('screen'); } catch (e) {} };
   const pause = () => { playing = false; audio.pause(); cover.hidden = false; pp.classList.remove('on'); try { wake?.release(); } catch (e) {} wake = null; };
   const toggle = () => playing ? pause() : play();
-  const jump = t => { t = Math.max(0, Math.min(total - 0.01, t)); audio.currentTime = t; show(t); if (ready && !playing) window.renderFrame(t); };
+  const jump = t => { unposter(); t = Math.max(0, Math.min(total - 0.01, t)); audio.currentTime = t; show(t); if (ready && !playing) window.renderFrame(t); };
 
   frame.addEventListener('click', toggle);   // 大播放键在画面里，点击冒泡到这里，不另绑
   pp.addEventListener('click', toggle);
