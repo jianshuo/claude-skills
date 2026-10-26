@@ -11,6 +11,8 @@ for (const proto of [CanvasRenderingContext2D.prototype, Path2D.prototype]) {
   proto.arc = function (x, y, r, ...rest) { return arc.call(this, x, y, r > 0 ? r : 0, ...rest); };
   proto.ellipse = function (x, y, rx, ry, ...rest) { return ell.call(this, x, y, rx > 0 ? rx : 0, ry > 0 ? ry : 0, ...rest); };
 }
+{ const rg = CanvasRenderingContext2D.prototype.createRadialGradient;   // 径向渐变同理：r0/r1 为负也抛 IndexSizeError
+  if (typeof rg === 'function') CanvasRenderingContext2D.prototype.createRadialGradient = function (x0, y0, r0, x1, y1, r1) { return rg.call(this, x0, y0, r0 > 0 ? r0 : 0, x1, y1, r1 > 0 ? r1 : 0); }; }
 const C = F.C = {
   paper: '#EFE8D2', paper2: '#E4DABC', paper3: '#D6C9A4',
   ink: '#1F4A3A', ink2: '#2F6B52', inkL: '#8FA593', red: '#9C2E24', redL: '#C2574A',

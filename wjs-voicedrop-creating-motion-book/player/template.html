@@ -21,7 +21,12 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 .frame { position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 1.64cqw; overflow: hidden; background: #10181b; cursor: pointer; }
 #c { width: 100%; height: 100%; display: block; }
 .cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.4cqw; background: rgba(0,0,0,.28); }
-.cover[hidden] { display: none; }   /* 上面 display:flex 会盖过浏览器默认的 [hidden]，不写这行暂停遮罩永远不消失 */
+.cover[hidden] { display: none; }
+/* 首帧封面：没开播之前画面区放书架封面（../cover.jpg，模糊铺底＋居中原图），第一次播放或拖进度条后撤掉；封面取不到就不显示 */
+.poster { position: absolute; inset: 0; overflow: hidden; background: #10181b; }
+.poster[hidden] { display: none; }
+.poster .pbg { position: absolute; inset: -8%; background: center / cover no-repeat; filter: blur(6cqw) brightness(.55); }
+.poster img { position: absolute; left: 50%; top: 46%; width: 76%; transform: translate(-50%, -50%); border-radius: .8cqw 1.6cqw 1.6cqw .8cqw; box-shadow: 0 4cqw 12cqw rgba(0,0,0,.55); }   /* 上面 display:flex 会盖过浏览器默认的 [hidden]，不写这行暂停遮罩永远不消失 */
 .big { width: 30.6cqw; height: 30.6cqw; border-radius: 999px; padding: 0; background: rgba(40,40,40,.55); border: 1px solid rgba(255,255,255,.18);
   backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); box-shadow: 0 3.3cqw 10.9cqw rgba(0,0,0,.35);
   display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .1s; }
@@ -52,6 +57,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
   <div class="player">
     <div class="frame" id="frame">
       <canvas id="c" width="1080" height="1920"></canvas>
+      <div class="poster" id="poster" hidden><div class="pbg" id="pbg"></div><img id="pimg" alt=""></div>
       <div class="cover" id="cover">
         <button class="big" id="big" type="button" aria-label="播放">
           <svg width="44" height="50" viewBox="0 0 44 50" aria-hidden="true"><path d="M4 3.5v43a2.5 2.5 0 0 0 3.8 2.1l34-21.5a2.5 2.5 0 0 0 0-4.2L7.8 1.4A2.5 2.5 0 0 0 4 3.5z" fill="#fff"/></svg>
@@ -98,6 +104,12 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
   audio.src = 'narration.mp3';
   const loadAudio = Promise.resolve();
 
+  // 首帧封面：书架封面在 video/ 的上一级（voicedrop.cn/books/<slug>/cover.jpg），加载成功才显示
+  const poster = $('poster'), pimg = $('pimg');
+  pimg.onload = () => { $('pbg').style.backgroundImage = `url("${pimg.src}")`; if (!started) poster.hidden = false; };
+  pimg.src = '../cover.jpg';
+  let started = false;
+  const unposter = () => { started = true; poster.hidden = true; };
   const show = t => { const p = Math.min(1, t / total) * 100 + '%'; done.style.width = p; knob.style.left = p;
     cur.textContent = fmt(t); remain.textContent = '-' + fmt(total - t); track.setAttribute('aria-valuenow', t.toFixed(0)); };
 

@@ -45,7 +45,7 @@ const DEF = { fillStyle: '#000000', strokeStyle: '#000000', lineWidth: 1, global
 let HOOK = { glyph: null };   // 每次 fillText 查缺字（引擎 U 就绪后挂上）
 const emSize = font => +(/([\d.]+)px/.exec(font) || [0, 10])[1];
 const charW = ch => { const c = ch.codePointAt(0); return c >= 0x2E80 || (c >= 0xFF00 && c <= 0xFFEF) || (c >= 0x3000 && c <= 0x303F) ? 1 : ch === ' ' ? 0.3 : /[A-Z0-9]/.test(ch) ? 0.62 : 0.52; };
-const negR = (...r) => { if (r.some(v => v < 0)) { const e = new Error(`Failed to execute 'arc': The radius provided (${r.find(v => v < 0)}) is negative.`); e.name = 'IndexSizeError'; throw e; } };
+const negR = (...r) => { if (r.some(v => v < 0)) { const e = new Error(`Failed to execute 'arc/ellipse/createRadialGradient': The radius provided (${r.find(v => v < 0)}) is negative.`); e.name = 'IndexSizeError'; throw e; } };
 class Ctx2D {
   constructor(canvas) { this.canvas = canvas; Object.assign(this, DEF); this._m = [1, 0, 0, 1, 0, 0]; this._st = []; this._clip = false; this._dash = []; }
   save() { const s = { m: [...this._m], clip: this._clip, dash: this._dash }; for (const k of STATE) s[k] = this[k]; this._st.push(s); }
@@ -61,7 +61,7 @@ class Ctx2D {
   clip() { this._clip = true; }
   arc(x, y, r) { negR(r); } ellipse(x, y, rx, ry) { negR(rx, ry); }   // 浏览器遇负半径抛 IndexSizeError，整段渲染失败
   setLineDash(d) { this._dash = d || []; } getLineDash() { return [...this._dash]; }
-  createLinearGradient() { return { addColorStop() {} }; } createRadialGradient() { return { addColorStop() {} }; } createConicGradient() { return { addColorStop() {} }; }
+  createLinearGradient() { return { addColorStop() {} }; } createRadialGradient(x0, y0, r0, x1, y1, r1) { negR(r0, r1); return { addColorStop() {} }; } createConicGradient() { return { addColorStop() {} }; }
   createPattern() { return { setTransform() {} }; }
   isPointInPath() { return false; } isPointInStroke() { return false; }
   getImageData(x, y, w, h) { return new ImageData(Math.max(1, Math.abs(w | 0)), Math.max(1, Math.abs(h | 0))); }

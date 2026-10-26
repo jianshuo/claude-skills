@@ -20,6 +20,8 @@ const args = process.argv.slice(2); let jobs = autoJobs();
 const ji = args.indexOf('-j'); if (ji >= 0) { jobs = Math.max(1, +args[ji + 1]); args.splice(ji, 2); }
 console.log(`并发 ${jobs}（可用内存 ${(availMem() / GB).toFixed(1)}GB，${os.cpus().length} 核）`);
 const P = path.resolve(args[0]), out = path.resolve(args[1]);   // 绝对路径：render.py 在 代码工程/ 下运行
+if (!fs.existsSync(path.join(P, '代码工程', 'lib'))) {   // 云端 run_book.sh 拉回时排除了引擎 lib/，直接渲会每段卡 120s 超时
+  console.error(`代码工程/lib/ 不存在（云端拉回的工程会缺）。先补：rsync -a --ignore-existing ~/.claude/skills/huashu-art-motion/scripts/engine/lib/ '${path.join(P, '代码工程', 'lib')}/'`); process.exit(1); }
 const E = path.join(P, '代码工程'), eras = fs.readFileSync(path.join(E, 'eras_book.js'), 'utf8'), B = book(P);
 const [W, H] = B.size || [1080, 1920], fps = String(B.fps || 30);
 const offs = JSON.parse(eras.match(/CHAPTER_OFFSETS = (\{.*?\});/)[1]), keys = Object.keys(offs);
