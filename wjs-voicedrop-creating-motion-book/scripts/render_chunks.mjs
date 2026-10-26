@@ -2,7 +2,8 @@
 // MP4（可选产物，要 Chromium，Mac 上跑）：按章切段，每段一个 render.py 进程（渲完退出、内存归还），已渲好的段跳过（可续跑），
 // 最后 ffmpeg 无损拼接、混入全片音轨。一次整片渲会被内存回收杀掉，所以按章切。
 // 并发默认按空闲内存和核数自动算（单进程实测 render.py＋Chromium 约 1.1GB、1.5 核）：16GB Mac 约 2，64GB/12 核约 8。
-// 用法：node render_chunks.mjs <项目目录> <输出 mp4> [-j N]
+// 用法：node render_chunks.mjs <项目目录> <输出 mp4> [-j N] [--no-cover]
+// 出片后默认接 add_cover.mjs：书封做 1 秒片头＋MP4 封面元数据（--no-cover 跳过）。
 // 改了某几章：删掉 <输出>_chunks/chNN.mp4 再跑（其余段直接复用）。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,6 +18,7 @@ const availMem = () => { if (process.platform !== 'darwin') return os.freemem();
     return (n('free') + n('inactive') + n('speculative') + n('purgeable')) * pg; } catch { return os.freemem(); } };
 const GB = 2 ** 30, autoJobs = () => Math.max(1, Math.min(Math.floor((availMem() - 4 * GB) / (1.5 * GB)), Math.floor(os.cpus().length / 1.5)));
 const args = process.argv.slice(2); let jobs = autoJobs();
+const nc = args.indexOf('--no-cover'), noCover = nc >= 0; if (noCover) args.splice(nc, 1);
 const ji = args.indexOf('-j'); if (ji >= 0) { jobs = Math.max(1, +args[ji + 1]); args.splice(ji, 2); }
 console.log(`并发 ${jobs}（可用内存 ${(availMem() / GB).toFixed(1)}GB，${os.cpus().length} 核）`);
 const P = path.resolve(args[0]), out = path.resolve(args[1]);   // 绝对路径：render.py 在 代码工程/ 下运行
@@ -47,3 +49,4 @@ execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i',
 execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', noaud, '-i', path.join(P, '音频', '全片口播.mp3'), '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', out], { stdio: 'inherit' });
 const d = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out]).toString().trim();
 console.log(`完成 -> ${out}（${d}s，段落表 ${total.toFixed(1)}s）`);
+if (!noCover) execFileSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), 'add_cover.mjs'), P, out], { stdio: 'inherit' });

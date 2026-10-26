@@ -21,6 +21,8 @@ if (!cover) {
   }
 }
 const probe = (sel, entries) => execFileSync('ffprobe', ['-v', 'error', '-select_streams', sel, '-show_entries', entries, '-of', 'default=nw=1:nk=1', inp]).toString().trim().split('\n');
+if (execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream_disposition=attached_pic', '-of', 'csv=p=0', inp]).toString().includes('1')) {
+  console.log(`已有片头封面，跳过：${inp}`); process.exit(0); }   // 重跑不叠第二段
 const [W, H, fr, tb] = probe('v:0', 'stream=width,height,r_frame_rate,time_base'), [sr, ch] = probe('a:0', 'stream=sample_rate,channels');
 const fps = fr, ts = tb.split('/')[1], dur = s => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', s]).toString();
 
