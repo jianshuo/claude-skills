@@ -39,7 +39,7 @@ KD=""; VULTR_API_KEY=""; LEASE=""; RURL=""; RTOK=""
 # engine-router 租约（见 engine-router/README「接入方」）：lease <额外 JSON 字段> → 「租约id 账号id」，挑不出是「- -」
 rt() { curl -4 -sS -m 10 -H "Authorization: Bearer $RTOK" -H 'Content-Type: application/json' -X POST "$RURL/v1/leases$1" -d @- 2>/dev/null; }
 lease() {   # label = 状态页上显示的书名
-  local lj; lj=$(T="《$TITLE》视频书${ONLY:+（试看 $ONLY）}" node -e 'process.stdout.write(JSON.stringify(process.env.T))')
+  local lj; lj=$(T="《${TITLE}》视频书${ONLY:+（试看 ${ONLY}）}" node -e 'process.stdout.write(JSON.stringify(process.env.T))')
   echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000,\"label\":$lj${1:-}}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
 lease_done() {   # 回报并释放；本轮起过 Claude 又没成功，就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
   [ -n "$LEASE" ] || return 0
