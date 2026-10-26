@@ -26,9 +26,11 @@ OUT=$ROOT/books/$slug; mkdir -p "$OUT"; exec > >(tee -a "$OUT/cloud.log") 2>&1
 STARTED=$(date +%s); ID=""; STATE=booting
 MB="$SK/cloud/mb.mjs"   # JSON 小活都交给它（以前是内嵌 python，2026-10-25 统一成 Node）
 # st <state> <step> [url] [内部日志尾]：写 state.json（接口读它答进度；logTail 只内部用），并把 step 记进对外日志
-st() { STATE=$1; node "$MB" state "$OUT/state.json" "$1" "$2" "${3:-}" "${4:-}" "$STARTED" "$ONLY" "$ID"; ev "$2"; }
+st() { STATE=$1; node "$MB" state "$OUT/state.json" "$1" "$2" "${3:-}" "${4:-}" "$STARTED" "$ONLY" "$ID"; ev "$2"; prog "$2"; }
 # 对外日志 events.json：只记「时间＋一句中文步骤」，不写路径、IP、机器 ID；同一句不连着重复记
 ev() { node "$MB" event "$OUT/events.json" "$1"; }
+# 有租约就把这一步报给 engine-router（状态页 lab.jianshuo.dev/router/「租约」栏显示；每报一次租约按 ttl 续期，12h 的整本也不会过期）
+prog() { [ -n "${LEASE:-}" ] || return 0; STEP="$1" node -e 'process.stdout.write(JSON.stringify({step:process.env.STEP}))' | rt "/$LEASE/progress" >/dev/null || true; }
 st booting "检查书和凭据"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
@@ -36,7 +38,9 @@ J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
 KD=""; VULTR_API_KEY=""; LEASE=""; RURL=""; RTOK=""
 # engine-router 租约（见 engine-router/README「接入方」）：lease <额外 JSON 字段> → 「租约id 账号id」，挑不出是「- -」
 rt() { curl -4 -sS -m 10 -H "Authorization: Bearer $RTOK" -H 'Content-Type: application/json' -X POST "$RURL/v1/leases$1" -d @- 2>/dev/null; }
-lease() { echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000${1:-}}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
+lease() {   # label = 状态页上显示的书名
+  local lj; lj=$(T="《$TITLE》视频书${ONLY:+（试看 $ONLY）}" node -e 'process.stdout.write(JSON.stringify(process.env.T))')
+  echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000,\"label\":$lj${1:-}}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
 lease_done() {   # 回报并释放；本轮起过 Claude 又没成功，就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
   [ -n "$LEASE" ] || return 0
   local err=""; if [ "$STATE" != done ] && [ -n "${ROUND:-}" ]; then err=$(tail -c 400 "$OUT/claude.err" 2>/dev/null || true); fi

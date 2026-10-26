@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // 分章 MP4（要 ffmpeg，在渲过 MP4 的机器上跑）：render_chunks.mjs 留下的 <输出>_chunks/chNN.mp4 就是每章画面，
-// 按段落表的章起止从全片口播切出同一段音频合上（画面只拷贝不重编码），再接 add_cover.mjs 的书封片头。
+// 按段落表的章起止从全片口播切出同一段音频合上（画面只拷贝不重编码）。分章默认不加书封片头（用户要求），--cover 才加。
 // 产物：<成片目录>/分章/NN_章名.mp4。已有的跳过（删掉重跑即可更新某章）。
-// 用法：node split_chapters.mjs <项目目录> [<成片 mp4，默认 <项目>/成片/成片_v1.mp4>] [--no-cover]
+// 用法：node split_chapters.mjs <项目目录> [<成片 mp4，默认 <项目>/成片/成片_v1.mp4>] [--cover]
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { book } from './common.mjs';
 
-const args = process.argv.slice(2), nc = args.indexOf('--no-cover'), noCover = nc >= 0; if (noCover) args.splice(nc, 1);
+const args = process.argv.slice(2), ci = args.indexOf('--cover'), withCover = ci >= 0; if (withCover) args.splice(ci, 1);
 const P = path.resolve(args[0]), film = path.resolve(args[1] || path.join(P, '成片', '成片_v1.mp4')), B = book(P);
 const eras = fs.readFileSync(path.join(P, '代码工程', 'eras_book.js'), 'utf8');
 const offs = JSON.parse(eras.match(/CHAPTER_OFFSETS = (\{.*?\});/)[1]), keys = Object.keys(offs);
@@ -26,6 +26,6 @@ for (const [i, k] of keys.entries()) {
   const tmp = out.replace(/\.mp4$/, '.part.mp4');
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', seg, '-ss', a.toFixed(4), '-t', (b - a).toFixed(4), '-i', audio,
     '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', tmp], { stdio: 'inherit' });
-  if (!noCover) execFileSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), 'add_cover.mjs'), P, tmp], { stdio: 'inherit' });
-  fs.renameSync(tmp, out); console.log(`${path.basename(out)}  ${dur(out).toFixed(1)}s（段落表 ${(b - a).toFixed(1)}s${noCover ? '' : ' + 1s 片头'}）`);
+  if (withCover) execFileSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), 'add_cover.mjs'), P, tmp], { stdio: 'inherit' });
+  fs.renameSync(tmp, out); console.log(`${path.basename(out)}  ${dur(out).toFixed(1)}s（段落表 ${(b - a).toFixed(1)}s${withCover ? ' + 1s 片头' : ''}）`);
 }
