@@ -41,7 +41,7 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 - **无人值守（`claude -p`）时子 agent 只能前台并行**：同一条消息发多个 Agent 调用、等这批全部返回再派下一批；绝不用后台 agent、绝不「等通知」就结束回合——`-p` 一结束回合进程就退出，后台 agent 全被杀（2026-10-25 第一单 20 个 agent 做到一半全没了）。`run_book.sh` 的提示词已写死这条；Claude 退出却没做出网页版时，用 `claude -p --continue` 接着同一会话续跑，最多 3 轮；重开的机器会先把上一轮拉回的半成品传上去接着做。
 - 云端没有 VoiceDrop MCP：取书用 `node $S/fetch_book.mjs <slug> 章名.txt`（读书架公开的 `_src/book.json`，要做的章没写完就退出，不开机）。
 - Vultr API key 有 IP 白名单：Tokyo VPS 的 IPv4 要在控制台 Account → API → Access Control 里放行，curl 用 `-4`。
-- **线上入口（像听书）**：任何人打开 `voicedrop.cn/books/<slug>/video/`，没做过就自动下单；lab 服务 `GET|POST https://lab.jianshuo.dev/api/video-book?slug=`（下单）/ `…/status?slug=`（只查）用 systemd-run 起 `video-<slug>` 单元跑 `run_book.sh`（`MB_ROOT=/opt/claude-agent/motion-book`）。闸：只做写完的书、一次 1 本、24 小时内最多开工 5 本（`/opt/claude-agent/.env` 的 `VIDEO_MAX_PER_DAY`，代码缺省 2；实现在 jianshuo.dev 仓库 `claude-agent/src/video-book.ts`）。书架已有 `video/` 时接口答 done，不会重做——要重做整本先删 R2 `books/<slug>/video/`。
+- **线上入口（像听书）**：任何人打开 `voicedrop.cn/books/<slug>/video/`，没做过就自动下单；lab 服务 `GET|POST https://lab.jianshuo.dev/api/video-book?slug=`（下单）/ `…/status?slug=`（只查）用 systemd-run 起 `video-<slug>` 单元跑 `run_book.sh`（`MB_ROOT=/opt/claude-agent/motion-book`）。闸：只做写完的书、同时最多 2 本、24 小时内最多开工 5 本（`/opt/claude-agent/.env` 的 `VIDEO_MAX_CONCURRENT` / `VIDEO_MAX_PER_DAY`，代码缺省 1 / 2；实现在 jianshuo.dev 仓库 `claude-agent/src/video-book.ts`）。书架已有 `video/` 时接口答 done，不会重做——要重做整本先删 R2 `books/<slug>/video/`。
 - **书架标志**：`publish_video.mjs` 发布成功后往线上 `_src/book.json` 合并 `video: {url, publishedAt, duration, chapters}`（chapters 少于全书章数＝试看版）；写书的 build.mjs 每次整份发布会把它从线上接回来，修书不会抹掉。
 
 ## 省时间的关键
