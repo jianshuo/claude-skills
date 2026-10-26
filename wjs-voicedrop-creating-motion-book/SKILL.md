@@ -27,7 +27,7 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 | 7 审片 | 独立审片 agent 看 qa 拼图＋口播文本，打分列问题 → 回给对应章节 agent 改 | `审片/*.md` | Mac |
 | 8 qa | 冒烟查不到的：画面好不好看、近空白、图形出画、确定性。分批跑、合并；框景线索出两帧拼图，两帧都切边的才改 | `node $S/qa_batches.mjs <项目> <项目>/qa/vN`；`node $S/framing_sheet.mjs <项目> <项目>/qa/vN` | Mac |
 | 9 HTML 交付 | 打包公用播放器 | `node $S/build_html.mjs <项目>` → Mac 发 Artifact（`files` 用 `html/artifact_files.json`）；VPS 把 `html/` 整个目录传到静态站 | 任意 |
-| 10 MP4（要才做） | 按章分段渲、可续跑、并发按空闲内存自动算（`-j` 可手动）；deliver 门禁 | `node $S/render_chunks.mjs <项目> <项目>/成片/成片_vN.mp4`；`uv run ~/.claude/skills/huashu-art-motion/scripts/deliver.py <mp4> --project <项目>/代码工程 --qa <qa 目录> --root <项目> --vertical yes --out <项目>/output/` | Mac |
+| 10 MP4（要才做） | 按章分段渲、可续跑、并发按空闲内存自动算（`-j` 可手动）；出片后自动 `add_cover.mjs` 加 1 秒书封片头＋MP4 封面元数据（`--no-cover` 跳过，已有封面不重复加）；deliver 门禁 | `node $S/render_chunks.mjs <项目> <项目>/成片/成片_vN.mp4`；`uv run ~/.claude/skills/huashu-art-motion/scripts/deliver.py <mp4> --project <项目>/代码工程 --qa <qa 目录> --root <项目> --vertical yes --out <项目>/output/` | Mac |
 
 **顺序是硬的：步 4 先拿到听书 mp3，步 5 的画面全部按这份 mp3 的 ASR 句时间切镜。** 音频只有这一个来源；全流程唯一可能花 TTS 钱的地方是步 4 里听书缓存没命中的章（一章只一次，之后永久缓存）。
 
