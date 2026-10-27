@@ -161,7 +161,7 @@ D.callout = (c, s, ax, ay, bx, by, lt, at, o = {}) => { const { fill = C.gold, c
 const POSE = {
   stand: { L: [-80, -178], R: [80, -178], sh: 0, hd: [0, 0], tilt: 0, lean: 0 },
   walk: { L: [-74, -182], R: [74, -182], sh: 0, hd: [0, 0], tilt: 0, lean: 0.03 },
-  think: { L: [30, -296], R: [20, -430], sh: 0, hd: [6, 6], tilt: 0.14, lean: 0 },
+  think: { L: [30, -296], R: [34, -414], sh: 0, hd: [6, 6], tilt: 0.14, lean: 0, ew: 3 },   // ew：肘「往下」的权重（托腮要肘朝下，不然小臂横过脸）
   shrug: { L: [-182, -338], R: [182, -338], sh: -16, hd: [0, 6], tilt: -0.12, lean: 0 },
   cheer: { L: [-150, -606], R: [150, -606], sh: -8, hd: [0, -6], tilt: 0, lean: 0 },
   slump: { L: [-44, -186], R: [44, -186], sh: 18, hd: [0, 30], tilt: 0.2, lean: 0.06 },
@@ -174,12 +174,12 @@ const POSE = {
 };
 D.POSES = Object.keys(POSE);
 const mixP = (a, b, k) => { const A = POSE[a] || POSE.stand, B = POSE[b] || A; const L = (u, v) => lerp(u, v, k);
-  return { L: [L(A.L[0], B.L[0]), L(A.L[1], B.L[1])], R: [L(A.R[0], B.R[0]), L(A.R[1], B.R[1])], sh: L(A.sh, B.sh), hd: [L(A.hd[0], B.hd[0]), L(A.hd[1], B.hd[1])], tilt: L(A.tilt, B.tilt), lean: L(A.lean, B.lean) }; };
+  return { L: [L(A.L[0], B.L[0]), L(A.L[1], B.L[1])], R: [L(A.R[0], B.R[0]), L(A.R[1], B.R[1])], sh: L(A.sh, B.sh), hd: [L(A.hd[0], B.hd[0]), L(A.hd[1], B.hd[1])], tilt: L(A.tilt, B.tilt), lean: L(A.lean, B.lean), ew: L(A.ew ?? 0.6, B.ew ?? 0.6) }; };
 // 二骨 IK，肘的方向取「更往外、更往下」那一解（不会翻到身体里）
-const ik = (S, T, a, b, out) => { let dx = T[0] - S[0], dy = T[1] - S[1], d = Math.hypot(dx, dy) || 1e-3; d = Math.min(d, a + b - 0.5); const ang = Math.atan2(dy, dx);
+const ik = (S, T, a, b, out, ew = 0.6) => { let dx = T[0] - S[0], dy = T[1] - S[1], d = Math.hypot(dx, dy) || 1e-3; d = Math.min(d, a + b - 0.5); const ang = Math.atan2(dy, dx);
   const ca = clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1), al = Math.acos(ca);
   const E1 = [S[0] + Math.cos(ang + al) * a, S[1] + Math.sin(ang + al) * a], E2 = [S[0] + Math.cos(ang - al) * a, S[1] + Math.sin(ang - al) * a];
-  const sc = E => E[0] * out + E[1] * 0.6; const E = sc(E1) >= sc(E2) ? E1 : E2; const k = d / Math.hypot(T[0] - S[0], T[1] - S[1]) || 1;
+  const sc = E => E[0] * out + E[1] * ew; const E = sc(E1) >= sc(E2) ? E1 : E2; const k = d / Math.hypot(T[0] - S[0], T[1] - S[1]) || 1;
   return { E, Hn: [S[0] + (T[0] - S[0]) * Math.min(1, k), S[1] + (T[1] - S[1]) * Math.min(1, k)] }; };
 D.person = (c, x, y, s = 1, o = {}) => {
   const { pose = 'stand', to = null, mix = 0, mood = 'calm', t = 0, react = -1e9, walk = null, dir = 1, look = 0, alpha = 1, grain = 0.55,
@@ -237,7 +237,7 @@ D.person = (c, x, y, s = 1, o = {}) => {
   [[Q.L, -1], [Q.R, 1]].forEach(([T, side]) => { const tg = [T[0], T[1]];
     if (walk != null) tg[0] += side * Math.sin(walk) * 38;                       // 走路：手臂和同侧腿反向摆
     if (side > 0 && waveW > 0) tg[0] += Math.sin(t * 9) * 26 * waveW;            // 挥手
-    const S = [side * 64, -384 + shY], { E, Hn } = ik(S, tg, 122, 120, side);
+    const S = [side * 64, -384 + shY], { E, Hn } = ik(S, tg, 122, 120, side, side > 0 ? Q.ew : 0.6);
     fill(RIG.taper(S, E, 44, 36, 4), top, { dx: 6, dy: 4, tone: armT }); fill(RIG.taper(E, Hn, 36, 30, 2), top, { dx: 6, dy: 4, tone: armT });
     fill(D.circle(Hn[0], Hn[1], 18), skin, { dx: 4, dy: 3, skin: true }); arms.push(Hn); });
   c.restore();
