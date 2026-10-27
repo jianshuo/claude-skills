@@ -1,0 +1,15 @@
+{
+  "name": "pop",
+  "label": "1962 波普（利希滕斯坦漫画格＋本戴网点：粗黑描边平涂、爆炸框、分格、对话/想法气泡、翻转硬币贯穿；人只出手与剪影、不画脸）",
+  "grammar": "y1_kurzgesagt（图示段落）＋波普分格（D.panel 漫画格排版）",
+  "recipe": "13_pop",
+  "fits": "金融与投资、量化/概率/统计、经济学、商业与市场、赌博与风险、需要「一个贯穿物（硬币/钞票）＋大数字＋曲线」讲清机制的书；节奏快、对比强、带点讽刺幽默的题材",
+  "avoid": "需要细腻人物表情与情感的叙事（flat2026）；尺度穿行类硬核科普（kurzgesagt）；货币制度史（banknote）；沉重悲剧与灾难（只能用 {dark:true} 严肃变体且慎用）；大段文字引用",
+  "from_book": "量化基金（quant-fund）",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（都是思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）。不用外网 Bangers 字体；GB2312 子集没有「￥」，钞票上用「元」。",
+  "palette": "墨黑 #141414｜纸 #f3eedb｜白 #fbf8ee｜红 #d8232a（点 #e2483c、深 #a8161c）｜蓝 #2f5cc8（深 #1f3f96）｜黄 #f7d52c（深 #d9a514）｜肤 #fae0cc。严肃章变体 K.C.dark（同键，降饱和）：红 #8e2f2f｜蓝 #3a4a74｜黄 #b79b3f｜纸 #cfc9b4，函数传 {dark:true} 启用",
+  "api": "K.W K.H K.TAU K.C K.C.dark K.pal(dark) | K.at K.pop K.once K.t0 K.ease K.jit | K.round K.circle K.ellipse K.poly K.world | K.ink(c,path,fill,lw) K.dots(c,pitch,r,col,bg) K.dotFill K.hatch K.burst K.burstBox K.speedLines | K.bg(c,t,{kind:dots|rays|solid|paper,tint,bold,dark}) K.finish(c,{dark}) | K.text K.bigText K.split2 K.tag K.popText K.callout | K.panel(c,x,y,w,h,o,fn) K.speech(气泡/想法泡) | K.coin K.coinFlip K.stack K.coinBars K.bars | K.series K.mapPts K.line(up/down) K.arrow | K.hand(point|open|fist|pinch) K.figure(stand|arms|slump) K.crowd | K.bill K.kline K.clock K.gear K.magnifier K.server K.bolt K.icons K.icon(name,…) | K.CHAPTER_NAMES K.CARD_KINDS K.cardToken K.chapterCard(c,lt,t,n,title,{dark}) K.subtitle",
+  "notes": "人不画脸：只用 K.hand（袖子＋手）和 K.figure/K.crowd（无五官剪影）。贯穿物是硬币 K.coin，章节卡用硬币在进度轨上翻滚，换书可改 K.cardToken。严肃章（爆仓/亏损）整章每个调用都传 {dark:true}（bg/finish/tag/bigText/icon 等都认）。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
