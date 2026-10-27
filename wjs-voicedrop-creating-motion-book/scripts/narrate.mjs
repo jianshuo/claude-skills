@@ -3,7 +3,9 @@
 //   1. 音频/chNN.mp3 ← 听书接口 <base>/<slug>/<stem>：先 HEAD 查缓存（HEAD 不触发合成）；GET 有缓存直接回源，没缓存由听书接口合成一次并写回 R2
 //      ——以后用户听书、再做动画都不再花 TTS 的钱。我们这边从不往听书缓存里写。
 //   2. 音频/chNN.asr.json ← 火山大模型流式 ASR（直接推 mp3 字节，不用解码）
-//   3. 稿/chNN.txt ← ASR 文本（听书是从章节页自动编排朗读的，以听到的为准）；音频/chNN.句时间.txt ← 按字对齐
+//   3. 稿/chNN.txt ← 听书接口 <stem>.txt 给的朗读原文（合成时实际念的那份：有脚本用脚本，没有就是章节页编排）；
+//      字幕用原文，ASR 只出时间——ASR 文本会听错字（2026-10-27 用户报：字幕错字）。原文拿不到、或对齐率 < 80%
+//      （修过书、缓存的 mp3 还是旧稿）才退回 ASR 文本。音频/chNN.句时间.txt ← 原文按 ASR 字时间对齐
 // 已有的文件跳过（删掉 chNN.mp3 才会重取）；默认 3 章并发。凭据：VOLC_ASR_APPID/VOLC_ASR_ACCESS_TOKEN（或 VOLC_APPID/VOLC_TOKEN）。
 // 用法：node narrate.mjs <项目目录> [ch03 ch07 …] [-j 3]
 import fs from 'node:fs';
@@ -41,6 +43,13 @@ async function audiobookMp3(ch) {
   return { mp3: Buffer.concat(mp3Frames(buf).frames), hit };   // 只留音频帧：多段朗读每段都带 ID3 头，夹在中间 ASR 会报 Invalid audio format
 }
 
+// 朗读原文（不触发合成；拿不到返回 null，调用方退回 ASR 文本）
+async function audiobookText(ch) {
+  const url = `${AB.base}/${encodeURIComponent(B.slug)}/${encodeURIComponent(stemOf(ch))}.txt`;
+  try { const r = await fetch(url, { signal: AbortSignal.timeout(30000) }); return r.ok ? (await r.text()).trim() : null; } catch { return null; }
+}
+const MIN_RATIO = 0.8;
+
 // ---------- ASR（大模型流式识别）----------
 async function asrOnce(mp3) {
   const fmt = mp3Frames(mp3);
@@ -77,8 +86,14 @@ async function one(ch) {
     }
     const mp3 = fs.readFileSync(mp3f);
     if (!fs.existsSync(asrf) || !fs.statSync(asrf).size) fs.writeFileSync(asrf, JSON.stringify(await asr(mp3), null, 1));
-    const res = JSON.parse(fs.readFileSync(asrf, 'utf8'));
-    if (!fs.existsSync(txt)) fs.writeFileSync(txt, res.result.text + '\n');
+    const res = JSON.parse(fs.readFileSync(asrf, 'utf8')), asrText = res.result.text + '\n';
+    // 稿 = ASR 原样的是老流程留下的，当作没有，换成原文；手改过的稿不动。
+    if (!fs.existsSync(txt) || fs.readFileSync(txt, 'utf8') === asrText) {
+      const orig = await audiobookText(ch);
+      const ok = orig && alignPhrases(res, orig).ratio >= MIN_RATIO;
+      fs.writeFileSync(txt, ok ? orig + '\n' : asrText);
+      note += ok ? '，字幕用原文' : `，⚠ 原文${orig ? `对不上（<${MIN_RATIO * 100}%）` : '拿不到'}→字幕退回 ASR 文本`;
+    }
     const al = alignPhrases(res, fs.readFileSync(txt, 'utf8'));
     fs.writeFileSync(path.join(A, `${ch}.句时间.txt`), formatRows(al.rows));
     return `${ch} ${mp3Frames(mp3).dur.toFixed(1).padStart(6)}s  ${al.rows.length} 句，对上 ${Math.round(al.ratio * 100)}% 的字${note}`;

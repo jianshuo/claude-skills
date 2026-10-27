@@ -20,7 +20,7 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 | 1 取书 | VoiceDrop MCP `list_books` → `read_book`：slug、章名（写成一行一个的文件）、听书章节 stem（缺省 01…NN） | 章名.txt | 任意 |
 | 2 选画风 | `references/选画风.md`：内容画像 → 先语法后画风 → 3 候选同句主镜头、独立评委 7 维打分；新画风先做成 `kits/<名>/` | `三方向/评审.md`、`选型结果.jpg`（发给用户，不等回复） | 出主镜头要 Chromium：VPS 上只按画像和 kits 的 fits/avoid 从已有套件里选 |
 | 3 建工程 | 复制引擎、装套件和字体、写 book.json 与章节制作规范 | `node $S/new_book.mjs <项目> --slug … --title … --kit … --chapters 章名.txt` | 任意 |
-| 4 取口播 | 听书 mp3（缓存优先）→ ASR → 稿＝ASR 文本 → 句时间 | `node $S/narrate.mjs <项目>` | 任意 |
+| 4 取口播 | 听书 mp3（缓存优先）→ ASR 出时间；稿＝听书朗读原文（`<stem>.txt`，对不上才退回 ASR 文本）→ 句时间 | `node $S/narrate.mjs <项目>` | 任意 |
 | 5 分章制作 | 章节 agent 并行，每个 1–2 章，brief＝`<项目>/制作规范.md`＋章号；贯穿物先写进 `scenes/book/props.js` | `scenes/book/chNN.js`、`音频/chNN.shots.json`、`镜头表/chNN.md` | 自查静帧要 Chromium；VPS 上用 `node $S/smoke.mjs <项目> --film chNN` 查报错和框景 |
 | 6 总装 | 音轨（帧级拼接＋静音帧）、段落表、字幕 | `node $S/assemble.mjs <项目>`（缺章先看：`--allow-missing`） | 任意 |
 | 6½ 冒烟检查（必做） | 不出像素地跑完整本：启动错误、运行时报错、缺字形、框景（半截字/进字幕带/叠字，判据同 qa）；有错不交付 | `node $S/smoke.mjs <项目>` → `qa/smoke/`（一本 20 分钟约 15s，VPS 约 2 分钟、124MB） | 任意 |
