@@ -34,6 +34,9 @@ const TONES = {
   [C.hair]: [C.hair, '#271D2B', '#54435A'], [C.hair2]: [C.hair2, '#5C361F', '#966040'], [C.greenLt]: [C.greenLt, C.green, '#7CC596'],
 };
 D.tone = col => TONES[col] || [col, col, col];
+// 调深/调浅一个 #RRGGBB（k>0 往黑，k<0 往白）
+D.mixHex = (a, b, k) => { const u = DG.arr(a), v = DG.arr(b); return '#' + [0, 1, 2].map(i => Math.round(lerp(u[i], v[i], clamp(k))).toString(16).padStart(2, '0')).join(''); };
+D.shade = (hex, k) => { const v = DG.arr(hex), m = k > 0 ? 0 : 255, a = Math.abs(k); return '#' + v.slice(0, 3).map(x => Math.round(x + (m - x) * a).toString(16).padStart(2, '0')).join(''); };
 
 D.at = (lt, a, d) => clamp((lt - a) / d);
 D.pop = (lt, a, d = 0.5) => { const q = D.at(lt, a, d); return q <= 0 ? 0 : MO.backOut(q, 1.5); };
@@ -84,12 +87,12 @@ D.paperTex = () => P.cached('f26_paper', W, H, g => { g.fillStyle = C.paper; g.f
   for (let i = 0; i < 9000; i++) { g.fillStyle = r() < 0.7 ? `rgba(150,120,90,${0.05 + r() * 0.06})` : `rgba(255,255,255,${0.3 + r() * 0.3})`; g.fillRect(r() * W, r() * H, 3, 3); } });
 // o: { tint 主色圆, cx, cy, r, blob 第二色斑色名|false, bx, by, br, floor 地面线 y|false, decos 个数(默认 10, 0 关), seed, wall 底色 }
 D.bg = (c, t, o = {}) => {
-  const { tint = 'pink', cx = W / 2, cy = 780, r = 400, blob = 'mint', bx = 860, by = 360, br = 150, floor = false, decos = 10, seed = 1 } = o;
+  const { tint = 'pink', cx = W / 2, cy = 780, r = 400, blob = 'mint', bx = 860, by = 360, br = 150, floor = false, decos = 10, seed = 1, avoid = [] } = o;
   c.drawImage(D.paperTex(), 0, 0);
   if (floor) { c.fillStyle = C.paper2; c.fillRect(0, floor, W, H - floor); c.fillStyle = 'rgba(226,207,174,.6)'; c.fillRect(0, floor, W, 10); }
   if (blob) c.drawImage(blobTex(blob, br, seed + 20), bx - 1.3 * br, by - 1.3 * br);
   if (tint) D.disc(c, cx, cy, r, tint, { seed: 11 + seed });
-  if (decos) D.decos(c, t, decos, seed);
+  if (decos) D.decos(c, t, decos, seed, avoid);
 };
 // 沸腾小符号（环境层）：十字、圆点、圆环、三角、半圆、波浪、点阵；只放在四周，不进中央和字幕带
 const DECO_KIND = ['plus', 'dot', 'ring', 'tri', 'half', 'squig', 'dots', 'x'];
@@ -103,9 +106,12 @@ D.deco = (c, k, x, y, s, col, i = 0) => { c.save(); c.translate(x, y); c.scale(s
   else if (k === 'squig') { c.lineWidth = 6; c.beginPath(); for (let s2 = 0; s2 <= 24; s2++) { const xx = -34 + s2 * 2.85, yy = Math.sin(s2 / 24 * Math.PI * 3 + i) * 9; s2 ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke(); }
   else if (k === 'dots') { for (let a = 0; a < 3; a++) for (let d = 0; d < 4; d++) { c.beginPath(); c.arc(d * 16 - 24, a * 16 - 16, 4.2, 0, TAU); c.fill(); } }
   c.restore(); };
-const DECO_SLOTS = [[110, 170], [330, 120], [760, 140], [980, 230], [70, 470], [1010, 560], [90, 820], [1000, 900], [130, 1130], [960, 1210], [520, 90], [240, 1290], [850, 1300], [60, 1000]];
-D.decos = (c, t, n = 10, seed = 1) => { const b = Math.floor(t * 4);
+// 槽位只在四周、y ≤ 1130：地面一带（y≈1150–1350）常放道具和人脚，不放符号
+const DECO_SLOTS = [[110, 170], [330, 120], [760, 140], [980, 230], [70, 470], [1010, 560], [90, 820], [1000, 900], [130, 1100], [1030, 1060], [520, 90], [50, 640], [600, 60], [60, 1000]];
+// avoid: [[x0,y0,x1,y1], …] 这些区域里的槽位不放（大字、主体所在处）
+D.decos = (c, t, n = 10, seed = 1, avoid = []) => { const b = Math.floor(t * 4);
   for (let i = 0; i < Math.min(n, DECO_SLOTS.length); i++) { const j = (i * 5 + seed * 3) % DECO_SLOTS.length, [x, y] = DECO_SLOTS[j];
+    if (avoid.some(([a, b2, c2, d]) => x > a - 40 && x < c2 + 40 && y > b2 - 40 && y < d + 40)) continue;
     const jx = (U.hash(i, b + seed * 7) - 0.5) * 3, jy = (U.hash(i + 50, b) - 0.5) * 3, ja = (U.hash(i + 99, b) - 0.5) * 0.18;
     c.save(); c.translate(x + jx, y + jy); c.rotate(ja); D.deco(c, DECO_KIND[Math.floor(U.hash(j, seed + 1) * 8)], 0, 0, 0.9 + U.hash(j, seed + 2) * 0.4, DECO_COL[Math.floor(U.hash(j, seed + 3) * 6)], i); c.restore(); } };
 
@@ -160,7 +166,7 @@ const POSE = {
   cheer: { L: [-150, -606], R: [150, -606], sh: -8, hd: [0, -6], tilt: 0, lean: 0 },
   slump: { L: [-44, -186], R: [44, -186], sh: 18, hd: [0, 30], tilt: 0.2, lean: 0.06 },
   point: { L: [-76, -180], R: [252, -420], sh: 0, hd: [8, 0], tilt: -0.06, lean: 0 },
-  hug: { L: [50, -352], R: [-50, -344], sh: 8, hd: [0, 12], tilt: 0.08, lean: 0 },
+  hug: { L: [56, -330], R: [-56, -316], sh: 8, hd: [0, 12], tilt: 0.08, lean: 0 },
   wave: { L: [-80, -178], R: [168, -566], sh: 0, hd: [0, 0], tilt: -0.1, lean: 0 },
   heart: { L: [-16, -336], R: [16, -326], sh: 0, hd: [0, 6], tilt: 0.1, lean: 0 },
   facepalm: { L: [40, -292], R: [10, -452], sh: 8, hd: [0, 16], tilt: 0.22, lean: 0.03 },
@@ -182,8 +188,8 @@ D.person = (c, x, y, s = 1, o = {}) => {
   const br = Math.sin(t * 2.6) * 2.5, wob = D.damped(t, react, 0.09, 0.42, 0.36), bounce = D.damped(t, react, 10, 0.42, 0.3);
   const shY = Q.sh + br + bounce * 0.4, [skB] = D.tone(skin);
   c.save(); c.globalAlpha *= alpha; c.translate(x, y); c.scale(s, s);
-  const body = new Path2D();   // 收集所有部件，最后统一叠颗粒
-  const fill = (p, col, so) => { D.flat(c, p, col, { grain: 0, ...so }); body.addPath(p); };
+  // 颗粒只叠在衣服、头发、鞋上（逐件叠：部件各自有旋转，合成一个 Path2D 再 clip 会错位）；皮肤不叠，脸保持干净
+  const fill = (p, col, so = {}) => D.flat(c, p, col, { grain: so.skin ? 0 : grain, ...so });
   // 腿（走路：两腿相位相反，抬脚）
   const sw = walk == null ? 0 : Math.sin(walk), lift = walk == null ? [0, 0] : [Math.max(0, Math.cos(walk)) * 16, Math.max(0, -Math.cos(walk)) * 16];
   [[-30, -1], [30, 1]].forEach(([hx, side], i) => { const fx = hx * 1.15 + (walk == null ? 0 : (i ? -sw : sw) * 44), fy = -18 - lift[i];
@@ -194,14 +200,14 @@ D.person = (c, x, y, s = 1, o = {}) => {
   fill(D.round(-62, -262, 124, 52, 14), bottom, { dx: 8, dy: 0 });
   const torso = D.smooth([[-50, -398 + shY], [50, -398 + shY], [76, -372 + shY], [68, -300], [62, -236], [-62, -236], [-68, -300], [-76, -372 + shY]]);
   fill(torso, top, { dx: 16, dy: 0, light: [-30, -330], lw: 40 });
-  fill(D.round(-15, -424 + shY, 30, 36, 8), D.tone(skin)[1], { dx: 0, dy: 0 });
+  fill(D.round(-15, -424 + shY, 30, 36, 8), D.tone(skin)[1], { dx: 0, dy: 0, skin: true });
   // 头（绕颈点倾斜＋阻尼晃）
   c.save(); c.translate(Q.hd[0] * dir, Q.hd[1] + shY); c.translate(0, -418); c.rotate((Q.tilt + wob) * dir); c.translate(0, 418);
   const hc = [0, -472];
   if (hairStyle === 'long') fill(D.round(-60, -508, 120, 132, [50, 50, 22, 22]), hair, { dx: 10, dy: 0 });
   if (hairStyle === 'bob') fill(D.round(-62, -516, 124, 96, [56, 56, 26, 26]), hair, { dx: 10, dy: 0 });
   if (hairStyle === 'bun') { c.save(); c.translate(0, -536); c.rotate(wob * 1.8); fill(D.circle(0, 0, 25), hair, { dx: 6, dy: 0 }); c.restore(); }
-  fill(D.ellipse(hc[0], hc[1], 50, 57), skin, { dx: 10, dy: 0 });
+  fill(D.ellipse(hc[0], hc[1], 50, 57), skin, { dx: 10, dy: 0, skin: true });
   const fr = D.smooth([[-53, -462], [-57, -502], [-32, -530], [8, -536], [44, -520], [57, -486], [54, -458], [40, -484], [10, -496], [-18, -490], [-40, -474]]);
   if (hairStyle !== 'none') fill(fr, hair, { dx: 8, dy: 0 });
   // 脸
@@ -215,7 +221,7 @@ D.person = (c, x, y, s = 1, o = {}) => {
         if (mood === 'shock') { c.fillStyle = C.white; c.beginPath(); c.arc(ex - 2, ey - 3, 2.4, 0, TAU); c.fill(); c.fillStyle = C.ink; } } };
     eye(-17 + lx); eye(17 + lx);
     const brow = (bx, a) => { c.save(); c.translate(bx + lx, ey - 17); c.rotate(a); c.beginPath(); c.moveTo(-8, 0); c.lineTo(8, 0); c.stroke(); c.restore(); };
-    if (mood === 'sad' || mood === 'worry') { brow(-17, 0.32); brow(17, -0.32); } if (mood === 'angry') { brow(-17, -0.4); brow(17, 0.4); }
+    if (mood === 'sad' || mood === 'worry') { brow(-17, -0.3); brow(17, 0.3); } if (mood === 'angry') { brow(-17, 0.42); brow(17, -0.42); }
     const mx = lx, my = -444; c.beginPath();
     if (mood === 'happy') { c.arc(mx, my - 6, 12, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke(); }
     else if (mood === 'calm' || mood === 'closed') { c.arc(mx, my - 5, 8, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke(); }
@@ -226,14 +232,14 @@ D.person = (c, x, y, s = 1, o = {}) => {
   c.restore();
   // 手臂（长袖，盖在身体前面）＋手
   const arms = [];
+  const armT = [D.tone(top)[1], D.shade(D.tone(top)[1], 0.18), top];   // 袖子比身体深一档：手臂横过胸前也看得出来
   const mk = MO.cubicInOut(clamp(mix)), waveW = (pose === 'wave' ? 1 - (to ? mk : 0) : 0) + (to === 'wave' ? mk : 0);
   [[Q.L, -1], [Q.R, 1]].forEach(([T, side]) => { const tg = [T[0], T[1]];
     if (walk != null) tg[0] += side * Math.sin(walk) * 38;                       // 走路：手臂和同侧腿反向摆
     if (side > 0 && waveW > 0) tg[0] += Math.sin(t * 9) * 26 * waveW;            // 挥手
     const S = [side * 64, -384 + shY], { E, Hn } = ik(S, tg, 122, 120, side);
-    fill(RIG.taper(S, E, 44, 36, 4), top, { dx: 6, dy: 4 }); fill(RIG.taper(E, Hn, 36, 30, 2), top, { dx: 6, dy: 4 });
-    fill(D.circle(Hn[0], Hn[1], 18), skin, { dx: 4, dy: 3 }); arms.push(Hn); });
-  if (grain) D.grainIn(c, body, grain);
+    fill(RIG.taper(S, E, 44, 36, 4), top, { dx: 6, dy: 4, tone: armT }); fill(RIG.taper(E, Hn, 36, 30, 2), top, { dx: 6, dy: 4, tone: armT });
+    fill(D.circle(Hn[0], Hn[1], 18), skin, { dx: 4, dy: 3, skin: true }); arms.push(Hn); });
   c.restore();
   const tr = (px, py) => [x + px * s, y + py * s];
   return { head: tr(Q.hd[0] * dir, -472 + Q.hd[1] + shY), top: tr(Q.hd[0] * dir, -545 + Q.hd[1] + shY), handL: tr(...arms[0]), handR: tr(...arms[1]), chest: tr(0, -330), feet: [x, y] };
@@ -245,11 +251,11 @@ D.mini = (c, x, y, s, col = C.coral, o = {}) => { const { alpha = 1, head = C.sk
   c.restore(); };
 // 人群：cols×rows 网格，颜色按种子取；o.hi 高亮的序号数组（变珊瑚色并跳一下，o.hiAt 起跳时刻配 o.lt），o.dim 其余变淡
 D.crowd = (c, cx, y, cols, rows, gap, s, o = {}) => { const { seed = 3, hi = [], hiCol = C.coral, lt = 0, hiAt = 0, dim = 0, pal = [C.ink2, C.green, C.gold, C.lavDot, C.greenLt, C.mintDot], appear = null } = o;
-  for (let r = rows - 1; r >= 0; r--) for (let k = 0; k < cols; k++) { const i = r * cols + k, isH = hi.includes(i), x = cx + (k - (cols - 1) / 2) * gap + (r % 2) * gap * 0.25, yy = y - r * gap * 0.62;
+  for (let r = rows - 1; r >= 0; r--) for (let k = 0; k < cols; k++) { const i = r * cols + k, isH = hi.includes(i), x = cx + (k - (cols - 1) / 2) * gap + (r % 2) * gap * 0.25, yy = y - r * gap * 0.74;
     const a = appear == null ? 1 : D.pop(lt, appear + i * 0.03, 0.4); if (a <= 0) continue;
-    const col = isH ? hiCol : pal[Math.floor(U.hash(i, seed) * pal.length)], hop = isH ? Math.max(0, -D.damped(lt, hiAt, 26, 0.5, 0.45)) + (lt >= hiAt ? 6 : 0) : 0;
+    const col0 = pal[Math.floor(U.hash(i, seed) * pal.length)], col = isH ? hiCol : dim ? D.mixHex(col0, C.paper2, dim * 0.6) : col0, hop = isH ? Math.max(0, -D.damped(lt, hiAt, 26, 0.5, 0.45)) + (lt >= hiAt ? 6 : 0) : 0;
     const head = [C.skin, C.skin2, '#F1C1A1'][Math.floor(U.hash(i, seed + 9) * 3)];
-    D.mini(c, x, yy, s * a, col, { alpha: isH || !dim ? 1 : 1 - dim * 0.65, head, hop, hair: U.hash(i, seed + 5) < 0.7 ? C.hair : C.hair2 }); } };
+    D.mini(c, x, yy, s * a, col, { head: !isH && dim ? D.mixHex(head, C.paper2, dim * 0.5) : head, hop, hair: U.hash(i, seed + 5) < 0.7 ? C.hair : C.hair2 }); } };
 })();
 
 // ---------- 情绪与思绪：思考泡、对话泡、情绪符号 ----------
@@ -411,7 +417,7 @@ D.CARD_TINTS = D.CARD_TINTS || ['pink', 'mint', 'gold', 'lav'];
 D.cardToken = D.cardToken || ((c, x, y, lt, t, walking, arriveAt) => D.person(c, x, y, 0.34, { pose: walking ? 'walk' : 'stand', to: walking ? null : 'wave', mix: D.at(lt, arriveAt + 0.15, 0.4), walk: walking ? lt * 11 : null, t, react: arriveAt, mood: 'happy', top: C.coral, hairStyle: 'bun', grain: 0.4 }));
 D.chapterCard = (c, lt, t, n, title = '') => {
   const tint = D.CARD_TINTS[(n - 1) % D.CARD_TINTS.length];
-  D.bg(c, t, { tint, cy: 700, r: 330, blob: tint === 'mint' ? 'pink' : 'mint', bx: 880, by: 1240, br: 120, seed: 900 + n, decos: 9 });
+  D.bg(c, t, { tint, cy: 700, r: 330, blob: tint === 'mint' ? 'pink' : 'mint', bx: 880, by: 1240, br: 120, seed: 900 + n, decos: 10, avoid: [[0, 500, W, 960]] });
   const N = Math.max(D.CHAPTER_NAMES.length, n, 2), x0 = 130, x1 = 950, y = 1250, X = i => lerp(x0, x1, i / (N - 1));
   c.fillStyle = C.paper3; c.fill(D.round(x0 - 30, y - 9, x1 - x0 + 60, 18, 9));
   const walkEnd = 1.15, q = MO.cubicInOut(D.at(lt, 0.15, walkEnd - 0.15)), done = X(n - 1);
@@ -421,9 +427,9 @@ D.chapterCard = (c, lt, t, n, title = '') => {
   if (lt > walkEnd) D.rings(c, done, y, 30, lt, walkEnd, { lw: 7, fade: true, alpha: 0.8 });
   const tx = lerp(n > 1 ? X(n - 2) : x0 - 60, done, q); D.cardToken(c, tx, y - 14, lt, t, lt < walkEnd, walkEnd);
   if (lt > 0.1) { const s = MO.slamK((lt - 0.1) / 0.17); D.tag(c, `第 ${n} 章`, W / 2, 560, { size: 62, fam: 'PuHui-Black', fill: C.ink, col: C.white, scale: s }); }
-  const lines = D.split2(title), all = lines.reduce((s, l) => s + [...l].length, 0), shown = Math.round(D.at(lt, 0.45, Math.max(0.3, all / 14)) * all), size = lines.length > 1 ? 96 : all > 7 ? 104 : 124;
+  const lines = D.split2(title), all = lines.reduce((s, l) => s + [...l].length, 0), shown = Math.round(D.at(lt, 0.45, Math.max(0.3, all / 14)) * all), size = lines.length > 1 ? 88 : all > 7 ? 104 : 124;
   let used = 0; lines.forEach((ln, i) => { const a = [...ln], k = clamp(shown - used, 0, a.length); used += a.length;
-    if (k > 0) D.text(c, a.slice(0, k).join(''), W / 2, (lines.length > 1 ? 730 : 790) + i * size * 1.25, { size, fam: 'PuHui-Black', maxW: 940 }); });
+    if (k > 0) D.text(c, a.slice(0, k).join(''), W / 2, (lines.length > 1 ? 730 : 790) + i * size * 1.25, { size, fam: 'PuHui-Black', maxW: 900 }); });
   D.finish(c);
 };
 })();
