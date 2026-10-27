@@ -32,6 +32,8 @@ ev() { node "$MB" event "$OUT/events.json" "$1"; }
 # 有租约就把这一步报给 engine-router（状态页 lab.jianshuo.dev/router/「租约」栏显示；每报一次租约按 ttl 续期，12h 的整本也不会过期）
 prog() { [ -n "${LEASE:-}" ] || return 0; STEP="$1" node -e 'process.stdout.write(JSON.stringify({step:process.env.STEP}))' | rt "/$LEASE/progress" >/dev/null || true; }
 st booting "检查书和凭据"
+# 编排机上的 skill 副本跟上 GitHub（以前从不更新，停在旧版本）。git 换文件是删了重建，正在跑的这份脚本不受影响，下一单才用新版。
+( flock -w 120 9 && git -C "$SK" pull -q --ff-only origin main ) 9>"$(git -C "$SK" rev-parse --git-dir 2>/dev/null || echo /tmp)/harvest.lock" 2>/dev/null || echo "skill 副本没更新成（不影响这一单）"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
 J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
@@ -112,7 +114,7 @@ PROMPT="你在一台一次性的云服务器上（Vultr ${PLAN}，Ubuntu，有 C
 用 wjs-voicedrop-creating-motion-book skill 把书架上的《$TITLE》（slug $slug）做成竖屏 HTML 动画版${ONLY:+，只做 $ONLY 这几章（试看版，总装用 assemble.mjs --only $ONLY）}。
 - 项目目录 ~/art-films/$slug。取书用 node $S/fetch_book.mjs $slug ~/art-films/章名.txt（这台机器没有 VoiceDrop MCP），再 new_book.mjs、narrate.mjs。
 $([ $RESUMED = 1 ] && echo "- 项目目录里已经有上一轮做了一半的东西：先照样跑 new_book.mjs 把引擎装上（它不覆盖已有文件，book.json 里的画风沿用）；口播/ASR 已齐的章 narrate.mjs 会跳过；已有 chNN_x.js 和对应 shots.json、且冒烟通过的段不要重做，只补缺的段。" || true)
-- 画风按 references/选画风.md 自己定：可以出主镜头对比，评委用子 agent，定了就往下走。
+- 画风按 references/选画风.md 定，现在是**探索期**：先跑 node $S/pick_styles.mjs 抽候选，三个候选的主镜头必须真画出来（这台机器有 Chromium），评委必须用没参与画图的子 agent，不许跳过直接选已有套件。选中新画风就在 skill 的 kits/<名>/ 建成套件再开工——编排机会把它收回进 git，下一本书能复用。
 - 分章制作派子 agent 并行；单个 agent 负责的口播不超过约 4 分钟，长章拆成 chNN_a / chNN_b（assemble 会自动按字母顺序拼）。渲染命令一律 bash $S/render_lock.sh 前缀（RENDER_SLOTS=4）。
 $RULES
 - 每章交稿前冒烟检查零报错零缺字；总装后整本冒烟检查，再 build_html.mjs。不要发布、不要上传到任何地方（编排机会拉回去发布），不要 git push。
@@ -152,6 +154,14 @@ STEP_DESC="取回成品"; ev "制作完成，取回成品"
 rsync -az -e "ssh $SSHO" --exclude '代码工程/lib/' --exclude '代码工程/demos/' --exclude '代码工程/reference_films/' --exclude '代码工程/examples/' --exclude '静帧/' \
   "mb@$IP:art-films/$slug/" "$OUT/" || true
 rsync -az -e "ssh $SSHO" "mb@$IP:art-films/claude.jsonl" "mb@$IP:art-films/claude.err" "$OUT/" 2>/dev/null || true
+# 新画风套件收回：做书机上 kits/ 里新建（git 未跟踪）的套件目录 → 本书产物 kits/ → harvest_kits.sh 提交进 claude-skills 并推送。
+# 机器马上要销毁，这一步不收就永远丢了。做没做完都收（套件常在第一章前就建好）。
+STEP_DESC="收回画风套件"
+KR='code/claude-skills/wjs-voicedrop-creating-motion-book/kits'
+newkits=$(R "cd ~/code/claude-skills && git status --porcelain --untracked-files=normal -- wjs-voicedrop-creating-motion-book/kits" 2>/dev/null \
+  | sed -n 's#^?? wjs-voicedrop-creating-motion-book/kits/\([^/]*\)/.*#\1#p' | sort -u || true)
+for n in $newkits; do mkdir -p "$OUT/kits/$n"; rsync -az -e "ssh $SSHO" "mb@$IP:$KR/$n/" "$OUT/kits/$n/" && ev "收回新画风套件：$n"; done
+bash "$SK/cloud/harvest_kits.sh" "$OUT" "$slug" || true
 if [ $PUBLISH = 1 ] && [ -f "$OUT/html/index.html" ]; then
   st publishing "发布到书架"; STEP_DESC="发布"
   node "$SK/scripts/publish_video.mjs" "$OUT"
