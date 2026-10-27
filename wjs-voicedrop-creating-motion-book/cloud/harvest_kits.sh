@@ -10,7 +10,7 @@ set -uo pipefail
 SK="$(cd "$(dirname "$0")/.." && pwd)"; OUT=$1; slug=$2
 REPO=$(git -C "$SK" rev-parse --show-toplevel 2>/dev/null) || { echo "收回套件：$SK 不在 git 仓库里，跳过"; exit 0; }
 KEY=${MB_DEPLOY_KEY:-/opt/claude-agent/.ssh/id_claude_skills_deploy}
-PUSH_URL=git@github.com:jianshuo/claude-skills.git
+PUSH_URL=${MB_PUSH_URL:-git@github.com:jianshuo/claude-skills.git}   # 演练时指向本地裸仓库
 export GIT_SSH_COMMAND="ssh -i $KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=20"
 G() { git -C "$REPO" -c user.name="motion-book (vps-tokyo)" -c user.email="noreply@jianshuo.dev" "$@"; }
 
