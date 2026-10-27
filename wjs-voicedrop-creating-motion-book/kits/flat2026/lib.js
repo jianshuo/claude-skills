@@ -86,7 +86,7 @@ D.paperTex = () => P.cached('f26_paper', W, H, g => { g.fillStyle = C.paper; g.f
 D.bg = (c, t, o = {}) => {
   const { tint = 'pink', cx = W / 2, cy = 780, r = 400, blob = 'mint', bx = 860, by = 360, br = 150, floor = false, decos = 10, seed = 1 } = o;
   c.drawImage(D.paperTex(), 0, 0);
-  if (floor) { c.fillStyle = C.paper2; c.fillRect(0, floor, W, H - floor); D.once('f26floor' + floor, () => 1); c.fillStyle = 'rgba(226,207,174,.6)'; c.fillRect(0, floor, W, 10); }
+  if (floor) { c.fillStyle = C.paper2; c.fillRect(0, floor, W, H - floor); c.fillStyle = 'rgba(226,207,174,.6)'; c.fillRect(0, floor, W, 10); }
   if (blob) c.drawImage(blobTex(blob, br, seed + 20), bx - 1.3 * br, by - 1.3 * br);
   if (tint) D.disc(c, cx, cy, r, tint, { seed: 11 + seed });
   if (decos) D.decos(c, t, decos, seed);

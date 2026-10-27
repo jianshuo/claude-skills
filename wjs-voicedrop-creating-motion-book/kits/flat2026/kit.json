@@ -1,0 +1,15 @@
+{
+  "name": "flat2026",
+  "label": "当代扁平插画（米白纸底、无描边纯色块、颗粒点彩密度渐变、会演戏的成年人角色＋阻尼二次动作）",
+  "grammar": "y4_storytime（角色叙事）＋y1_kurzgesagt（图示段落）",
+  "recipe": "16_2026",
+  "fits": "身心：心理学、情绪、自我成长、关系、习惯、冥想与疗愈；人文：社会现象、选举与公共生活、以人为主角讲的历史",
+  "avoid": "硬核机制科普与尺度穿行（kurzgesagt 更对题）；货币金融制度（banknote）；需要大量真实档案照片、原话引用的新闻史；严肃悲剧/灾难（暖色扁平会显得轻佻）",
+  "from_book": "（新建套件，尚未用于整本书；样张见 kit-flat2026-test）",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（都是思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）",
+  "palette": "纸 #F6EFE2｜纸2 #EEDFC7｜藏青字 #262A5C｜珊瑚 #E8655A｜芥黄 #F2B33D｜绿 #2F8A5D｜粉 #F5CDC6｜薄荷 #D6ECE0｜淡紫 #E7DEF3（只做小色斑）",
+  "api": "D.bg D.disc D.decos D.deco D.stipple D.grainIn D.flat D.blob D.damped D.last D.text D.split2 D.tag D.popText D.callout D.person（pose: stand walk think shrug cheer slump point hug wave heart facepalm open；mood: calm happy sad shock worry closed angry none；返回 head/top/handL/handR/chest 锚点） D.POSES D.mini D.crowd D.thought D.speech D.emote（spark heart sweat question exclaim zzz scribble rain sparkle bulb） D.rings D.arrow D.bars D.split D.timeline D.plant D.ballotBox D.book D.phone D.cup D.bulb D.scales D.clock D.sun D.brain D.heart D.window D.world D.finish D.chapterCard D.cardToken D.CARD_TINTS D.subtitle",
+  "notes": "本套件的人有极简五官（点眼＋一笔嘴＋腮红），身心题材靠表情传情绪；制作规范里「不画脸」对本套件放宽为「只用 D.person 的 mood，不另画写实五官、不画 Q 版大头」。mood:'none' 可退回无脸。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
