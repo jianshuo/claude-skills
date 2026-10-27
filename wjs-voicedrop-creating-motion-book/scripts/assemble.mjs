@@ -2,7 +2,7 @@
 // 总装：各章口播（听书整章 ch01…chNN）各自计时 → 全片时间轴。纯 Node，不要 ffmpeg。
 // - 音轨：各章 MP3 按帧首尾相接，章间插全零静音帧（GAP，按帧取整）→ 音频/全片口播.mp3；章偏移按帧数精确算
 // - 段落表：各章 音频/chNN.shots.json（章内局部时间）加章偏移 → 代码工程/eras_book.js
-// - 字幕：句时间（ASR 对齐）→ 行中标点保留、句号换空格，行尾不留标点（」』除外）→ ≤17 字合并、>18 字拆、数字量词不拆、<0.8s 并或延、空条不出 → scenes/book/subs.js（调套件 K.subtitle）、音频/全片.srt
+// - 字幕：句时间（ASR 对齐）→ 不配对的标点全角半角一律换空格（成对的「」（）《》留），行尾不留标点→ ≤17 字合并、>18 字拆、数字量词不拆、<0.8s 并或延、空条不出 → scenes/book/subs.js（调套件 K.subtitle）、音频/全片.srt
 // 用法：node assemble.mjs <项目目录> [--allow-missing]（缺章用占位镜头，先看已完成的部分）[--only ch01,ch02,ch03]（试看版：只总装这几章，章节卡仍按全书章数）
 import fs from 'node:fs';
 import path from 'node:path';
@@ -47,6 +47,9 @@ console.log(`全片 ${total.toFixed(1)}s = ${(total / 60).toFixed(1)} 分钟，$
 // ---------- 字幕 ----------
 const NUM = new Set('零一二三四五六七八九十百千万亿两几0123456789.%'), MW = new Set('倍个年人种次岁天位颗元块条');
 const TRAIL = /[\s，、。：；？！,.;:?!—…·~～-]+$/;   // 行尾一律不留标点（」』等收尾引号除外）
+// 字幕不要不配对的标点（全角半角都去，换空格）；成对的「」（）《》“”留着。半角 , : 夹在数字/字母中间（1,000、10:30）不动，小数点和连字符不动。
+const clean = tx => tx.replace(/[，、。：；？！—…·～]+/g, ' ').replace(/(?<![0-9A-Za-z])[,:;?!]+|[,:;?!]+(?![0-9A-Za-z])/g, ' ')
+  .replace(/([「（《“『(])\s+/g, '$1').replace(/\s+([」）》”』)])/g, '$1').replace(/\s{2,}/g, ' ').replace(TRAIL, '').trim();
 const endP = s => /[，、：；？！。]$/.test(s), join = (x, y) => x + (endP(x) ? '' : '，') + y;   // 本身带标点就不再补逗号
 function chapterSubs(ch, off) {
   const rows = parseRows(fs.readFileSync(path.join(A, `${ch}.句时间.txt`), 'utf8')), cues = [];
@@ -71,7 +74,7 @@ function chapterSubs(ch, off) {
   // 拆行落在开引号/开括号/箭头后面时，把它挪到下一行行首（「系统里根本不存在「⏎当前股价」」→ 「…不存在⏎「当前股价」」）
   for (let i = 0; i + 1 < merged.length; i++) { const m = /\s*([「（《“『(→≥≤=]+)\s*$/.exec(merged[i][2]); if (m) { merged[i][2] = merged[i][2].slice(0, m.index); merged[i + 1][2] = m[1] + (/[→≥≤=]/.test(m[1]) ? ' ' : '') + merged[i + 1][2]; } }
   merged.forEach((m, i) => { if (m[1] - m[0] < 0.8) m[1] = Math.min(i + 1 < merged.length ? merged[i + 1][0] - 0.02 : m[1] + 0.8, m[0] + 0.8); });
-  return merged.filter(m => m[2].replace(/[ ，、。？！：；]/g, '')).map(([a, b, tx]) => [r3(off + a), r3(off + b), tx.replace(/。/g, ' ').replace(TRAIL, '').trim()]);
+  return merged.filter(m => m[2].replace(/[ ，、。？！：；]/g, '')).map(([a, b, tx]) => [r3(off + a), r3(off + b), clean(tx)]);
 }
 const subs = CH.flatMap(ch => chapterSubs(ch, offs[ch]));
 const ts = s => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')},${String(Math.round(s % 1 * 1000) % 1000).padStart(3, '0')}`;
