@@ -226,9 +226,10 @@ D.person = (c, x, y, s = 1, o = {}) => {
   c.restore();
   // 手臂（长袖，盖在身体前面）＋手
   const arms = [];
-  [[Q.L, -1], [Q.R, 1]].forEach(([T, side]) => { let tg = [T[0], T[1] + (pose === 'wave' || to === 'wave') && side > 0 ? 0 : 0];
-    if (walk != null && (pose === 'walk' || pose === 'stand')) tg = [T[0] + Math.sin(walk) * -side * 0 + (side < 0 ? -1 : 1) * 0 - Math.sin(walk) * 38 * (side < 0 ? 1 : -1), T[1]];
-    if ((pose === 'wave' && side > 0) && mix < 1 || (to === 'wave' && side > 0 && mix >= 1)) tg = [tg[0] + Math.sin(t * 9) * 26, tg[1]];
+  const mk = MO.cubicInOut(clamp(mix)), waveW = (pose === 'wave' ? 1 - (to ? mk : 0) : 0) + (to === 'wave' ? mk : 0);
+  [[Q.L, -1], [Q.R, 1]].forEach(([T, side]) => { const tg = [T[0], T[1]];
+    if (walk != null) tg[0] += side * Math.sin(walk) * 38;                       // 走路：手臂和同侧腿反向摆
+    if (side > 0 && waveW > 0) tg[0] += Math.sin(t * 9) * 26 * waveW;            // 挥手
     const S = [side * 64, -384 + shY], { E, Hn } = ik(S, tg, 122, 120, side);
     fill(RIG.taper(S, E, 44, 36, 4), top, { dx: 6, dy: 4 }); fill(RIG.taper(E, Hn, 36, 30, 2), top, { dx: 6, dy: 4 });
     fill(D.circle(Hn[0], Hn[1], 18), skin, { dx: 4, dy: 3 }); arms.push(Hn); });
@@ -340,7 +341,7 @@ D.plant = (c, x, y, s = 1, ang = 0, o = {}) => tf(c, x, y, s, 0, () => { const p
   D.flat(c, p, pot, { dx: 12, dy: 0, grain: 0.5 }); c.fillStyle = C.white; c.fillRect(-70, -92, 140, 16); });
 // 选票箱：slip 0..1 选票从上方滑进投票口；mark 选票上打勾进度
 D.ballotBox = (c, x, y, s = 1, o = {}) => tf(c, x, y, s, 0, () => { const { slip = 0, col = C.ink, mark = 1 } = o;
-  if (slip < 1) { const yy = lerp(-430, -230, MO.cubicIn ? MO.cubicIn(slip) : slip * slip); c.save(); c.beginPath(); c.rect(-200, -700, 400, 470); c.clip(); c.translate(0, yy); c.rotate(-0.06 * (1 - slip));
+  if (slip < 1) { const yy = lerp(-430, -230, slip * slip); c.save(); c.beginPath(); c.rect(-200, -700, 400, 470); c.clip(); c.translate(0, yy); c.rotate(-0.06 * (1 - slip));
     D.flat(c, D.round(-70, -100, 140, 170, 10), C.white, { dx: 0, dy: 8, grain: 0.3 }); c.strokeStyle = C.coral; c.lineWidth = 12; c.lineCap = 'round'; c.lineJoin = 'round';
     if (mark > 0) { c.beginPath(); c.moveTo(-30, -14); c.lineTo(-6, 14); c.lineTo(lerp(-6, 36, clamp(mark)), lerp(14, -36, clamp(mark))); c.stroke(); } c.restore(); }
   D.flat(c, D.round(-190, -230, 380, 230, 18), col, { dx: 18, dy: 0, light: [-130, -150], lw: 30, grain: 0.5 });
@@ -420,8 +421,8 @@ D.chapterCard = (c, lt, t, n, title = '') => {
   if (lt > walkEnd) D.rings(c, done, y, 30, lt, walkEnd, { lw: 7, fade: true, alpha: 0.8 });
   const tx = lerp(n > 1 ? X(n - 2) : x0 - 60, done, q); D.cardToken(c, tx, y - 14, lt, t, lt < walkEnd, walkEnd);
   if (lt > 0.1) { const s = MO.slamK((lt - 0.1) / 0.17); D.tag(c, `第 ${n} 章`, W / 2, 560, { size: 62, fam: 'PuHui-Black', fill: C.ink, col: C.white, scale: s }); }
-  const lines = D.split2(title), all = [...title].length, shown = Math.round(D.at(lt, 0.45, all / 14) * all), size = lines.length > 1 ? 96 : all > 7 ? 104 : 124;
-  let used = 0; lines.forEach((ln, i) => { const a = [...ln], k = clamp(shown - used, 0, a.length); used += a.length + (lines.length > 1 && i === 0 && [...title].length > used ? 0 : 0);
+  const lines = D.split2(title), all = lines.reduce((s, l) => s + [...l].length, 0), shown = Math.round(D.at(lt, 0.45, Math.max(0.3, all / 14)) * all), size = lines.length > 1 ? 96 : all > 7 ? 104 : 124;
+  let used = 0; lines.forEach((ln, i) => { const a = [...ln], k = clamp(shown - used, 0, a.length); used += a.length;
     if (k > 0) D.text(c, a.slice(0, k).join(''), W / 2, (lines.length > 1 ? 730 : 790) + i * size * 1.25, { size, fam: 'PuHui-Black', maxW: 940 }); });
   D.finish(c);
 };
