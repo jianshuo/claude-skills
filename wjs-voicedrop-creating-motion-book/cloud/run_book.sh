@@ -33,7 +33,7 @@ ev() { node "$MB" event "$OUT/events.json" "$1"; }
 prog() { [ -n "${LEASE:-}" ] || return 0; STEP="$1" node -e 'process.stdout.write(JSON.stringify({step:process.env.STEP}))' | rt "/$LEASE/progress" >/dev/null || true; }
 st booting "检查书和凭据"
 # 编排机上的 skill 副本跟上 GitHub（以前从不更新，停在旧版本）。git 换文件是删了重建，正在跑的这份脚本不受影响，下一单才用新版。
-( flock -w 120 9 && git -C "$SK" pull -q --ff-only origin main ) 9>"$(git -C "$SK" rev-parse --git-dir 2>/dev/null || echo /tmp)/harvest.lock" 2>/dev/null || echo "skill 副本没更新成（不影响这一单）"
+( flock -w 120 9 && git -C "$SK" pull -q --ff-only origin main ) 9>"$(git -C "$SK" rev-parse --absolute-git-dir 2>/dev/null || echo /tmp)/harvest.lock" 2>/dev/null || echo "skill 副本没更新成（不影响这一单）"
 echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PLAN max=${MAXH}h dry=$DRY"
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
 J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
