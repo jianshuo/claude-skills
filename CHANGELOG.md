@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-27]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — subtitle generation improvements in `narrate.mjs` (several commits, iterative refinement):
+  - **Subtitle text source**: subtitles now use the audiobook original reading text (`<stem>.txt`) as their source, with ASR providing only sentence-level timestamps. When the source text cannot be reliably aligned to the audio, the skill falls back to the ASR-transcribed text. This produces subtitle lines that match the actual 听书 script rather than the noisier ASR output.
+  - **Punctuation handling rule** (final after several iterations): unpaired punctuation (full-width and half-width — `。、！？…—` etc.) is replaced with a space; paired quotes and brackets (`「」『』""''()`) are kept as-is; no punctuation is left at a line ending (except closing `」` / `』`); opening quotes, opening brackets, and arrows are pushed to the start of the next line rather than left stranded at the end of the previous one.
+
 ## [2026-10-26]
 
 ### Changed
