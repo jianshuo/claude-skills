@@ -18,7 +18,7 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 | 步 | 做什么 | 命令 / 产物 | 在哪跑 |
 |---|---|---|---|
 | 1 取书 | VoiceDrop MCP `list_books` → `read_book`：slug、章名（写成一行一个的文件）、听书章节 stem（缺省 01…NN） | 章名.txt | 任意 |
-| 2 选画风 | `references/选画风.md`：内容画像 → 先语法后画风 → 3 候选同句主镜头、独立评委 7 维打分；新画风先做成 `kits/<名>/` | `三方向/评审.md`、`选型结果.jpg`（发给用户，不等回复） | 出主镜头要 Chromium：VPS 上只按画像和 kits 的 fits/avoid 从已有套件里选 |
+| 2 选画风 | `references/选画风.md`：内容画像 → 先语法后画风 → 3 候选同句主镜头、独立评委 7 维打分；新画风先做成 `kits/<名>/`。**探索期**：候选用 `node $S/pick_styles.mjs` 抽，必须真出三张主镜头＋独立评委，打分偏向新画风（见选画风.md 第 0 节） | `三方向/评审.md`、`选型结果.jpg`（发给用户，不等回复） | 出主镜头要 Chromium（做书机有；只有 1GB 的 Tokyo VPS 本机没有，别在那上面做书） |
 | 3 建工程 | 复制引擎、装套件和字体、写 book.json 与章节制作规范 | `node $S/new_book.mjs <项目> --slug … --title … --kit … --chapters 章名.txt` | 任意 |
 | 4 取口播 | 听书 mp3（缓存优先）→ ASR 出时间；稿＝听书朗读原文（`<stem>.txt`，对不上才退回 ASR 文本）→ 句时间 | `node $S/narrate.mjs <项目>` | 任意 |
 | 5 分章制作 | 章节 agent 并行，每个 1–2 章，brief＝`<项目>/制作规范.md`＋章号；贯穿物先写进 `scenes/book/props.js` | `scenes/book/chNN.js`、`音频/chNN.shots.json`、`镜头表/chNN.md` | 自查静帧要 Chromium；VPS 上用 `node $S/smoke.mjs <项目> --film chNN` 查报错和框景 |
@@ -47,7 +47,8 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 ## 省时间的关键
 
 - **口播零成本复用**：听书缓存命中就不花 TTS 的钱；ASR 推 mp3 约 40 倍速，几章并发一两分钟完。
-- **套件复用**：选画风时已有套件分差 ≤2 就用它。现有：`kurzgesagt`（科学/医学/技术机制）、`banknote`（货币/央行/金融制度，字体是随套件分发的思源宋体 OFL）。每做完一本新画风的书，把库收进 kits/。
+- **套件复用与探索**：探索期（选画风.md 第 0 节）偏向没用过的画风，分差 ≤5 选新画风；探索期结束后恢复「已有套件分差 ≤2 就用它」。现有：`kurzgesagt`（科学/医学/技术机制）、`banknote`（货币/央行/金融制度，字体是随套件分发的思源宋体 OFL）。用量流水在 `kits/USAGE.tsv`。
+- **套件不丢**：云上新建的 `kits/<名>/` 由编排机 `cloud/harvest_kits.sh` 收回 → 提交进 claude-skills 仓库 → 用部署钥匙推 GitHub（推不出去就留在 VPS 本地提交，下次一起推）；Mac 上的同步钩子先把仓库里多出来的套件拉回本地再镜像，不会删掉它们。
 - **默认 HTML**：长片渲 MP4 要几小时，HTML 打包不到 1 秒；画面一样，改一镜即时生效。
 - **章节并行**：步 5 一次派齐；每章用章内局部时间，互不依赖，总装最后做。
 
