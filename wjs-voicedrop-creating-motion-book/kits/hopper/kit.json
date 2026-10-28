@@ -1,0 +1,15 @@
+{
+  "name": "hopper",
+  "label": "1942 霍珀美国现实主义（硬光块面：背光冷青绿／受光暖琥珀双版本，会缓移的斜光斑裁切；酒红招牌、砖红只给重点；牌桌、窗、街、夜灯；人只出无脸剪影与手；贯穿物＝红菱形牌背的牌）",
+  "grammar": "y1_kurzgesagt（图示段落：数据板／折线／柱／仓位条／K 线，示意性）＋y4_storytime（叙事：剪影人坐桌、窗前、街头人群，靠光影与构图传情绪，不靠表情）",
+  "recipe": "24_hopper",
+  "fits": "孤独、克制、冷静自嘲的人文与金融：散户心理、投资纪律、风险与概率、个人决策、都市生活与职场、需要「一个物（牌/筹码）＋一束光」讲清机制的书；节奏沉稳，章内以牌桌/窗/街三类场景轮换",
+  "avoid": "热闹高饱和的消费与广告题材（pop）；尺度穿行类硬核科普（kurzgesagt）；需要细腻人物表情的情感叙事（flat2026）；大量密集数据表格（图表是示意级，做不了精确读数）；暖童年、奇幻题材",
+  "from_book": "弱者思维（ruozhe-siwei）",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（都是思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）。GB2312 没有「￥」「⁶⁰」「½」「−」。",
+  "palette": "深青绿 #4F7A68（墙/背景，暗部 #3E5F53）｜琥珀黄 #E9C887（光斑/线/数据，暗部 #CF9F5E）｜砖红 #C9473C（只给重点：翻开的关键牌、风险、涨）｜酒红 #6E2626（招牌/标题板）｜奶油白 #F5EBD3（字/牌面）｜深褐黑 #2B1D16（地/字幕带）。成对色：K.SH 背光版（冷青绿＋深褐）/ K.LT 受光版（暖琥珀＋砖红），同键同义，K.lit 回调里按键取色。不用蓝紫、渐变霓虹",
+  "api": "K.W K.H K.TAU K.C K.SH K.LT K.SAFE | K.at K.pop K.once K.t0 K.ease | K.round K.circle K.ellipse K.poly K.world | K.bg(c,t,{kind:room|night|street|blinds|dark, title:'dark'|'lit'|false, zone:[y0,y1], drift, phase, dx, bx, lx, ly, dust}) K.beam K.lit(c,t,region,fnShadow(c,Pal),fnLit) K.dual(c,fn) K.polysPath K.lamp K.finish(c) | K.text K.bigText(≥100px) K.title(招牌板) K.tag(≥52px) K.popText K.callout K.split2 | K.card(c,x,y,w,h,{face,flip,text≥80px,hot,rot,lift}) K.cardW(text) K.cardStack K.chips | K.table K.window K.chair K.mug K.deskLamp K.screen K.board | K.figure(stand|back|sit|slump|think) K.crowd K.hand(open|point|pinch|fist|flat) | K.series K.mapPts K.line K.bars K.posBar K.candles K.kline K.shiyi | K.CHAPTER_NAMES K.chapterCard(c,lt,t,n,title) K.cardToken K.CARD_KINDS K.subtitle",
+  "notes": "核心手法是「双版本裁切」：K.bg 画底并写 K.beam（本帧光斑多边形），所有道具内部走 K.lit（先背光色画一遍，再 clip 进光斑用受光色画一遍），光斑随 t 缓移，物体被光斑切开时自动一半冷一半暖。自己画新东西时用 K.dual(c,(c,Pal)=>{…用 Pal.wall/wood/cream/skin/coat 等成对色键…})。bg 和用到 lit 的物体要在同一个 K.world 里画。光斑铁律：标题区（bg 的 zone，默认 y140–500）整块在暗里（title:'dark'，默认）或整块在光里（'lit'），光斑边缘不切标题字；标题/标签板（K.title/K.tag/K.callout）是不受光裁切的实色板，字永远整块可读。人不画脸：只出 K.figure/K.crowd 的无脸剪影（块面、有重量，背影/坐桌/垂头）与 K.hand（袖口＋大手）；不另画五官。牌面字 ≥80px（K.card 强制），牌宽 ≥ K.cardW(text)，超 4 字自动两行；标题板字 ≥100px，标签 ≥52px。数据图都是示意级，折线/柱/K线自动带「示意」标（posBar 默认不带，note:true 打开）；A 股习惯涨红跌青。红色只给重点，其余用青绿与琥珀。主体放 y200–1350，K.finish 压暗 y1380–1560 字幕带。图表放在 K.board 数据板里（深青底奶油边，自发光不受光裁切）。night 底的吊灯在 (lx,ly)=(540,640)，灯锥是光斑，注意别被标题板盖住（可传 ly）。K.bg 的 kind:'dark' 无光斑，适合纯数据镜头。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
