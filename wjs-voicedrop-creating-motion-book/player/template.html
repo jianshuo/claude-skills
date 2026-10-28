@@ -1,25 +1,25 @@
 <title>{{TITLE}}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* 公用放映厅（wjs-voicedrop-creating-motion-book/player）：画面 9:16 占满宽度，下面一条 70px 深色控制条（按 Claude Design「视频播放器」稿，2026-10-26）。
-   暂停时画面压暗、正中一个毛玻璃大播放键；点画面任意处切换播放/暂停。
+/* 公用放映厅（wjs-voicedrop-creating-motion-book/player）：画面铺满（2026-10-28 改，原「9:16 画面＋下面 70px 控制条」）。
+   放映区宽 = min(可用宽, 可用高×9.3/16)：手机竖屏（比 9:16 长）宽度撑满、画面按高度铺满、左右裁一点；
+   电脑/横屏放映区正好 9:16 居中，两边是底色。VoiceDrop App 里书目录页给的区域约 393×695 ≈ 9:16，几乎不裁。
+   进度条浮在画面底部（渐变压暗），暂停时显示；播放时隐去，只留底边一根细进度线。点画面任意处切换播放/暂停。
    时间永远取口播 <audio> 的 currentTime，画面每帧实时画（不经 MP4）。 */
 :root {
-  --bg: #0d1117; --ink: #fff; --sub: rgba(255,255,255,.9); --track: rgba(255,255,255,.25); --fill: #fff;
+  --bg: #0d1117; --ink: #fff; --sub: rgba(255,255,255,.92); --track: rgba(255,255,255,.3); --fill: #fff;
   --ui: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
   color-scheme: dark;
 }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflow: hidden; -webkit-tap-highlight-color: transparent; }
-.stage { height: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box;
-  padding: 12px max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px)); }
-/* 画面＋控制条是一个整体，宽 W；里面所有尺寸都按 W 的百分比（cqw，设计稿画面宽 366px：1cqw = 3.66px），任何手机比例一致。
-   总高 = W×16/9（画面）＋ W×0.1913（控制条 70/366）= W×1.9691，所以 W 取「可用宽」和「可用高 ÷ 1.9691」里小的那个。 */
-.player { container-type: inline-size; flex: none;
-  width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), calc((100vh - 12px - env(safe-area-inset-bottom, 0px)) / 1.9691));
-  width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), calc((100dvh - 12px - env(safe-area-inset-bottom, 0px)) / 1.9691)); }
-.frame { position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 1.64cqw; overflow: hidden; background: #10181b; cursor: pointer; }
-#c { width: 100%; height: 100%; display: block; }
+.stage { height: 100%; display: flex; justify-content: center; }
+/* 1cqw = 放映区宽的 1%；按钮、字号都按它算，任何尺寸比例一致 */
+.player { container-type: inline-size; position: relative; overflow: hidden; height: 100%; flex: none;
+  width: min(100vw, 100vh * 9.3 / 16); width: min(100vw, 100dvh * 9.3 / 16); }   /* 9.3 不是 9：容差，App 里 393×695 这种比 9:16 宽一丝的区域照样贴满，不露 1px 黑边 */
+.frame { position: absolute; inset: 0; background: #10181b; cursor: pointer; }
+/* 铺满（cover）：高 = max(放映区高, 宽×16/9)，宽按 9:16 跟着走，居中裁 */
+#c { position: absolute; top: 50%; left: 50%; height: max(100%, 100cqw * 16 / 9); width: auto; aspect-ratio: 9 / 16; transform: translate(-50%, -50%); display: block; }
 .cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.4cqw; background: rgba(0,0,0,.28); }
 .cover[hidden] { display: none; }   /* 上面 display:flex 会盖过浏览器默认的 [hidden]，不写这行暂停遮罩永远不消失 */
 .big { width: 30.6cqw; height: 30.6cqw; border-radius: 999px; padding: 0; background: rgba(40,40,40,.55); border: 1px solid rgba(255,255,255,.18);
@@ -29,47 +29,47 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 .big svg { width: 12cqw; height: 13.66cqw; margin-left: 2.19cqw; }
 .status { font-size: 3.55cqw; color: var(--sub); text-align: center; padding-inline: 4.4cqw; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
 .status:empty { display: none; }
-.bar { width: 100%; height: 19.13cqw; box-sizing: border-box; padding-right: 1.1cqw; display: flex; align-items: center; gap: 2.73cqw; }
-.pp { flex: none; width: 14.2cqw; height: 14.2cqw; border-radius: 999px; border: 0; padding: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .1s; }
-.pp:hover { background: rgba(255,255,255,.1); }
-.pp:active { transform: scale(.94); }
-.pp .i-play { width: 6.56cqw; height: 7.65cqw; margin-left: 1.09cqw; }
-.pp .i-pause { width: 6.01cqw; height: 7.1cqw; }
-.pp .i-pause, .pp.on .i-play { display: none; }
-.pp.on .i-pause { display: block; }
-.big:focus-visible, .pp:focus-visible, .track:focus-visible { outline: 2px solid #f0b43c; outline-offset: 2px; }
-.tm { flex: none; font-size: 3.55cqw; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--sub); }
-#cur { min-width: 10.9cqw; }
-#remain { min-width: 13.1cqw; text-align: right; }
-.track { flex: 1; min-width: 0; height: 9.84cqw; display: flex; align-items: center; cursor: pointer; touch-action: none; }
-.rail { position: relative; width: 100%; height: 1.64cqw; border-radius: 999px; background: var(--track); transition: height .15s; }
-.track.drag .rail { height: 2.73cqw; }
+/* 浮层进度条：只有进度条本身接点击，渐变区透给画面（点了照样切换播放） */
+/* 底部这一条（渐变区＋进度条，约 31cqw 高）是手势区，播放中也接：横滑＝拖进度，轻点＝切换播放，竖滑交给页面滚动 */
+.bar { position: absolute; left: 0; right: 0; bottom: 0; touch-action: pan-y; cursor: pointer; transition: opacity .25s;
+  padding: 14cqw 4.4cqw calc(3.3cqw + env(safe-area-inset-bottom, 0px));
+  display: grid; grid-template-columns: 1fr 1fr; background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.6)); }
+.player.on .bar { opacity: 0; }
+.player.on.scrub .bar { opacity: 1; transition: none; }
+.track { grid-column: 1 / 3; height: 8.8cqw; display: flex; align-items: center; }
+.big:focus-visible, .track:focus-visible { outline: 2px solid #f0b43c; outline-offset: 2px; }
+.tm { font-size: 3.3cqw; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--sub); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+#remain { text-align: right; }
+.rail { position: relative; width: 100%; height: 1.2cqw; border-radius: 999px; background: var(--track); transition: height .15s; }
+.track.drag .rail { height: 2.2cqw; }
 .done { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px; background: var(--fill); }
-.knob { position: absolute; top: 50%; left: 0; width: 6.01cqw; height: 6.01cqw; margin: -3cqw 0 0 -3cqw; border-radius: 999px; background: #fff; box-shadow: 0 .55cqw 1.64cqw rgba(0,0,0,.4); }
+.knob { position: absolute; top: 50%; left: 0; width: 4.9cqw; height: 4.9cqw; margin: -2.45cqw 0 0 -2.45cqw; border-radius: 999px; background: #fff; box-shadow: 0 .55cqw 1.64cqw rgba(0,0,0,.4); }
+/* 播放中底边细进度线：深色底槽＋白色进度，浅色和深色画面上都看得见 */
+.mini { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .25s; pointer-events: none; }
+.mini i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #fff; box-shadow: 0 0 2px rgba(0,0,0,.5); }
+.player.on .mini { opacity: 1; }
+.player.scrub .mini { opacity: 0; }
 </style>
 
 <div class="stage">
-  <div class="player">
+  <div class="player" id="player">
     <div class="frame" id="frame">
       <canvas id="c" width="1080" height="1920"></canvas>
       <div class="cover" id="cover">
         <button class="big" id="big" type="button" aria-label="播放">
           <svg width="44" height="50" viewBox="0 0 44 50" aria-hidden="true"><path d="M4 3.5v43a2.5 2.5 0 0 0 3.8 2.1l34-21.5a2.5 2.5 0 0 0 0-4.2L7.8 1.4A2.5 2.5 0 0 0 4 3.5z" fill="#fff"/></svg>
         </button>
-        <div class="status" id="status">正在加载画面和口播…</div>
+        <div class="status" id="status">正在加载画面…</div>
       </div>
     </div>
-  <div class="bar">
-    <button class="pp" id="pp" type="button" aria-label="播放或暂停">
-      <svg class="i-play" width="24" height="28" viewBox="0 0 30 34" style="margin-left:4px" aria-hidden="true"><path d="M3 2.5v29a2 2 0 0 0 3 1.7l22.6-14.5a2 2 0 0 0 0-3.4L6 .8A2 2 0 0 0 3 2.5z" fill="#fff"/></svg>
-      <svg class="i-pause" width="22" height="26" viewBox="0 0 28 32" aria-hidden="true"><rect x="3" y="1" width="8" height="30" rx="2" fill="#fff"/><rect x="17" y="1" width="8" height="30" rx="2" fill="#fff"/></svg>
-    </button>
-    <span class="tm" id="cur">0:00</span>
-    <div class="track" id="track" role="slider" tabindex="0" aria-label="进度" aria-valuemin="0" aria-valuemax="{{TOTAL}}" aria-valuenow="0">
-      <div class="rail"><div class="done" id="done"></div><div class="knob" id="knob"></div></div>
+    <div class="bar" id="bar">
+      <div class="track" id="track" role="slider" tabindex="0" aria-label="进度" aria-valuemin="0" aria-valuemax="{{TOTAL}}" aria-valuenow="0">
+        <div class="rail"><div class="done" id="done"></div><div class="knob" id="knob"></div></div>
+      </div>
+      <span class="tm" id="cur">0:00</span>
+      <span class="tm" id="remain">-{{MMSS}}</span>
     </div>
-    <span class="tm" id="remain">-{{MMSS}}</span>
-  </div>
+    <div class="mini"><i id="mini"></i></div>
   </div>
   <div hidden><input id="scrub" type="range"><span id="tt"></span><button id="play" type="button"></button></div>
 </div>
@@ -86,7 +86,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const frame = $('frame'), cover = $('cover'), status = $('status'), pp = $('pp'), track = $('track'), done = $('done'), knob = $('knob'), cur = $('cur'), remain = $('remain');
+  const player = $('player'), frame = $('frame'), cover = $('cover'), status = $('status'), track = $('track'), done = $('done'), knob = $('knob'), mini = $('mini'), cur = $('cur'), remain = $('remain');
   // preload=metadata：只取头信息。auto 会让 Safari 开播前就把整个 30–40MB 用 bytes=0- 一路拉完（2026-10-26 截图），
   // metadata 下点播放才开始取、边播边取，拖进度条从新位置重新取。
   const audio = new Audio(); audio.preload = 'metadata';
@@ -98,7 +98,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
   audio.src = 'narration.mp3';
   const loadAudio = Promise.resolve();
 
-  const show = t => { const p = Math.min(1, t / total) * 100 + '%'; done.style.width = p; knob.style.left = p;
+  const show = t => { const p = Math.min(1, t / total) * 100 + '%'; done.style.width = p; knob.style.left = p; mini.style.width = p;
     cur.textContent = fmt(t); remain.textContent = '-' + fmt(total - t); track.setAttribute('aria-valuenow', t.toFixed(0)); };
 
   Promise.all([loadFonts, loadAudio]).then(() => {
@@ -112,25 +112,35 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 
   const loop = () => {
     if (!playing) return;
-    const t = Math.min(audio.currentTime, total - 0.01); window.renderFrame(t); if (!dragging) show(t);
+    const t = Math.min(audio.currentTime, total - 0.01); if (!dragging) { window.renderFrame(t); show(t); }   // 拖动中画面跟手指，不跟口播
     if (audio.ended || audio.currentTime >= total - 0.02) { pause(); window.renderFrame(total - 0.01); return; }
     requestAnimationFrame(loop);
   };
   const play = async () => { if (!ready) return; try { await audio.play(); } catch (e) { status.textContent = '浏览器没有允许播放声音，请再点一次'; return; }
-    playing = true; cover.hidden = true; status.textContent = ''; pp.classList.add('on'); requestAnimationFrame(loop);
+    playing = true; cover.hidden = true; status.textContent = ''; player.classList.add('on'); requestAnimationFrame(loop);
     try { wake = await navigator.wakeLock?.request('screen'); } catch (e) {} };
-  const pause = () => { playing = false; audio.pause(); cover.hidden = false; pp.classList.remove('on'); try { wake?.release(); } catch (e) {} wake = null; };
+  const pause = () => { playing = false; audio.pause(); cover.hidden = false; player.classList.remove('on'); try { wake?.release(); } catch (e) {} wake = null; };
   const toggle = () => playing ? pause() : play();
   const jump = t => { t = Math.max(0, Math.min(total - 0.01, t)); audio.currentTime = t; show(t); if (ready && !playing) window.renderFrame(t); };
 
   frame.addEventListener('click', toggle);   // 大播放键在画面里，点击冒泡到这里，不另绑
-  pp.addEventListener('click', toggle);
-  // 进度条：按下即跳、拖动跟手（拖动时条加粗到 10px）
-  const seekAt = e => { const r = track.getBoundingClientRect(); jump((e.clientX - r.left) / r.width * total); };
-  track.addEventListener('pointerdown', e => { if (!ready) return; dragging = true; track.classList.add('drag'); track.setPointerCapture(e.pointerId); seekAt(e); });
-  track.addEventListener('pointermove', e => { if (dragging) seekAt(e); });
-  const up = () => { dragging = false; track.classList.remove('drag'); };
-  track.addEventListener('pointerup', up); track.addEventListener('pointercancel', up);
+  // 底部手势区（.bar）：播放中不用先暂停——
+  //   横滑超过 8px 就开始拖：进度条浮出来，从当前位置跟手（相对拖，起手不跳），画面实时预览，松手才让口播跳过去（流式音频边拖边 seek 会卡）；
+  //   暂停时按在进度条上＝按哪跳哪（老行为）；轻点不动＝切换播放；竖滑由浏览器接走（pointercancel），页面照常滚。
+  const bar = $('bar'); let g = null, dragT = 0;
+  const preview = t => { dragT = Math.max(0, Math.min(total - 0.01, t)); show(dragT); window.renderFrame(dragT); };
+  const startDrag = e => { dragging = true; player.classList.add('scrub'); track.classList.add('drag'); try { bar.setPointerCapture(e.pointerId); } catch (_) {} };
+  bar.addEventListener('pointerdown', e => { if (!ready) return;
+    const r = track.getBoundingClientRect(), onTrack = e.clientY >= r.top && e.clientY <= r.bottom;
+    g = { x: e.clientX, y: e.clientY, t: Math.min(audio.currentTime, total - 0.01), w: r.width, left: r.left };
+    if (!playing && onTrack) { startDrag(e); preview((e.clientX - r.left) / r.width * total); g.abs = true; } });
+  bar.addEventListener('pointermove', e => { if (!g) return; const dx = e.clientX - g.x;
+    if (!dragging) { if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(e.clientY - g.y)) return; startDrag(e); }
+    preview(g.abs ? (e.clientX - g.left) / g.w * total : g.t + dx / g.w * total); });
+  bar.addEventListener('pointerup', () => { if (!g) return;
+    if (dragging) { audio.currentTime = dragT; dragging = false; player.classList.remove('scrub'); track.classList.remove('drag'); } else toggle();
+    g = null; });
+  bar.addEventListener('pointercancel', () => { if (dragging) { audio.currentTime = dragT; dragging = false; player.classList.remove('scrub'); track.classList.remove('drag'); } g = null; });
   track.addEventListener('keydown', e => { const d = { ArrowLeft: -15, ArrowRight: 15 }[e.key]; if (d && ready) { e.preventDefault(); jump(audio.currentTime + d); } });
   document.addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toggle(); } });
   // 被书架目录页嵌在首屏时（functions/voicedrop/books/[[path]].js 的 videoHero）：首屏滑出视野，外层发 {mb:'pause'} 来暂停

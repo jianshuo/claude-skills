@@ -24,8 +24,9 @@ const log = [];
 // ① 合包
 const START = '<script>window.FONT_FACES', MAIN = '\n<script>\n(() => {';
 if (!page.includes('src="bundle.js')) {
-  const a = page.indexOf(START), b = page.indexOf(MAIN, a);
-  if (a < 0 || b < 0) throw new Error('入口页里找不到脚本段（FONT_FACES … 播放器主脚本）');
+  // FONT_FACES 那一行留在页里当锚点（republish_player 靠它找脚本段），从它后面开始合
+  const s0 = page.indexOf(START), a = s0 < 0 ? -1 : page.indexOf('</script>', s0) + '</script>'.length, b = page.indexOf(MAIN, a);
+  if (s0 < 0 || b < 0) throw new Error('入口页里找不到脚本段（FONT_FACES … 播放器主脚本）');
   const seg = page.slice(a, b), parts = [];
   for (const m of seg.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
     const src = m[1].match(/src="([^"]+)"/);
@@ -33,7 +34,7 @@ if (!page.includes('src="bundle.js')) {
   }
   const bundle = Buffer.from(parts.join('\n;\n') + '\n');
   fs.writeFileSync(path.join(H, 'bundle.js'), bundle);
-  page = page.slice(0, a) + `<script charset="utf-8" src="bundle.js?v=${hash(bundle)}"></script>` + page.slice(b);
+  page = page.slice(0, a) + `\n<script charset="utf-8" src="bundle.js?v=${hash(bundle)}"></script>` + page.slice(b);
   log.push(`合包 ${parts.length} 段 → bundle.js ${(bundle.length / 1024).toFixed(0)}KB`);
 }
 
