@@ -1,0 +1,14 @@
+{
+  "name": "egypt",
+  "label": "埃及墓室壁画（沙纸灰泥墙、彩块几何边框＋象形字栏、深墨描边平涂、侧脸正面眼的程式化人物；红=道理/压力、蓝=感受、金=关系，贯穿物＝灰云＋餐桌中间的缝）",
+  "grammar": "y4_storytime（角色叙事）＋分栏壁画格（清单、地图）＋y1_kurzgesagt（图示段落）",
+  "recipe": "02_egypt",
+  "fits": "亲子/家庭/关系里的「听见与被听见」；有压力、权力、规矩与情感拉扯的叙事；需要分栏做步骤清单、变量地图的心理/教养/治理类书；有仪式感、庄重而克制的题材（衰老、记忆、传承、审判与修复）",
+  "avoid": "需要大量数据图表与精确机制的硬核科普（kurzgesagt 更对题）；轻快搞笑的生活流；货币金融（banknote）；现代都市感、科技感强的题材；章节极多且需要每章换世界观的书（边框与象形字栏每镜都在，长片易单调）",
+  "from_book": "听见孩子说不开心以后（parent-child-meaning）",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（都是思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）。象形字是代码画的固定字形库，不用字体文件",
+  "palette": "沙纸 #E6D3A3｜深墨 #1E1612｜赭红 #B5432E（道理/压力/指令）｜青金蓝 #2F55A4（感受/内心/孩子）｜金 #D9A82E（关系/温暖/修复）｜孔雀绿 #2E8B57｜灰云 #7C8594｜奶白 #F2EAD6｜陶土 #D4936A｜夜底 #2A3350（tint:'night' 才用）",
+  "api": "D.C D.BAND D.at D.pop D.once D.t0 D.round D.circle D.ellipse D.poly D.smooth D.world D.damped D.last D.mixHex D.shade D.flat（墨线描边平涂）D.tube D.blocks D.bg（tint sand|cream|dusk|night；floor；top；sun） D.finish D.text D.split2 D.pill D.tag D.cartouche（王名圈大字胶囊） D.popText D.callout D.glyph D.glyphRow D.GLYPHS D.hand D.person（kind man|woman|child；pose: stand walk sit point bow hug raise cheer think shrug slump wave heart facepalm open hold give；mood: calm happy sad shock worry closed angry none；talk；dir:-1 朝左；返回 head/top/mouth/handL/handR/chest/feet 锚点） D.POSES D.mini D.crowd D.cloud（thick/rain/gold） D.aten（日盘＋带手光线） D.thought D.speech（edge 色） D.emote（spark heart sweat tear question exclaim zzz scribble rain cloud gold sparkle bulb） D.rings D.arrow D.bars D.split D.timeline D.tally D.panel D.list D.plant D.book（纸草卷） D.phone（石板） D.cup D.bulb（油灯） D.scales D.clock D.sun D.brain D.heart D.window D.table（gap/gold） D.crack D.chapterCard D.cardToken D.CARD_TINTS D.subtitle D.CHAPTER_NAMES",
+  "notes": "本套件的人有埃及程式侧脸：墨线眼＋眉＋嘴，靠 mood 传情绪，制作规范里「不画脸」对本套件放宽为「只用 D.person 的 mood，不另画写实五官」；mood:'none' 退回无脸。色彩语义全片统一：父亲/道理/指令用 top:C.red 与 edge:C.red，孩子/感受用 C.blue，关系/修复用 C.gold；越往全书结尾 D.cloud 的 thick 越小、gold 越大（金色越多）。人物 s=1 全高约 660px（含假发），双人对话一般 s=0.62–0.8、脚踩 D.GY(1310)，坐姿 pose:'sit' 自带凳子（chair:false 去掉）；dir:-1 整个人镜像朝左。D.bg 的顶部象形字栏占 y0–185、底部地线在 y1310、边框占左右各 26px：主体放 y 200–1350，y1380–1560 是字幕带（D.finish 会铺沙纸并画两条分栏线）。tint:'night' 用于睡眠/夜晚章，其他 tint 只改墙色。象形字只当装饰，不写成真文本。D.table 的 gap 0..1 让桌子从中间裂开，gold 0..1 把缝填金（结尾「缝合拢」）；D.crack 画墙上的缝。D.finish 每镜最后调一次（章节卡内部已调）。内存：每种 tint×seed%4×floor 组合缓存一张整屏底图（约 8MB），一章内别乱用太多组合。"
+}
