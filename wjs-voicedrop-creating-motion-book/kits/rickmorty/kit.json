@@ -1,0 +1,15 @@
+{
+  "name": "rickmorty",
+  "label": "扁平描边卡通（斑驳暖灰墙＋木地板，平涂＋深灰圆角描边，大眼白小瞳孔的原创成年人，奶油黄描边大字）",
+  "grammar": "y4_storytime（角色叙事）＋y1_kurzgesagt（图示段落）",
+  "recipe": "37_rick_morty",
+  "fits": "心理、情绪、关系、家庭与日常生活场景；幽默又温和的成人叙事；需要「室内场景＋表情人物」撑满全书的人文类书",
+  "avoid": "硬核机制科普与尺度穿行（kurzgesagt）；货币金融制度（banknote）；严肃悲剧/灾难（描边卡通会显得轻佻）；需要大量真实档案的新闻史",
+  "from_book": "comfort（安慰的技术）",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（思源黑体 GB2312 子集，SIL OFL 1.1）。字一律奶油黄＋深灰粗描边（D.text 自带）",
+  "palette": "描边 #222323｜墙 #C3BB9C（斑驳）｜木地板 #8D6E50｜沙发灰蓝 #5D6F8A｜橙开衫 #E08D4C｜芥黄 #E9C455｜草绿 #6F8F5C｜肤 #EFC4A0｜奶油字 #F6E7A3｜泪 #8FD0EE（墙色可按章换：pink 暖米 / mint 灰绿 / gold 芥黄 / lav 灰蓝 / night 夜）",
+  "api": "D.bg(tint: pink|mint|gold|lav|night) D.roomTex D.flat(带描边) D.text(自带奶油字+描边) D.tag D.popText D.callout D.person（pose: stand walk think shrug cheer slump point hug wave heart facepalm open touch cup；mood: calm happy sad shock worry closed angry none；sit:true 坐姿（脚落在 y，臀高 y-150）；flip:true 镜像；返回 head/top/handL/handR/chest 锚点） D.sofa(c,x,y,s) D.window(c,x,y,w,h,{t,day,rain}) D.lamp D.picture D.mini D.crowd D.thought D.speech D.emote D.rings D.arrow D.bars D.split D.timeline D.plant D.ballotBox D.book D.phone D.cup D.bulb D.scales D.clock D.sun D.brain D.heart D.finish D.chapterCard D.cardToken D.CARD_TINTS D.subtitle D.damped D.last D.split2",
+  "notes": "人有表情（眼睑/眉/嘴/泪），制作规范里「不画脸」对本套件放宽为「只用 D.person 的 mood，不另画写实五官」。没有颗粒、没有渐变、没有漂浮装饰（D.decos 是空操作）。人物坐在 D.sofa 上：sofa 底在 y，则人物 y 同值、sit:true；一个朝右一个 flip:true 朝左（flip 时 dir 保持默认 1，镜像已处理方向；坐姿腿朝 dir 方向伸）。墙色 tint 用法：D.bg(c,t,{tint:'night'})，窗外下雨用 D.window({t})。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
