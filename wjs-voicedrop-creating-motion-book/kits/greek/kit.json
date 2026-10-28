@@ -1,0 +1,15 @@
+{
+ "name": "greek",
+ "label": "阿提卡黑绘陶器（陶土橙底、黑釉剪影＋陶土刻线＋酒红带白点，回纹边框；陶罐柱/分段圆盘/天平/币堆做数据图，侧面剪影人物，无五官；风险章可反相成黑底橙剪影）",
+ "grammar": "y1_kurzgesagt（图示段落）＋叙事饰带（人群 frieze、回纹/莲苞滚动纹带）",
+ "recipe": "03_greek",
+ "fits": "财经/科技、权力结构与治理、历史与制度、招股书/监管/合同类；需要庄重＋怀疑基调、数字多、要用「账簿/陶罐/天平」讲清账的书",
+ "avoid": "轻松搞笑、儿童向；需要细腻人物表情的叙事（flat2026）；货币制度史（banknote 更对题）；大面积发光/尺度穿行（kurzgesagt）；需要渐变写实质感的题材",
+ "from_book": "spacex-s1",
+ "fonts": [],
+ "fonts_note": "不另带字体：标题/标签用引擎自带 PuHui-Black，字幕 PuHui-Bold（思源黑体 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）。章节编号用 ASCII 罗马数字（I V X），不用繁体、不用 Ⅰ Ⅱ 特殊字符（GB2312 子集不保证有）。",
+ "palette": "陶土 #dc6a2f（深 #b4531f、字幕带压暗 #4a1c0a、留白 #f3cfa4）｜黑釉 #1b120d｜酒红 #8a2a37（只给字牌/饰带/火焰/关键块）｜米白 #f6ead6｜刻线橙 #ee9a58。反相（{inv:true}）：底 #17100b，剪影变陶土橙，刻线变黑釉",
+ "api": "K.W K.H K.TAU K.C K.pal(inv) K.SAFE | K.at K.pop K.once K.t0 K.ease K.rng | K.round K.circle K.ellipse K.poly K.world | K.bg(c,t,{inv,frame,speed,top,bottom,sides}) K.frame K.meander K.lotus K.finish(c,{inv}) | K.sil K.incise K.dots K.dotRow K.band | K.text K.plaque K.popText K.callout K.bigNum | K.person(c,x,y,h,{pose:stand|walk|point|raise|hold|sit,dir,t,long,head,beard}) K.frieze | K.rocket(c,x,y,scale,rot,flame,legs,{part:full|ship|booster,t}) K.tower(c,x,yTop,yBot,{arm,open,dir}) K.sat K.disc(c,x,y,r,sun|earth|moon|plain) | K.jar(c,x,yBase,w,h,value,{target,red,num}) K.bars K.pie K.scales(c,cx,yBase,w,tilt,{left,right}) K.coins K.arrow K.loop K.timeline | K.roman K.wrap K.CHAPTER_NAMES K.chapterCard(c,lt,t,n,title,{inv}) K.subtitle",
+ "notes": "所有函数认 {inv:true}（风险/崩塌章整章都传）。内容安全区 K.SAFE = x56–1024 / y120–1700，字幕带 y1380–1560 不放关键内容；字幕画在 finish 之后。bars/pie/timeline/bigNum 带 lt/at 出场进度参数。字号默认 64，字牌/标签 ≥56。",
+ "placeholder_bg": "K.bg(c, t, {})"
+}
