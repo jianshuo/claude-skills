@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-28]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — art style library significantly expanded; HTML delivery optimised:
+  - **6 new art style kits**: `egypt`, `gothic`, `greek`, `hopper`, `matisse`, `pop` — each a self-contained Canvas animation library (`lib.js` + `kit.json`) that can be scored and selected alongside the existing `kurzgesagt` and `banknote` kits. Style fit-gap scoring works the same way; the new kits widen the palette for books whose aesthetic doesn't suit the two originals.
+  - **Art style usage log**: new `kits/USAGE.tsv` records which style each book was assigned (date, slug, kit name), making it easy to spot kit distribution and avoid over-using any one style.
+  - **HTML build optimisation** (step 9): `build_html.mjs` now automatically runs a new `scripts/optimize_html.mjs` at the end of every build. It bundles all JS into a single file, trims the icon font to only the glyphs used in the book (output as woff2), and injects `<link rel="preload">` headers — reducing cold-start load time from 10 s+ to the 3 s range.
+  - **Player republish script**: new `scripts/republish_player.mjs <slug>` lets you push a refreshed `player/template.html` (or updated bundle/fonts) to an already-published book without re-rendering any animation frames — only the entry page, JS bundle, and font files are replaced.
+  - **Player template rework**: `player/template.html` revised to match the new optimised build pipeline.
+  - **Production art style assignments recorded** (2026-10-27/28): `innovative-drugs` → gothic, `quant-fund` → pop, `ruozhe-siwei` → hopper, `spacex-s1` → greek, `parent-child-meaning` → egypt, `run-long` → matisse, `acupuncture` → flat2026.
+
 ## [2026-10-27]
 
 ### Changed
