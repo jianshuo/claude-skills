@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 把整本书打包成浏览器里直接播放的网页（默认交付物，不经 MP4）：画面实时绘制，时间取口播 <audio> 的 currentTime。纯 Node，不要 ffmpeg / 字体工具。
+// 把整本书打包成浏览器里直接播放的网页（默认交付物，不经 MP4）：画面实时绘制，时间取口播 <audio> 的 currentTime。纯 Node＋（可选）uvx 跑字体子集，不要 ffmpeg。
 // - 脚本：引擎库 + eras_book.js 的 SCENE_LIBS，全部 <script charset="utf-8"> 直接引入（不写 charset 中文会乱码）
 // - 字体：场景代码里用到的 family，按 lib/fonts.js 拷原文件（GB2312 全集，每个 1.4–2.2MB）；播放器先 fetch 成 ArrayBuffer 再注册 FontFace
 // - 音频：音频/全片口播.mp3 原样拷（豆包 24kHz 单声道 64kbps，20 分钟约 11MB）
@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { SK, book } from './common.mjs';
 
 const P0 = path.resolve(process.argv[2]), smokeF = path.join(P0, 'qa/smoke/smoke.json');
@@ -40,6 +41,9 @@ const hash = f => crypto.createHash('md5').update(fs.readFileSync(f)).digest('he
 page = page.replace(/(["'])((?:lib|scenes|fonts)\/[^"'?]+|transitions\.js|engine\.js|eras_book\.js|narration\.mp3)\1/g,
   (m, q, f) => fs.existsSync(path.join(OUT, f)) ? `${q}${f}?v=${hash(path.join(OUT, f))}${q}` : m);
 fs.writeFileSync(path.join(OUT, 'index.html'), page);
+// 首开提速：合包、字体子集（woff2）、预加载。失败不拦发布，退回未优化的入口页照样能播。
+try { execFileSync('node', [path.join(SK, 'scripts/optimize_html.mjs'), OUT], { stdio: 'inherit' }); page = fs.readFileSync(path.join(OUT, 'index.html'), 'utf8'); }
+catch (e) { console.warn('⚠ 首开提速没做成，发未优化版：' + e.message); fs.writeFileSync(path.join(OUT, 'index.html'), page); }
 fs.writeFileSync(path.join(OUT, '_test.html'), '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + page + '</body></html>');
 const files = []; const walk = d => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); e.isDirectory() ? walk(f) : files.push(f); } }; walk(OUT);
 const pub = Object.fromEntries(files.filter(f => !['index.html', '_test.html', 'artifact_files.json'].includes(path.basename(f))).sort().map(f => [path.relative(OUT, f), f]));
