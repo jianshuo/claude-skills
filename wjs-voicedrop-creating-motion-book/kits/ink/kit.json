@@ -1,0 +1,18 @@
+{
+  "name": "ink",
+  "label": "中国水墨写意（宣纸米底、焦浓重淡清五色墨、连续毛笔飞白、晕染洇开；涨朱砂跌花青，朱红钤印只给关键处；墨柱/墨线/天平/铜钱做示意级数据图，人只出无脸写意背影与手；章节卡＝圆相里一个汉字章序）",
+  "grammar": "y1_kurzgesagt（图示段落：墨柱／墨线／天平／币，示意性）＋t3_finance_chart（数字统一 K.num，涨红跌青）＋叙事（写意背影、手、楼、云、钟）",
+  "recipe": "17_ink",
+  "fits": "金融财报、投资与市场、制度与经济史、人文历史、冷静克制的解说；需要「留白＋一两样主物」讲清机制的章节；风险/夜晚/暗面用 night 反白底",
+  "avoid": "热闹高饱和的消费广告题材；尺度穿行类硬核科普；需要精确读数的密集表格（图是示意级）；需要表情的情感叙事（人无脸）；童趣奇幻",
+  "from_book": "一夜两份财报（msft-goog-earnings）",
+  "fonts": [
+    { "family": "Songti-Black", "file": "NotoSerifSC-Black.woff" },
+    { "family": "Songti-Regular", "file": "NotoSerifSC-Regular.woff" }
+  ],
+  "fonts_note": "思源宋体 Noto Serif SC（SIL OFL 1.1，见 fonts/OFL.txt）的 GB2312 子集，与 banknote 套件同一份文件，family 名沿用 Songti-*；GB2312 没有「−」「￥」「⁶⁰」「½」，负号一律用 K.num 的毛笔笔画或 ASCII「-」",
+  "palette": "宣纸 #EFE6D0｜纸2 #E4D8BC｜焦墨 #16120F｜重墨 #4A4640｜淡墨 #8C877C｜朱砂(涨/钤印) #C4281E｜朱日 #D8553F｜花青(跌) #3F5F78｜花青浅 #6F8AA0｜赭石 #C47A3C｜藤黄(币) #C9A24A｜夜墨 #12161A。深底(night/dark)下涨 #E4503F、跌 #7FA6C4、字 #EFE6D0（K.up()/K.down()/K.fg() 自动取）",
+  "api": "K.W K.H K.TAU K.C K.SAFE | K.at K.pop K.once K.t0 K.ease K.rng | K.round K.circle K.world | K.brush(c,pts,{w,tone,dry,reveal,seed,col,head,tail,tailK,bristles,light}) K.leaf | K.wash(c,key,grow,fn,{blur,halo,haloA,alpha,light,box}) K.blob(c,key,cx,cy,rx,ry,col,{grow,seed,amp,...}) K.sun K.moon | K.paper K.paperNight K.bg(c,t,{kind:paper|mist|night|dark, mountain:true|false, moon,mx,my,mr}) K.finish(c) K.fg K.up K.down K.tone | K.text K.bigText(≥100) K.tag(≥52) K.popText K.callout K.num(c,s,x,y,{size,dir,align,p}) K.fmt.pct/n/dir K.seal(c,x,y,size,text,{rot,p}) | K.bars(c,data,{x,y,w,h,p,max,unit}) K.line(c,series,{x,y,w,h,p,dir,min,max}) K.scale(c,cx,cy,w,tilt,{left,right,p}) K.coin(c,x,y,r,{col:gold|ink|cinnabar,p}) K.arrow(c,x,y,len,up|down,{p,w}) K.hand(c,x,y,{pose:point|open|fist|flat,rot,s,flip,p,sleeve}) K.figure(c,x,y,h,{pose:stand|back|walk|point|raise|sit|think,t,dir,p,col,hat}) K.cloud K.tower K.bell | K.CHAPTER_NAMES K.split2 K.chapterCard(c,lt,t,n,title,{kind}) K.subtitle(c,text,alpha)",
+  "notes": "1) 笔画一律走 K.brush：湿笔芯＋每根笔毛一条连续折线、飞白处宽度平滑收到 0，两端是尖的；不要用「每小段 stroke＋butt/round cap」拼笔（接缝会出矩形断片，评审点过名）；画柱子等粗块用 tailK:0.1、dry≈.2。reveal 0..1 即写出进度，caller 用 K.at(lt,a,d) 驱动，写出中笔头是圆的。2) 涨＝朱砂 K.C.up，跌＝花青 K.C.down（中国习惯涨红跌青，与「红涨绿跌」的美股习惯相反，注意口播语境；其余数据用墨）。红色只给涨、钤印和关键强调，别铺满。3) 数字全部走 K.num（首位 +/- 画成毛笔笔画）＋K.fmt.pct(v)→'+4.5%'/'-7.4%'，同一镜里同类数字小数位、单位、符号写法必须一致，不要一处「+4.5%」一处「跌7.4%」。4) 深底：K.bg 写入 K.dark，之后 K.text/num/tag/brush 默认色自动反白，深底下 K.brush/K.wash 自己传 light 的地方套件内部已处理，自写调用时加 light:K.dark；night 底的涨跌色用 K.up()/K.down() 取亮版。5) 版面：主体 y200–1350 要铺满（评审指出下半屏空白）：图示放大、上下两组（图表+天平/人）叠起来，y1380–1560 字幕带由 K.finish 压墨雾、K.subtitle 画字幕，y>1574 只有淡墨远山；章节卡之外的镜头不要把内容堆在 y<200。6) 晕染 K.wash/K.blob 每处 key 必须唯一（共用 scratch 画布），每帧 2 次模糊，单镜 ≤6 处，用 box 限定范围；在 K.world 相机里画晕染时坐标跟着相机走。7) 钤印 K.seal 一镜最多一两枚，章节卡固定右上；2×2 阴文，最多 4 字。8) 字号：大标题≥100、标签≥52、数字/最小 44；K.text 默认带轻微墨洇影（bleed:false 关闭）。9) 人只出 K.figure（无脸背影，可用 col 换衣色）与 K.hand，不画五官；K.hand 默认带长袖（sleeve:false 去掉），袖子很长，放在字幕带附近时它会被压暗。10) 贯穿物建议用天平 K.scale 或铜钱 K.coin（预期/估值章），先在 scenes/book/props.js 里包一层。11) 远山缓慢横移，mist 底（章节卡默认）山更高并带雾带，night 底可开 moon。12) K.finish 里的暗带在浅底是淡墨雾（不是黑块），所以字幕板用深墨底＋朱砂竖条。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
