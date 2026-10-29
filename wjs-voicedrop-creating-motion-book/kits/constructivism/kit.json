@@ -1,0 +1,15 @@
+{
+  "name": "constructivism",
+  "label": "1924 俄国构成主义海报（米色旧纸带纤维、红#c8231c／黑#151311／奶白三色、斜红带、李西茨基楔形光束、半脸网点的几何人、粗黑体字压红底块、轻微倾斜、硬边错位投影）",
+  "grammar": "y4_storytime（角色叙事）＋y1_kurzgesagt（图示段落）；对比、论证、数据类可多用 K.bars / K.dist / K.timeline",
+  "recipe": "22_constructivism",
+  "fits": "社会：社会心理、群体对比、两方对立或并置（两张桌子、两种立场）、论证与说服类；政治与公共议题、宣言式、历史上的运动与思潮、需要「口号感」和力度的非虚构。温暖不说教的题材也行（靠红黑两个角色「A／B」而不是性别、阵营）",
+  "avoid": "大量柔和情绪、细腻亲密关系的私语感（flat2026 更对题）；需要真实面孔、表情的叙事；多色信息图（只有红黑奶白三色，色彩层次有限）；货币金融制度（banknote）；儿童向或轻喜剧",
+  "from_book": "girl-talk-boy-talk",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（都是思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）",
+  "palette": "旧纸 #e9dfc4｜纸2 #d9c9a4｜纸3 #c4b48c｜红 #c8231c｜暗红 #8f1711｜黑 #151311｜黑2 #2b2724｜奶白 #f4ecd6｜灰字 #4a4640（只做「示意」角标）。只有红／黑／奶白三色成画，禁止蓝紫、渐变底、柔和阴影",
+  "api": "K.at K.pop K.once K.t0 K.damped K.mix K.round K.circle K.ellipse K.poly K.polyPath K.world K.C K.paperTex K.darkTex K.halftone K.dotDisc K.slab K.bg K.finish K.text K.split2 K.plate K.popText K.callout K.count K.wedge K.burst K.voice K.person（pose: sit stand point shrug turn listen talk lean slump cheer；role A黑身红领／B红身黑领；dir ±1 朝向＝半脸网点侧；seat；to+mix 姿势混合；返回 head/top/mouth/handF/handB/chest/feet 锚点） K.POSES K.mini K.crowd K.table（kind square/round/long，返回 top/x0/x1） K.heart K.gear K.cup K.phone K.bubble K.question K.exclaim K.arrow K.coin K.lock K.megaphone K.podium K.check K.cross K.clock K.star K.bars K.hbars K.dist K.timeline K.stamp K.card K.CHAPTER_NAMES K.chapterCard K.subtitle",
+  "notes": "人是几何人：圆头＋梯形身＋方臂，一半脸是网点，完全不画五官，红／黑只是「角色 A／B」不代表性别（制作规范里「不画脸」本套件天然满足）。人群只用 K.crowd / K.mini 剪影。投影一律是错位一块纯黑，不用模糊阴影。字压红底块用 K.plate / popText({plate:true})，砸入（slamK）出场，不淡入。K.person 的 (x,y) 是地面，坐姿要把 K.table 画在人之后（桌挡下半身），桌面高 h≈190×人缩放比。K.dist 的 d 是两峰相距（标准差个数），可随 lt 动画从 0 拉开，效应量越小重叠越大；返回 overlap 占比。",
+  "placeholder_bg": "K.bg(c, t, { slab: [790, 730, 56] })"
+}
