@@ -114,6 +114,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-cleaning-spam`](./wjs-cleaning-spam/) | 清理 X 推文下的同城引流 spam 回复：dry-run 预览 → 人工审 borderline → 隐藏 + 静音 | spam 回复列表 → 隐藏条数 + 静音账号数（7 天窗口内） |
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
+| [`wjs-trading-diary`](./wjs-trading-diary/) | 投资交易日记：下单前念教训、下单后记账、吃亏变规则——三本只追加不改历史的账本 | `记一笔投资` / `交易日记` / `下单前` / `/wjs-trading-diary` |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
 | [`wjs-explaining-tv-slang`](./wjs-explaining-tv-slang/) | 解释美剧/英剧台词、口头语、俚语和梗：给出实际用途、语气分量、中文对应说法、使用场景，并追加记录到个人生词本 | `美剧口头语` / `台词什么意思` / `这是什么梗` / `/wjs-explaining-tv-slang` |
 | [`wjs-fetching-movie`](./wjs-fetching-movie/) | 把电影清单变成 Relisten 可直接导入的 HEVC mp4（含英/中内封字幕），只用合法片源（Internet Archive 公版片、官方免费放映等） | `找电影` / `给 relisten 准备片子` / `电影列表` / `/wjs-fetching-movie` |
@@ -467,6 +468,16 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - 最终输出：一个 block，5 行，任何一行还是模糊的说明没走完。
 
 > 触发词：`反思` / `复盘` / `吃一堑` / `这次又栽了` / `为什么我总是…` / `知道道理但做不到`
+
+### [`wjs-trading-diary`](./wjs-trading-diary/)（交易日记）
+
+每一次**下单前 / 下单后 / 吃一堑**都跑一遍，把投资决策追加到两本只增不改的账本里。
+
+- **三种模式**：下单前（先念已有的教训 + 铁律，违反时要求当事人亲口说出理由）、下单后/体检（优先从 Futu OpenD API 取事实，再从截图抽；对不上就追更正条）、吃一堑（走 `wjs-eating-and-growing` 五步，再把结论压成一条投资规则）。
+- **两本账**（`10-investing/LOG.md` 和 `LESSONS.md`）：新条目倒序插在文件最前，写完即用 `git diff --numstat` 验证删除行数为 0——任何"整理"旧条目的动作一律禁止。
+- **金额和持仓不进本 SKILL.md**：只写进私有记忆库，公开仓库里的 skill 文件不记录任何仓位数字。
+
+> 触发词：`下单前` / `下单后` / `成交了` / `账户体检` / `亏了` / `赚了` / `投资复盘` / `记一笔投资` / `交易日记` / `/wjs-trading-diary`
 
 ---
 

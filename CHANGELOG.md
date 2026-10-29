@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-29]
+
+### Added
+
+- **`wjs-trading-diary`** — new skill: a personal investment trading diary for 王建硕. Three modes — pre-trade (reads back past LESSONS.md entries and the portfolio's iron rules, calling out any violation; only proceeds after the trader explicitly confirms with a reason), post-trade / account check (pulls fills and fees from the Futu OpenD API at `127.0.0.1:11111` when available; falls back to screenshot extraction; reconciles plan vs. fill, explains portfolio drift in σ terms, and checks whether the core position has deviated ≥ 5 percentage points from target), and post-loss reflection (runs `wjs-eating-and-growing`'s five steps, then distils the outcome into a single numbered investment rule). Two append-only log files: `LOG.md` (facts: date, ticker, shares, price, fee, rationale, mood) and `LESSONS.md` (one rule per L-NNN entry). The append-only constraint is strict: after every write the skill verifies `git diff --numstat` shows zero deleted lines. Private amounts and positions are written only to the local memory repo and never to this public SKILL.md. Triggers: `下单前` / `下单后` / `成交了` / `账户体检` / `亏了` / `赚了` / `投资复盘` / `记一笔投资` / `交易日记` / `/wjs-trading-diary`.
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — five new art style kits and engine-router improvements:
+  - **5 new art style kits**: `8bit` (pixel-art / retro gaming aesthetic), `constructivism` (Soviet constructivist poster design — bold geometry, limited palette, strong typography), `ink` (Chinese ink-wash painting, bundled with NotoSerifSC-Black and NotoSerifSC-Regular woff fonts), `kusama` (Yayoi Kusama–inspired dot-pattern and vivid colour fields), `rickmorty` (Rick and Morty cartoon style). Each kit ships as `lib.js` + `kit.json`.
+  - **Art style assignments recorded** (2026-10-28/29): `dudu-koala-quarrel` → flat2026, `comfort` → rickmorty, `attention-body` → kusama, `girl-talk-boy-talk` → constructivism, `russia-two-wars` → constructivism, `inside-terminal` → 8bit, `msft-goog-earnings` → ink.
+  - **Engine-router update** (`cloud/run_book.sh`): the lease request now lists both `claude` and `kimi` as accepted engines; the lease response now carries the assigned engine name and earliest-resume ETA; `lease_done()` reports the actual engine used (`$ENG`) rather than hard-coding `"claude"`.
+
 ## [2026-10-28]
 
 ### Changed
