@@ -153,8 +153,8 @@ ROUND=1; MAXROUND=3; launch 1
 echo "Claude 开工 $(date -u +%T)"; st making "Claude 开始制作"; STEP_DESC="制作中"
 
 # 进度：每 2 分钟在做书机上跑一次 probe.mjs（开机时随 skill 克隆过去了），里程碑记进对外日志（只记变化），state.json 的 step 是一句总括。
-# Claude 退出了但还没做出网页版 → 续跑（最多 MAXROUND 轮）；到时限就收工。
-deadline=$(( STARTED + MAXH * 3600 - 1200 )); TIMEUP=0; prevsum=""
+# Claude 退出了但还没做出网页版 → 续跑（最多 MAXROUND 轮）；到时限就收工（开机前等额度的时间不算进时限）。
+deadline=$(( STARTED + WAITED + MAXH * 3600 - 1200 )); TIMEUP=0; prevsum=""
 while :; do
   while ! R test -f art-films/exit.code 2>/dev/null; do
     [ "$(date +%s)" -gt "$deadline" ] && { echo "到时限了，收工（未完成）"; ev "到了时限还没做完，收工"; TIMEUP=1; break; }
