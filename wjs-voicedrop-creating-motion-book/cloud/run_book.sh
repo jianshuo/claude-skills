@@ -38,15 +38,17 @@ echo "=== $(date -u +%FT%TZ) 开始：$slug ${ONLY:+（只做 $ONLY）} plan=$PL
 api() { curl -4 -sS --fail-with-body -H "Authorization: Bearer $VULTR_API_KEY" -H 'Content-Type: application/json' "$@"; }
 J() { node "$MB" get "$1"; }   # J 'd.instance.id'：从 stdin 的 JSON 取值
 KD=""; VULTR_API_KEY=""; LEASE=""; RURL=""; RTOK=""
-# engine-router 租约（见 engine-router/README「接入方」）：lease <额外 JSON 字段> → 「租约id 账号id」，挑不出是「- -」
+# engine-router 租约（见 engine-router/README「接入方」）：lease → 「租约id 引擎 账号id 最早恢复」，挑不出是「- - - <eta>」，router 不通是空串
+# 引擎 claude（订阅令牌）或 kimi（同一个 Claude Code CLI，换 Anthropic 兼容端点）——做书机上跑的都是 claude -p。
 rt() { curl -4 -sS -m 10 -H "Authorization: Bearer $RTOK" -H 'Content-Type: application/json' -X POST "$RURL/v1/leases$1" -d @- 2>/dev/null; }
 lease() {   # label = 状态页上显示的书名
   local lj; lj=$(T="《${TITLE}》视频书${ONLY:+（试看 ${ONLY}）}" node -e 'process.stdout.write(JSON.stringify(process.env.T))')
-  echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\"]},\"ttl_ms\":21600000,\"label\":$lj${1:-}}" | rt "" | J '(d.lease_id||"-")+" "+String(d.account||"-").split("/").pop()' 2>/dev/null || true; }
+  echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\",\"kimi\"]},\"ttl_ms\":21600000,\"label\":$lj}" | rt "" \
+    | J '[d.lease_id||"-",d.engine||"-",String(d.account||"-").split("/").pop(),d.eta||"-"].join(" ")' 2>/dev/null || true; }
 lease_done() {   # 回报并释放；本轮起过 Claude 又没成功，就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
   [ -n "$LEASE" ] || return 0
   local err=""; if [ "$STATE" != done ] && [ -n "${ROUND:-}" ]; then err=$(tail -c 400 "$OUT/claude.err" 2>/dev/null || true); fi
-  OK=$([ "$STATE" = done ] && echo true || echo false) ERR="$err" node -e 'process.stdout.write(JSON.stringify({ok:process.env.OK==="true",engine_used:"claude",error:process.env.ERR}))' \
+  OK=$([ "$STATE" = done ] && echo true || echo false) ERR="$err" ENG="${ENG:-claude}" node -e 'process.stdout.write(JSON.stringify({ok:process.env.OK==="true",engine_used:process.env.ENG,error:process.env.ERR}))' \
     | rt "/$LEASE/complete" >/dev/null || true
   LEASE=""; }
 destroy() { set +e   # 退出一律走这里：销毁机器、删临时密钥、交还租约、没成功就把 state.json 落成 failed
@@ -65,18 +67,27 @@ STEP_DESC="取书"; node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" 
 NCH=$(J 'd.chapters' < "$OUT/book_meta.json"); TITLE=$(J 'd.title' < "$OUT/book_meta.json")
 ev "读到书：《$TITLE》共 $NCH 章${ONLY:+，这次只做 $(echo $ONLY | tr ',' ' ')}"
 
-# Claude 账号由 engine-router 挑：先按配速和红线问，挑不出再 force（无视配速和红线，只躲撞墙/冷却）。
-# router 只回账号名，令牌取 secrets.env 的 CLAUDE_TOKEN_<账号 id，- 换 _>。
-# router 不通 / 挑不出 / 没有这个账号的令牌 → 用 CLAUDE_TK（lab .env 那个 = claude-1）照做，不因此停工。
-RURL=$(getenv ROUTER_URL "$CLAUDE_ENV"); RTOK=$(getenv ROUTER_TOKEN "$CLAUDE_ENV"); ACCT="缺省令牌（claude-1）"; A=""
+# 账号由 engine-router 在 claude-1/2、kimi-1 里按配速和红线挑。挑不出就在开机前排队等（每 10 分钟再问，最多 WAITH 小时），
+# 不再 force 硬拿——2026-10-30 两个 Claude 号就是被视频书 force 吃光的。
+# router 只回账号名，凭据取 secrets.env：claude → CLAUDE_TOKEN_<账号 id，- 换 _>；kimi → KIMI_KEY_<账号 id>（可选 KIMI_BASE_URL、KIMI_MODEL）。
+# router 不通 / 没有这个账号的凭据 → 用 CLAUDE_TK（lab .env 那个 = claude-1）照做，不因此停工。
+RURL=$(getenv ROUTER_URL "$CLAUDE_ENV"); RTOK=$(getenv ROUTER_TOKEN "$CLAUDE_ENV"); ACCT="缺省令牌（claude-1）"; ENG=claude; A=""; KIMI_KEY=""
+WAITH=${MB_WAIT_HOURS:-6}; WAITED=0
 if [ -n "$RURL" ] && [ -n "$RTOK" ]; then
-  read -r LEASE A <<< "$(lease)" || true
-  if [ "${LEASE:--}" = - ]; then read -r LEASE A <<< "$(lease ',"force":true')" || true; fi
-  if [ "${LEASE:--}" = - ]; then LEASE=""; fi
-  T=""; if [ -n "$LEASE" ]; then T=$(getenv "CLAUDE_TOKEN_${A//-/_}" $ROOT/secrets.env); fi
-  if [ -n "$T" ]; then CLAUDE_TK=$T; ACCT=$A; else echo "router 没给出能用的账号（${LEASE:-无租约} ${A:-}），用缺省令牌"; lease_done; fi
+  while :; do
+    E=""; ETA=""; read -r LEASE E A ETA <<< "$(lease)" || true
+    [ "${LEASE:-}" = - ] || break
+    [ $WAITED -ge $((WAITH * 3600)) ] && { STEP_DESC="等 AI 额度超时"; echo "等了 ${WAITH}h 仍挑不出账号，放弃"; exit 1; }
+    st booting "等 AI 额度（几个账号都到了配速线或红线${ETA:+，最早 $(TZ=Asia/Shanghai date -d "$ETA" +%H:%M 2>/dev/null || echo "$ETA")}）"
+    sleep 600; WAITED=$((WAITED + 600))
+  done
+  T=""
+  if [ -n "$LEASE" ] && [ "$E" = kimi ]; then KIMI_KEY=$(getenv "KIMI_KEY_${A//-/_}" $ROOT/secrets.env); [ -n "$KIMI_KEY" ] && T=kimi
+  elif [ -n "$LEASE" ]; then T=$(getenv "CLAUDE_TOKEN_${A//-/_}" $ROOT/secrets.env); fi
+  if [ -n "$T" ]; then ENG=${E:-claude}; ACCT=$A; [ "$ENG" = claude ] && CLAUDE_TK=$T
+  else echo "router 没给出能用的账号（${LEASE:-router 不通} ${A:-}），用缺省令牌"; KIMI_KEY=""; lease_done; fi
 fi
-echo "Claude 账号：${ACCT}${LEASE:+（租约 $LEASE）}"
+echo "引擎账号：${ACCT}${LEASE:+（$ENG，租约 $LEASE）}"; ev "这本由 ${ACCT} 来做"
 
 KD=$(mktemp -d); ssh-keygen -q -t ed25519 -N '' -f "$KD/id" -C "motion-book-$slug"
 UD=$(sed "s#__PUBKEY__#$(cat "$KD/id.pub")#" "$SK/cloud/cloud-init.sh" | base64 -w0)
