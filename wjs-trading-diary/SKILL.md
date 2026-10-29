@@ -36,7 +36,7 @@ description: Use when 王建硕 is about to place, has just placed, or is reflec
 
 ## B 下单后 / 体检
 
-1. 从截图或他的话里抽事实，做成表（标的｜股数｜成交价｜金额｜时间）。看不清的数字**问，不猜**。
+1. **先用 API 取事实**：OpenD 在监听 `127.0.0.1:11111` 时，跑 `~/code/futu-tools/.venv/bin/python ~/code/futu-tools/query.py deals|orders|summary --start <日期>`，手续费用 `order_fee_query` 查（用法见记忆库 `10-investing/futu-openapi.md`）。API 时间是美东时间，要换算成东京时间。OpenD 没开时，才从截图或他的话里抽，做成表（标的｜股数｜成交价｜金额｜时间）。看不清的数字**问，不猜**。他口述的事实和 API 对不上时，以 API 为准，并追加一条更正。
 2. 对账：计划 vs 成交（价差、股数）；账户总额拆解（浮盈亏 + 现金变动 + 手续费 = 账面变化），对不上就写明差额和推测来源，标「待核对」。
 3. 体检时按 σ 说话（几个 σ，2σ 内不问为什么），并检查核心仓偏离目标是否 ≥5 个百分点。
 4. 追加 LOG：`## YYYY-MM-DD · <一句话结论>`。有遗留问题就在条目末尾写「**遗留**：…」，下次体检先把上次的遗留念出来。
