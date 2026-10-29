@@ -76,15 +76,16 @@ WAITH=${MB_WAIT_HOURS:-6}; WAITED=0
 if [ -n "$RURL" ] && [ -n "$RTOK" ]; then
   while :; do
     E=""; ETA=""; read -r LEASE E A ETA <<< "$(lease)" || true
-    [ "${LEASE:-}" = - ] || break
-    [ $WAITED -ge $((WAITH * 3600)) ] && { STEP_DESC="等 AI 额度超时"; echo "等了 ${WAITH}h 仍挑不出账号，放弃"; exit 1; }
+    if [ "${LEASE:-}" != - ]; then break; fi
+    if [ "${ETA:-}" = - ]; then ETA=""; fi
+    if [ $WAITED -ge $((WAITH * 3600)) ]; then STEP_DESC="等 AI 额度超时"; echo "等了 ${WAITH}h 仍挑不出账号，放弃"; exit 1; fi
     st booting "等 AI 额度（几个账号都到了配速线或红线${ETA:+，最早 $(TZ=Asia/Shanghai date -d "$ETA" +%H:%M 2>/dev/null || echo "$ETA")}）"
     sleep 600; WAITED=$((WAITED + 600))
   done
   T=""
   if [ -n "$LEASE" ] && [ "$E" = kimi ]; then KIMI_KEY=$(getenv "KIMI_KEY_${A//-/_}" $ROOT/secrets.env); [ -n "$KIMI_KEY" ] && T=kimi
   elif [ -n "$LEASE" ]; then T=$(getenv "CLAUDE_TOKEN_${A//-/_}" $ROOT/secrets.env); fi
-  if [ -n "$T" ]; then ENG=${E:-claude}; ACCT=$A; [ "$ENG" = claude ] && CLAUDE_TK=$T
+  if [ -n "$T" ]; then ENG=${E:-claude}; ACCT=$A; if [ "$ENG" = claude ]; then CLAUDE_TK=$T; fi
   else echo "router 没给出能用的账号（${LEASE:-router 不通} ${A:-}），用缺省令牌"; KIMI_KEY=""; lease_done; fi
 fi
 echo "引擎账号：${ACCT}${LEASE:+（$ENG，租约 $LEASE）}"; ev "这本由 ${ACCT} 来做"
@@ -103,7 +104,16 @@ echo "IP $IP，等装环境（约 5–10 分钟）"; ev "制作机已开机"; st
 for i in $(seq 120); do R test -f .ready 2>/dev/null && break; sleep 15; done
 R test -f .ready || { STEP_DESC="安装制作环境超时"; echo "装环境超时"; exit 1; }
 echo "环境就绪 $(date -u +%T)"; ev "制作环境就绪（Node、Chromium、Claude Code、动画引擎）"
-printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=4\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
+if [ "$ENG" = kimi ]; then   # 同 engine-router adapters.ts 的 kimi 腿：换端点，Claude Code 内部各档位（含子 agent）全映射到 Kimi 模型
+  KM=$(getenv KIMI_MODEL $ROOT/secrets.env); KM=${KM:-k3[1m]}; KB=$(getenv KIMI_BASE_URL $ROOT/secrets.env); KB=${KB:-https://api.kimi.com/coding/}
+  { printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport RENDER_SLOTS=4\n' "$ASR_ID" "$ASR_TK"
+    printf 'export ANTHROPIC_BASE_URL=%q\nexport ANTHROPIC_API_KEY=%q\n' "$KB" "$KIMI_KEY"
+    for k in ANTHROPIC_MODEL ANTHROPIC_DEFAULT_FABLE_MODEL ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do printf 'export %s=%q\n' $k "$KM"; done
+    printf 'export CLAUDE_CODE_AUTO_COMPACT_WINDOW=1048576\nexport CLAUDE_CODE_MAX_CONTEXT_TOKENS=1048576\nexport CLAUDE_CODE_EFFORT_LEVEL=high\n'
+  } | R 'umask 077; cat > ~/code/.env'
+else
+  printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=4\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
+fi
 
 if [ $DRY = 1 ]; then   # 演习：只验证环境（Node、Claude Code、Chromium 出一张静帧）
   R 'bash -lc "set -e; node --version; claude --version; cd ~/code/huashu-art-motion/scripts/engine && uv run --with playwright python render.py --film gallery --solo 01_cave --stills 1.0 --no-counter --out /tmp/dry && ls -la /tmp/dry"' | tee "$OUT/dry.txt"
