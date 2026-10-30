@@ -104,7 +104,7 @@ node $B all book-<slug>              # 收尾，打印公开链接
 
 **节奏（省时间的关键）**：第 1–3 章只依赖 00–04 资料，收集完就和辩论**同时**开写；第 4、5 章等第 3 轮结辩，第 6 章等裁决。评审不过就换新写手照 `must_fix` 改，再派新评审复审。评审判了 pass 但仍列了 must_fix 时，小改一下就发，不用再复审。
 
-**封面**：在 Tokyo VPS 上用 paint 出图（book 流水线同一个工具，带 `--group <slug>`）。paint 要 `PAINT_API_TOKEN`，从 `/opt/claude-agent/.env` 读，别回显；退出码 3 表示还没画完，原样重跑。写个小脚本 scp 上去跑（INTC 那次的样板在 `<D>/../INTC-2026-10-30/` 同级的做法里）：
+**封面**：在 Tokyo VPS 上用 paint 出图（book 流水线同一个工具，带 `--group <slug>`）。paint 要 `PAINT_API_TOKEN`，从 `/opt/claude-agent/.env` 读，别回显；退出码 3 表示还没画完，原样重跑。提示词里有中文和引号，写成小脚本 scp 上去跑最省事：
 
 ```bash
 # 在 VPS 上（root）
