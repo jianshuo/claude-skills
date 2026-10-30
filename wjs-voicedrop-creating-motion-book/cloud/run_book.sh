@@ -155,7 +155,7 @@ $RULES"
 # 起一轮 Claude。注意是「cd …;」不是「cd … &&」：「a && b &」会把整串放进一个后台子 shell，它攥着 ssh 的管道不放，ssh 一直不返回（2026-10-25 第一单就卡在这）
 launch() {   # launch <第几轮>：第 1 轮用 PROMPT，之后 --continue 接着同一个会话、用 PROMPT_CONT
   local flag=""; if [ "$1" -gt 1 ]; then flag="--continue"; printf '%s' "$PROMPT_CONT" | R 'cat > ~/art-films/prompt.txt'; else printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'; fi
-  [ "$ENG" = kimi ] && flag="$flag --settings ~/code/kimi.settings.json"
+  if [ "$ENG" = kimi ]; then flag="$flag --settings ~/code/kimi.settings.json"; fi
   R "rm -f ~/art-films/exit.code"
   R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p $flag \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose >> claude.jsonl 2>> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
 }
