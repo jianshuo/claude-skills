@@ -45,9 +45,13 @@ lease() {   # label = 状态页上显示的书名
   local lj; lj=$(T="《${TITLE}》视频书${ONLY:+（试看 ${ONLY}）}" node -e 'process.stdout.write(JSON.stringify(process.env.T))')
   echo "{\"kind\":\"text\",\"task_class\":\"video\",\"engine_hints\":{\"require\":[\"claude\",\"kimi\"]},\"ttl_ms\":21600000,\"label\":$lj}" | rt "" \
     | J '[d.lease_id||"-",d.engine||"-",String(d.account||"-").split("/").pop(),d.eta||"-"].join(" ")' 2>/dev/null || true; }
-lease_done() {   # 回报并释放；本轮起过 Claude 又没成功，就把 claude.err 尾巴给 router，额度/凭据类报错会让该账号冷却
+lease_done() {   # 回报并释放；本轮起过 Claude 又没成功，就把报错给 router，额度/凭据类报错会让该账号冷却
+  # 429/额度在 claude.jsonl 的 is_api_error_message 里，不在 stderr；stderr 里 kimi 腿每次都有 unrecognized_model 告警（无害），滤掉
+  # （2026-10-30 market-oracle：kimi 5h 撞墙，回报的却只有三行告警）
   [ -n "$LEASE" ] || return 0
-  local err=""; if [ "$STATE" != done ] && [ -n "${ROUND:-}" ]; then err=$(tail -c 400 "$OUT/claude.err" 2>/dev/null || true); fi
+  local err=""; if [ "$STATE" != done ] && [ -n "${ROUND:-}" ]; then
+    err=$( { tail -c 300000 "$OUT/claude.jsonl" 2>/dev/null | grep '"is_api_error_message":true' | tail -1 | J 'd.message.content[0].text' 2>/dev/null || true
+             grep -v 'claude-code:unrecognized_model' "$OUT/claude.err" 2>/dev/null || true; } | tail -c 400); fi
   OK=$([ "$STATE" = done ] && echo true || echo false) ERR="$err" ENG="${ENG:-claude}" node -e 'process.stdout.write(JSON.stringify({ok:process.env.OK==="true",engine_used:process.env.ENG,error:process.env.ERR}))' \
     | rt "/$LEASE/complete" >/dev/null || true
   LEASE=""; }
