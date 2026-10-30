@@ -1,0 +1,15 @@
+{
+  "name": "kirby",
+  "label": "1966 漫威 Kirby 四色胶印（纸底＋粗黑描边平涂＋套色错位 3-5px＋本戴点/排线做灰阶＋krackle 能量点＋星爆＋分镜格＋行情纸带贯穿；人只出手与黑块剪影、不画脸）",
+  "grammar": "y2_vox 事件史＋t3 财经图表＋Kirby 四色分格（K.panel 分镜格叙事，K.chart 大图表数据章，K.tape 纸带当格间引线）",
+  "recipe": "27_kirby",
+  "fits": "金融与市场史、战争/危机史、事件编年史、商业与经济危机、需要「时间锚点＋大数字＋行情曲线＋分镜叙事」的书；与四色漫画同时代（1930s-60s）的题材先天贴合；节奏强、有转折点和冲突的题材",
+  "avoid": "需要细腻人物表情与情感特写的叙事（flat2026/ink）；尺度穿行硬核科普（kurzgesagt）；大段文字引用与学术推导；真实战争伤亡场景必须开 {war:true} 降档（禁拟声词/krackle 用于炸弹），全程轻快卡通基调的童书",
+  "from_book": "市场先知（market-oracle）",
+  "fonts": [],
+  "fonts_note": "只用引擎自带字体：中文 PuHui-Black/Heavy/Bold（思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1），英文美术字 Bangers-400（引擎已带，OFL，K.eng 自动按内容挑）；屏上字不得超 GB2312。",
+  "palette": "纸 #F2E9D8（全片统一纸底，不用纯白）｜黑 #111111｜红 #D93636（下跌/危险）｜蓝 #2B3FA0（上涨/冷静信息）｜黄 #F2C230（星爆/数字标签）｜白 #FBF6E8（仅标签底/墨线层留白）。禁真灰禁渐变，灰阶全靠排线密度和本戴点。战时降档 K.C.war（同键三色降饱和，{war:true} 启用）",
+  "api": "K.W K.H K.TAU K.C K.C.war K.pal(o) K.MIS K.LIGHT K.SCREEN | K.at K.pop K.once K.t0 K.ease K.jit | K.round K.circle K.ellipse K.poly K.world | K.ink(c,path,fill,lw,col,{reg}) K.dots K.dotFill K.hatch(gap≥8) K.kirbyShade(c,path,{d1,d2,gap,light}) K.krackle(c,x,y,R,t) K.starburst K.speedLines | K.bg(c,t,{kind:paper|dots|rays,tint,war}) K.finish | K.text K.eng K.bigText(黑挤出积木字) K.split2 K.tag(黄底黑字) K.popText K.callout | K.panel(c,x,y,w,h,o,fn) K.caption(黄底旁白框) K.newspaper(报纸头版) K.soundFx(war 拒绝) K.mourn(黑格默哀) | K.tape(行情纸带：齿孔/价格字符/wave/crumple/tear) K.series K.mapPts K.line K.arrow K.chart(tags 钉曲线) | K.hand(point|open|fist) K.figure(stand|arms|slump) | K.plates(色版+墨线版双版合成，英雄镜头) | K.CHAPTER_NAMES K.cardToken K.chapterCard(c,lt,t,n,title,{anchor,war}) K.subtitle",
+  "notes": "人物不画脸：只用 K.hand（袖＋手，纸色皮肤）和 K.figure（黑块剪影）。套色错位由 K.ink 自动做（K.MIS=[4,3]，勿改，勿再加随机偏移；精密小几何传 {reg:0}）。贯穿物是行情纸带 K.tape：章首 K.chapterCard 从顶部吐入印时间锚点，叙事章穿格（危急加 crumple/tear），数据章 K.chart base:'tape'，反例章 tear 撕断。战时章整章传 {war:true}：三色降饱和＋K.soundFx 拒绘，伤亡节点用 K.mourn 黑格。单屏 ≤4 格、每屏一个 3 秒焦点、数据图占屏 ≥50%、排线距 ≥8px。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
