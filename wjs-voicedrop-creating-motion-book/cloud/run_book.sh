@@ -114,7 +114,12 @@ if [ "$ENG" = kimi ]; then   # 同 engine-router adapters.ts 的 kimi 腿：换�
     printf 'export ANTHROPIC_BASE_URL=%q\nexport ANTHROPIC_API_KEY=%q\n' "$KB" "$KIMI_KEY"
     for k in ANTHROPIC_MODEL ANTHROPIC_DEFAULT_FABLE_MODEL ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do printf 'export %s=%q\n' $k "$KM"; done
     printf 'export CLAUDE_CODE_AUTO_COMPACT_WINDOW=1048576\nexport CLAUDE_CODE_MAX_CONTEXT_TOKENS=1048576\nexport CLAUDE_CODE_EFFORT_LEVEL=high\n'
+    printf 'export CLAUDE_CODE_MAX_OUTPUT_TOKENS=32000\n'   # behavesAs opus 会把 max_tokens 抬到 64000，钉回 Kimi 的 32000
   } | R 'umask 077; cat > ~/code/.env'
+  # 新版 Claude Code 不认识 k3 会往 stderr 刷 [claude-code:unrecognized_model]：behavesAs 指一个它认识的模型，发出去的模型名不变。
+  # 选 opus-4-8 是因为实测请求和「不认识」时几乎一样（同 beta、同 tools）；sonnet-4-6 会换掉整套 system prompt（2026-10-30）
+  KMJ=$(K="$KM" node -e 'process.stdout.write(JSON.stringify({modelPicker:{options:[{model:process.env.K,behavesAs:"claude-opus-4-8"}]}}))')
+  printf '%s' "$KMJ" | R 'cat > ~/code/kimi.settings.json'
 else
   printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=4\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
 fi
@@ -150,6 +155,7 @@ $RULES"
 # 起一轮 Claude。注意是「cd …;」不是「cd … &&」：「a && b &」会把整串放进一个后台子 shell，它攥着 ssh 的管道不放，ssh 一直不返回（2026-10-25 第一单就卡在这）
 launch() {   # launch <第几轮>：第 1 轮用 PROMPT，之后 --continue 接着同一个会话、用 PROMPT_CONT
   local flag=""; if [ "$1" -gt 1 ]; then flag="--continue"; printf '%s' "$PROMPT_CONT" | R 'cat > ~/art-films/prompt.txt'; else printf '%s' "$PROMPT" | R 'cat > ~/art-films/prompt.txt'; fi
+  [ "$ENG" = kimi ] && flag="$flag --settings ~/code/kimi.settings.json"
   R "rm -f ~/art-films/exit.code"
   R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; claude -p $flag \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose >> claude.jsonl 2>> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
 }
