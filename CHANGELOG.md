@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-30]
+
+### Added
+
+- **`wjs-researching-company`** — new skill: researches a listed company end-to-end and turns it into a VoiceDrop book. Three parallel data-collection agents (Unusual Whales for price/options/flow/shorts/insiders/news, ZeroHedge for coverage and sell-side commentary, and a fundamentals/news agent for earnings, guidance, and events), plus a local Futu OpenD snapshot for real-time quotes and options chains. A three-round bull-vs-bear debate follows: independent bull and bear agents each see only the other's finished arguments (not their reasoning), then an independent judge agent delivers a verdict with a four-window prediction table (1 week / 1 month / 3 months / 12 months — direction, price range, probability, confidence, and a falsification signal for each). The judge's predictions are appended to a local `predictions.tsv` for future calibration. The book is then written as a 6-chapter 科普 essay (chapter 1: what happened today; 2: company history and business; 3: market votes with money; 4: the bull case; 5: the bear case; 6: verdict — up or down, how sure, why) and published straight to `voicedrop.cn/books` via `build.mjs` — the text is exactly what the skill wrote; the cloud AI rewrite path (`write_book` MCP) is explicitly not used. Triggers: `研究一下 INTC` / `研究清楚这家公司` / `多空辩论` / `做一本公司研究书` / `/wjs-researching-company <ticker>`.
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — two new art style kits and `run_book.sh` engine-routing improvements:
+  - **2 new art style kits**: `bauhaus` (Bauhaus-school geometric constructivism — primary colours, bold typography, flat shapes) and `kirby` (Jack Kirby–inspired comic-book energy: thick ink outlines, dynamic Kirby krackle, bold panel composition). Each ships as `lib.js` + `kit.json` and was harvested back from the Tokyo VPS into the repo.
+  - **Art style assignments recorded** (2026-10-30): `home-inventory` → bauhaus, `market-oracle` → kirby. The kit library now totals **10 styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`.
+  - **`cloud/run_book.sh` improvements** (several commits): refined headless-session resume logic and lease-request handling for the Tokyo VPS one-shot render path.
+- **`wjs-trading-diary`** — SKILL.md fully fleshed out (previously a stub); now documents all three operating modes (pre-trade, post-trade/account check, post-loss reflection), the append-only log discipline with `git diff --numstat` verification, the Futu OpenD API query path for fills and fees, the σ-based portfolio drift check, and the LESSONS.md rule format. Marketplace entry updated to reflect the full trigger list.
+
+### Changed (docs)
+
+- **README** — added `wjs-researching-company` to the skills summary table and as a new subsection in section 8 "项目体检 / 反思 / 自我维护"; updated the `wjs-voicedrop-creating-motion-book` entry to reflect the full 10-kit art style library (bauhaus and kirby added).
+
 ## [2026-10-29]
 
 ### Added

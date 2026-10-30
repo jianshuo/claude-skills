@@ -115,6 +115,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-auditing-project`](./wjs-auditing-project/) | 项目状态体检 | 一句"看看哪里出问题了" → grouped checklist |
 | [`wjs-eating-and-growing`](./wjs-eating-and-growing/) | 5 步反思框架：把"吃堑"变成 L3 权重的真实改变 | 吃亏的经历 → 堑 + 自动输出 + 旧参数 + 新参数 + 替代动作 |
 | [`wjs-trading-diary`](./wjs-trading-diary/) | 投资交易日记：下单前念教训、下单后记账、吃亏变规则——三本只追加不改历史的账本 | `记一笔投资` / `交易日记` / `下单前` / `/wjs-trading-diary` |
+| [`wjs-researching-company`](./wjs-researching-company/) | 把一家上市公司研究清楚并做成 VoiceDrop 书：Unusual Whales + ZeroHedge + 基本面 → 多空辩论 → 裁决预测 → 6 章科普书直接上架 | `研究一下 INTC` / `多空辩论` / `做一本公司研究书` / `/wjs-researching-company <ticker>` |
 | [`wjs-teaching-english`](./wjs-teaching-english/) | 把一个英语单词做成 HLS 视频超剪（word + IPA + 中文解释 + 真实片段） | `teach love` / `学英语 <word>` / `/wjs-teaching-english <word>` |
 | [`wjs-explaining-tv-slang`](./wjs-explaining-tv-slang/) | 解释美剧/英剧台词、口头语、俚语和梗：给出实际用途、语气分量、中文对应说法、使用场景，并追加记录到个人生词本 | `美剧口头语` / `台词什么意思` / `这是什么梗` / `/wjs-explaining-tv-slang` |
 | [`wjs-fetching-movie`](./wjs-fetching-movie/) | 把电影清单变成 Relisten 可直接导入的 HEVC mp4（含英/中内封字幕），只用合法片源（Internet Archive 公版片、官方免费放映等） | `找电影` / `给 relisten 准备片子` / `电影列表` / `/wjs-fetching-movie` |
@@ -246,7 +247,7 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 
 ### [`wjs-voicedrop-creating-motion-book`](./wjs-voicedrop-creating-motion-book/)
 
-把 VoiceDrop 书架上的整本书做成**分章解说动画**。口播直接用书架「听本章」那份完整朗读 mp3（不另写稿、不新花 TTS 钱），画面由 Canvas 逐帧动画引擎生成，画风按书的内容气质自动选型（已有套件 `kurzgesagt` / `banknote` 可直接复用）。
+把 VoiceDrop 书架上的整本书做成**分章解说动画**。口播直接用书架「听本章」那份完整朗读 mp3（不另写稿、不新花 TTS 钱），画面由 Canvas 逐帧动画引擎生成，画风按书的内容气质自动选型（套件库 10 款：`kurzgesagt` / `banknote` / `flat2026` / `8bit` / `constructivism` / `ink` / `kusama` / `rickmorty` / `bauhaus` / `kirby`，用量流水自动记录）。
 
 - **默认竖屏 1080×1920@30（视频号 9:16），交付 HTML 播放器**；用户要 MP4 才渲（macOS 本地）；MP4 渲完自动加 1 秒书封片头，可用 `split_chapters.mjs` 拆成分章文件供单章下载。
 - **10 步流水线**：取书 → 选画风 → 建工程 → 取口播/ASR → 分章并行制作 → 总装 → 冒烟检查 → 审片 → QA → HTML/MP4 交付。
@@ -478,6 +479,17 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **金额和持仓不进本 SKILL.md**：只写进私有记忆库，公开仓库里的 skill 文件不记录任何仓位数字。
 
 > 触发词：`下单前` / `下单后` / `成交了` / `账户体检` / `亏了` / `赚了` / `投资复盘` / `记一笔投资` / `交易日记` / `/wjs-trading-diary`
+
+### [`wjs-researching-company`](./wjs-researching-company/)（公司研究书）
+
+当王建硕想深入研究一家上市公司——不只看价格，而是从多角度做多空辩论、写成可分享的科普书——走这个 skill。
+
+- **数据收集（三 agent 并行）**：Unusual Whales（价格、期权/IV、资金流、做空、内部人/机构）+ ZeroHedge 文章 + 财报基本面，同时主循环拉富途 OpenD 快照和期权链。
+- **多空辩论（三轮）**：多方和空方独立 agent，互相只看对方的成稿；裁判是第三个没参与辩论的 agent，给出四个时间窗（1 周 / 1 月 / 3 月 / 12 月）的方向、价格区间、上涨概率和 confidence。
+- **直接成书发布**：6 章科普书（现状 + 历史 + 市场投票 + 多方论证 + 空方论证 + 裁决预测），用 `build.mjs` 直接发到 `voicedrop.cn/books`，不走云端 AI 重写。
+- **预测留档**：每次裁决结果追加到 `predictions.tsv`，方便日后回头打分校准。
+
+> 触发词：`研究一下 INTC` / `研究清楚这家公司` / `多空辩论` / `做一本公司研究书` / `/wjs-researching-company <ticker>`
 
 ---
 
