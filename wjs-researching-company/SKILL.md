@@ -14,6 +14,7 @@ description: Use when 王建硕 wants a listed company researched end to end and
 | `01-unusualwhales.md` | Unusual Whales：价格、期权/IV、资金流、做空、内部人/机构/国会、财报反应、新闻 |
 | `02-zerohedge.md` | zerohedge.com 的相关文章与转载的卖方观点 |
 | `03-fundamentals-news.md` | 财报、指引、事件时间线、估值、卖方评级、催化剂 |
+| `04-futu.md` + `futu/*.csv` | 富途 OpenD 行情：快照（含盘前/盘后）、一年日线、按日资金流向、大中小单分布、所属板块、近几个到期日期权链 |
 | `debate/` | `bull-1.md bear-1.md`（立论）→ `-2`（反驳）→ `-3`（结辩）→ `judge.md`（裁决） |
 | `book-<slug>/` | 书的工作目录（book.json、chapters/NN.html、reviews/NN.json、cover.jpg） |
 | `~/code/reports/predictions.tsv` | 预测流水（只追加），以后回头打分校准用 |
@@ -43,7 +44,15 @@ description: Use when 王建硕 wants a listed company researched end to end and
 2. **Zero Hedge** → `02-zerohedge.md`。`WebSearch` + `allowed_domains:["zerohedge.com"]` 多角度检索，再 `WebFetch` 读正文；付费墙读不到就记标题、日期、URL、摘要。
 3. **基本面与新闻** → `03-fundamentals-news.md`。财报一手来源（公司 IR、8-K、电话会）优先，近期事件用 `WebSearch` 的 `extended` 模式。
 
-三份到齐后主循环通读一遍，有明显缺口（比如没拿到财报指引）就补派一个 agent，别带着缺口去辩论。
+同时主循环自己跑富途（几秒钟，不用派 agent）：
+
+```bash
+cd ~/code/futu-tools && .venv/bin/python research.py US.<T> --expiries 3 --out <D>/futu > <D>/04-futu.md
+```
+
+需要本机 OpenD 在跑并已登录（`nc -z 127.0.0.1 11111`）。没开就请建硕打开 `/Applications/Futu_OpenD.app` 登录，或者跳过这一份并在 00 里注明。脚本只用行情接口，不碰交易。港股、A 股把前缀换成 `HK.` / `SH.` / `SZ.`。注意：财报或大事件后跳空时，期权快照里的「平值」是按上一个收盘价取的，要在 04 里注明。
+
+四份到齐后主循环通读一遍，有明显缺口（比如没拿到财报指引）就补派一个 agent，别带着缺口去辩论。
 
 ### 2. 辩论（三轮，每轮多空并行）
 
