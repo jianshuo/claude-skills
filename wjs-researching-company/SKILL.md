@@ -23,7 +23,7 @@ description: Use when 王建硕 wants a listed company researched end to end and
 
 ## 核心原则
 
-- **事实与观点分层**：收集层只记事实（每个数带日期和出处），辩论层才有观点，裁决层才有预测。书里每个数字都能追到 01–03 的某一行。
+- **事实与观点分层**：收集层只记事实（每个数带日期和出处），辩论层才有观点，裁决层才有预测。书里每个数字都能追到 01–04 的某一行。
 - **辩论要真对抗**：多方、空方是两个独立 agent，互相看不到对方的思路，只看到对方的成稿；裁判是第三个没参与辩论的 agent。
 - **预测要可打分**：每个时间窗给方向、价格区间、上涨概率和 confidence，并用期权隐含波动区间做对照。说不准就说不准，confidence 低也照写。
 - **不是投资建议**：书里写明数据截止时间、作者持仓（查 `jianshuo-memory/10-investing/`），以及「这是推演，不是建议」。
@@ -56,7 +56,7 @@ cd ~/code/futu-tools && .venv/bin/python research.py US.<T> --expiries 3 --out <
 
 ### 2. 辩论（三轮，每轮多空并行）
 
-提示词在 `references/prompts.md` 的「辩论」一节。每个辩手都读 00–03 全部资料。
+提示词在 `references/prompts.md` 的「辩论」一节。每个辩手都读 00–04 全部资料。
 
 | 轮 | 多方 | 空方 |
 |---|---|---|
@@ -68,7 +68,7 @@ cd ~/code/futu-tools && .venv/bin/python research.py US.<T> --expiries 3 --out <
 
 ### 3. 裁决（独立裁判）
 
-新 spawn 一个没参与的 agent，读 00–03 和六份辩稿，写 `judge.md`：逐条判哪方论证更站得住，然后给预测表（1 周 / 1 个月 / 3 个月 / 12 个月）：方向、中枢价、区间、上涨概率、confidence（0–100%）、最关键的三条理由、什么信号出现就说明判断错了。必须和期权隐含区间（价格×IV×√(T/365)）对照，偏离要说理由。
+新 spawn 一个没参与的 agent，读 00–04 和六份辩稿，写 `judge.md`：逐条判哪方论证更站得住，然后给预测表（1 周 / 1 个月 / 3 个月 / 12 个月）：方向、中枢价、区间、上涨概率、confidence（0–100%）、最关键的三条理由、什么信号出现就说明判断错了。必须和期权隐含区间（价格×IV×√(T/365)）对照，偏离要说理由。
 
 裁决完把预测追加进 `~/code/reports/predictions.tsv`（只追加，表头：`日期	代码	基准价	窗口	方向	中枢	区间低	区间高	上涨概率	confidence	书slug`）。
 
@@ -100,15 +100,25 @@ node $B intro book-<slug>            # 导读
 node $B all book-<slug>              # 收尾，打印公开链接
 ```
 
-**封面**：在 Tokyo VPS 上用 paint 出图（book 流水线同一个工具，带 `--group <slug>`），拉回本地再 `build.mjs asset`：
+`build.mjs` 要用包含表格样式的版本（jianshuo.dev main 2ddabfb 起），先 `git -C ~/code/jianshuo.dev pull`。科普书写法已允许 `<table>`，数据表和预测表放心用。
+
+**节奏（省时间的关键）**：第 1–3 章只依赖 00–04 资料，收集完就和辩论**同时**开写；第 4、5 章等第 3 轮结辩，第 6 章等裁决。评审不过就换新写手照 `must_fix` 改，再派新评审复审。评审判了 pass 但仍列了 must_fix 时，小改一下就发，不用再复审。
+
+**封面**：在 Tokyo VPS 上用 paint 出图（book 流水线同一个工具，带 `--group <slug>`）。paint 要 `PAINT_API_TOKEN`，从 `/opt/claude-agent/.env` 读，别回显；退出码 3 表示还没画完，原样重跑。写个小脚本 scp 上去跑（INTC 那次的样板在 `<D>/../INTC-2026-10-30/` 同级的做法里）：
 
 ```bash
-ssh root@66.42.45.128 "sudo -u claude-agent /opt/claude-agent/bin/paint '<提示词>' /opt/claude-agent/workspace/covers/<slug>.jpg --size 1024x1536 --group <slug>"
+# 在 VPS 上（root）
+TOK=$(grep '^PAINT_API_TOKEN=' /opt/claude-agent/.env | cut -d= -f2-)
+mkdir -p /opt/claude-agent/workspace/covers && chown claude-agent /opt/claude-agent/workspace/covers
+sudo -u claude-agent env PAINT_API_TOKEN="$TOK" /opt/claude-agent/bin/paint '<提示词>' /opt/claude-agent/workspace/covers/<slug>.jpg --size 1024x1536 --group <slug> --label <书名>
+# 回本机
 scp root@66.42.45.128:/opt/claude-agent/workspace/covers/<slug>.jpg book-<slug>/cover.jpg
 node $B asset book-<slug> cover.jpg cover.jpg
 ```
 
-封面要求照写书 skill：大字书名为主、副标题、作者「王建硕」，淡雅抽象背景，画面上只出现这些字，JPG。
+封面要求照写书 skill：大字书名为主、副标题、作者「王建硕」，淡雅抽象背景，画面上只出现这些字，JPG。拉回来用 Read 看一眼，字有错就重画。
+
+**导读** `intro.html`：裁决出来后主循环自己写就行（一个钩子 + 贯穿全书的问题 + 怎么做的 + 结论预告 + 截止时间/无持仓/不是建议），`node $B intro book-<slug>` 发。
 
 ### 5. 收尾
 
@@ -117,7 +127,7 @@ node $B asset book-<slug> cover.jpg cover.jpg
 
 ## Red Flags
 
-- 书里出现 01–03 里找不到的数字 → 删掉或回去补出处。
+- 书里出现 01–04 里找不到的数字 → 删掉或回去补出处。
 - 辩手看到了对方的提示词或思路，或裁判参与过辩论 → 不算独立，重来。
 - 预测只有方向没有概率和 confidence，或没和期权隐含区间对照 → 裁决不合格。
 - 用 `write_book` 发书 → 会被云端 AI 重写、种子还被截到 20k，不用。
