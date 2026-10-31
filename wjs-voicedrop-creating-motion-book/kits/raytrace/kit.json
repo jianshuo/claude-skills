@@ -1,0 +1,14 @@
+{
+  "name": "raytrace",
+  "label": "早期光追 CGI（近黑深炭天＋细线框地平线网格、逐像素透视棋盘地面、塑料与铬着色的齿轮/块/球/漏斗/回路、地面倒影；冷静理性的 90 年代渲染演示）",
+  "grammar": "y1_kurzgesagt（图示段落：流程、回路、筛选）＋舞台式 3D 物件特写",
+  "recipe": "15_raytrace",
+  "fits": "机制、系统、进化、流程与反馈回路、筛选与验证、组织与知识资产；科技史/计算机；需要把抽象概念做成「可摆在台面上的物件」的冷静思辨类主题；3–6 个物件的构图",
+  "avoid": "大量文字/长清单（物件少而大，字交给字幕）；强情绪人物叙事（人形无五官）；自然、手作、温暖生活题材；需要大场景写实质感；一屏超过 6–8 个物件",
+  "from_book": "变异、选择、复制（knowledge-evolution，10 章，样张见 ~/art-films/knowledge-evolution/三方向/raytrace）",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带 PuHui-Black，字幕 PuHui-Bold，数字用 Poppins-800（都随 huashu-art-motion 引擎分发，SIL OFL）。只用 GB2312 里有的字",
+  "palette": "近黑深炭天 #15171a（可选暖米灰 #d8cfba）｜棋盘 奶白 #e6dfcc / 石墨 #34383d｜塑料 红 #dd3333、青绿 #1f9d8f、黄 #e8b923｜铬/钢 灰白 #d6d9dc / #8b9096｜字 白 #f6f3ea＋墨 #16181b 描边（K.C）。贯穿色：红=变异、青绿=选择、黄=复制。无蓝紫、无渐变天、无霓虹外发光",
+  "api": "K.C K.TINTS K.at K.pop K.once K.t0 K.damped K.round K.circle K.world K.stage K.bg K.scaleAt K.shadow K.reflect K.sphere K.tube K.plastic K.shade K.plasticBox K.pill K.slab K.gear K.meshRot K.gearChain K.arrow K.loop K.funnel K.label3d K.tag K.text K.split2 K.popText K.callout K.icon（eye wing shield doc check cross key bulb lock lens flag，亦接受中文名） K.ICON_NAMES K.figure（pose: stand point reach cheer hold walk；返回 hand/handB/head/top/chest/feet/prop 锚点） K.POSES K.finish K.CHAPTER_NAMES K.CARD_TINTS K.chapterCard K.subtitle",
+  "notes": "每镜先 K.stage(c,t,{hor})（地平线 y 默认 560，主体放 y200–1350；棋盘整张缓存，换 hor/sky/tx/tz 才重算，一本书尽量只用 1–2 组参数）。物件按「接地线 gy」摆：先 K.reflect(c,gy,fade,l=>画物体)再正画，物体不放字。铬球 K.sphere 每帧逐像素算 ≤220px 小精灵，同屏 ≤2 个，其余用 kind:'plastic'；K.reflect 每次一张 1080×≤760 的半幅层，一镜里用 ≤4 次。齿轮：节圆半径 R，相邻中心距=Ra+Rb，用 K.gearChain 自动算反向咬合相位（每帧传 a=t*0.9）。K.slab 做文档/清单/流程框、K.plasticBox 做块、K.pill 做步骤、K.funnel 做筛选（口径 w≥300、h≥380 才好看）、K.loop 做反馈回路（beads 放环上的球）、K.figure 做专家/验证者（badge 放图标、prop 放手里的东西、不画五官）。立体字 K.text 是描边＋右下错位厚度，不做倒影镜像；贴地标签 K.label3d ground:true 竖向压扁一半，字号取 ≥96。字最小 52；字幕带 y1380–1560 不放东西。动态用弹入/滑入/画线进度/齿轮转动；所有随机走 U.hash/U.rng。"
+}
