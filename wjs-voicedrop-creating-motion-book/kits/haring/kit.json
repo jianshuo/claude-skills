@@ -1,0 +1,15 @@
+{
+  "name": "haring",
+  "label": "1982 凯斯·哈林（收敛成温暖安静版：浅暖底＋圆头粗黑线＋小面积平涂重点色；无脸小人只一个点眼、6fps 硬切姿势；放射线只做重音；日本街景组件＋「三行小本子」贯穿）",
+  "grammar": "平涂街景＋无脸小人（stand/walk/look/crouch/point/sit/write/wave/reach）＋符号语言（太阳/月亮/音波/温度计/箭头/气泡）",
+  "recipe": "31_haring",
+  "fits": "人文城市步行、生活方式、温和叙事（散步观察、日常小发现、旅居随笔、城市/街区/小店/四季的轻松记录）；适合用小人加街景组件讲「看见—停下—记下」；节奏舒缓、色块明快、带一点童趣的题材",
+  "avoid": "硬数据与图表密集的内容、需要精确曲线/大数字的金融统计类；严肃悲剧与灾难；需要细腻人物表情的情感叙事；大段文字引用",
+  "from_book": "japan-slow-streets",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/标签用引擎自带 PuHui-Heavy / PuHui-Black，字幕 PuHui-Bold（思源黑体 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）。屏上字只用 GB2312（门帘/灯笼上的单字也要在 GB2312 内，如 茶 面 酒 福；不要用「麺」之类日文汉字）。",
+  "palette": "墨黑 #1c1814（线）｜纸 #f7edd2｜奶白 #fbf4df / #fffaf0｜重点色（小面积）黄 #f6c928｜红 #e2453a｜蓝 #2e6fcf｜绿 #3f9b5c｜粉 #f29ab8｜橙 #f08a2c｜木 #c58a56 / #b5784a；浅底色 yellowL #f8dc6a｜pinkL #f7c8d3｜blueL #a9cdea｜greenL #b9dba9。线宽 LW=11（小人缩放时自动收细）",
+  "api": "K.W K.H K.TAU K.C K.LW K.alias=HK | K.at K.pop K.once K.t0 K.ease K.jit K.bounce | K.round K.circle K.ellipse K.poly K.world | K.ink(c,path,fill,lw,col) K.rect K.line K.rays(c,cx,cy,rx,ry,n,t,seed,len,lw,a0,a1,k)=放射线重音 | 小人：K.POSES{stand walkA walkP walkB look point crouch sit write wave reach} K.figure(c,x,y,s,col,pose,{flip,eye,alpha}) →锚点{head eye hl hr neck hip fl fr feet top}，K.walker(c,x,y,s,col,t,{flip,speed}) 6fps 走路，K.idle(慢拍呼吸) K.crowd(c,x,y,n,s,t,seed,{spread,depth,walking,cols}) | 街景：K.house K.pole K.wires K.lantern K.door K.noren(c,x,y,w,h,col,ch,t) K.vending K.drain K.manhole K.seams K.steps K.cat(pose sit|loaf|walk) K.plant K.tree K.ground | 贯穿物：K.notebook(c,x,y,s,rot,{lines:[p1,p2,p3],open,col}) →{pen} K.pen | 符号：K.sun K.moon K.sound K.temp K.heat K.heart K.arrow(c,x0,y0,x1,y1,{lt,at,col,bend}) | K.bg(c,t,{kind:cream|yellow|pink|blue|green|night,rays,ox,oy,ground,groundCol,frame}) K.finish(c) | K.text K.bigText(黑描边大字) K.split2 K.tag K.popText K.callout K.speech(气泡/想法泡) | K.CHAPTER_NAMES K.CARD_KINDS K.cardToken K.chapterCard(c,lt,t,n,title) K.subtitle",
+  "notes": "小人无脸、只一个点眼；姿势硬切不插值（K.walker 4 帧 6fps，地上位移由调用方按 lt 算 x）；放射线只放在「看见/发现/写下」的一刻（K.rays 挂在 K.figure 返回的 head 锚点上），别满屏。贯穿物是 K.notebook：三行 lines 各自写出进度 0..1，笔尖跟着走；章节卡里是夹着本子的小人走到站点后掏本子（换书可改 K.cardToken）。主体放 y200–1350，字幕带 y≈1480，每镜最后调 K.finish(c) 再画 K.subtitle（先 finish 后字幕，字幕不被压暗）。K.bg 的 rays 只在章节卡/强调镜用。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
