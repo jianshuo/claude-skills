@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-10-31]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — three new art style kits harvested from the Tokyo VPS, each born from a production book run:
+  - **`haring`** (凯斯·哈林温暖安静版): Keith Haring–inspired flat street scenes with faceless stick figures (stand/walk/look/crouch/point/sit/write/wave/reach), bold black outlines on a warm cream ground, small accent colour fills, and a Japanese street-scene component set (house, noren, lantern, vending machine, cat). Fits human-interest urban and lifestyle storytelling. Applied to `japan-slow-streets`.
+  - **`raytrace`** (早期光追 CGI): early 1990s ray-traced CGI aesthetic — near-black deep-charcoal sky, perspective checkerboard ground with reflections, chrome-and-plastic gear/sphere/slab/funnel primitives, cold-rational palette (red = mutation, teal = selection, gold = replication). Fits mechanism, system, process, and evolutionary/knowledge-growth topics. Applied to `knowledge-evolution`.
+  - **`ghibli`** (吉卜力水彩纸偶): Studio Ghibli–inspired watercolour wash backgrounds with cel-shaded crescent-shadow paper-puppet characters; a living room with a ring of chairs as the recurring motif; cool grey-blue paper for solemn chapters. Fits gentle humanist narrative, institutions, and international relations. Applied to `united-nations`.
+  - **Art style assignments recorded** (2026-10-31): `japan-slow-streets` → haring, `knowledge-evolution` → raytrace, `united-nations` → ghibli. The kit library now totals **13 styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 13-kit art style library (haring, raytrace, and ghibli added).
+
 ## [2026-10-30]
 
 ### Added
