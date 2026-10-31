@@ -1,0 +1,15 @@
+{
+  "name": "shadowpuppet",
+  "label": "中国皮影（灯后幕布透光、镂空皮件刻纹＋铆钉提线偶人、日/暮/夜三套幕布色轮换）",
+  "grammar": "y4_storytime（偶人叙事）＋道具比喻图示（幕布上的镂空道具）",
+  "recipe": "34_shadowpuppet",
+  "from_book": "awe-before-knowledge",
+  "fits": "思想与人文：敬畏、克制、认知边界、技术与人、系统与后果；中国历史与传统文化；寓言与比喻式的哲思、成长与命运；气质克制温暖又带一点警醒的书",
+  "avoid": "大量数据图表与密集数字（只能用 3–5 个镂空点示意）；硬核机制科普与尺度穿行（kurzgesagt）；货币金融制度（banknote）；轻快搞笑的段子体；需要真实照片、档案的新闻史",
+  "fonts": [],
+  "fonts_note": "不另带字体：标题/字幕用引擎自带的 PuHui-Black / PuHui-Heavy / PuHui-Bold（思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随 huashu-art-motion 引擎分发）",
+  "palette": "幕布 day #FFF7D8→#F6DCA0→#D9A460→#8C5A2A｜dusk #FFE6BD→#F5B88C→#C8685A→#52283E｜night #E2EEFF→#A4BCE6→#5A74B0→#161F46（三色轮换，幕布渐变是画风本体）｜皮件：朱红 #C0352A、墨绿 #2F7D4C、琥珀 #D99A2E、赭黄 #E2BD4A、靛蓝 #2C5A8A、橘 #D9782A、浅皮 #F2DCA4（大道具）、深褐描边 #3A160A｜字：奶黄 #F6D783＋深褐粗描边",
+  "api": "K.C K.SCREEN K.at K.pop K.once K.t0 K.round K.circle K.ellipse K.smooth K.poly K.world K.damped K.last K.split2 K.carve K.piece K.rivet K.cut K.bg（o.tone: day|dusk|night, lx, ly, r） K.lamp（光圈：dark 圈外压暗, grow, lamp） K.oilLamp K.rods K.string K.puppet（pose: stand walk raise down point shrug lift think wave bow；o.to/mix 混姿势，o.hat: cap bun wusha none，o.cols，o.dir；返回 head/top/neck/handA/handB/feet/chest/elbowA 锚点） K.POSES K.crowd K.map（streets/grow/mark） K.city（base/h/rise/lit/seed） K.ground K.arrow K.scales K.clock K.book K.tree K.gear K.grid K.scroll K.glyph K.qmark K.cloud K.orb K.lantern K.mountain K.house K.text K.tag K.popText K.callout K.finish K.CHAPTER_NAMES K.CARD_TONES K.chapterCard K.subtitle",
+  "notes": "制作规范里的通用禁令对本套件放宽：(1)「禁止蓝紫、渐变底」——幕布本身就是灯光渐变，day/dusk/night 三色轮换是本套件的底，不算违规；皮件只用上面色板，不另加霓虹/外发光。(2)「人不画脸」——偶人是皮影空脸（镂空脸＋眉眼唇线），只用 K.puppet 的画法，不另画写实五官、不画 Q 版。版式：主体放 y 290–1250，下方给字幕；日/暮/夜按章或按情绪轮换（章节卡自动按章号轮换，K.CARD_TONES 可改）；每镜先调 K.bg 再画城市/偶人（皮色随当前幕布色）；道具要比偶人更亮更大；杆线 K.rods 由 puppet 自动画，若杆线横穿别的角色用 o.rods=false。已知/未知用 K.lamp 的光圈表达（圈内亮＝已知，圈外暗＝未知）。镜头放大 >2 倍时离屏皮件按 2 倍分辨率画，再往上会略糊。每帧性能：一个偶人约 15 块皮件，同屏 ≤3 个大偶人＋若干道具较稳；人群用 K.crowd 且 s ≤ 0.4。",
+  "placeholder_bg": "K.bg(c, t, {tone:'day'})"
+}
