@@ -1,0 +1,15 @@
+{
+ "name": "cubism",
+ "label": "分析立体主义（米褐纸底、赭金与钢灰蓝的半透明切面、三角刻面渐变、布拉克式小笔触、墨褐粗描边、警示红只给下跌与结论）",
+ "grammar": "y1_kurzgesagt（图示）＋t3_finance_chart（拆块式图表）",
+ "recipe": "11_cubism",
+ "fits": "企业软件/财报/估值、商业模式拆解、‘一个整体被拆成碎片’的叙事（席位→用量、入口→底座）、争议与多视角论证",
+ "avoid": "需要精细写实人脸/温暖情绪的人物故事；大量小字密表（切面纹理会抢细字）；医学机制",
+ "from_book": "ServiceNow：AI帮谁赚钱（servicenow-ai-repricing）",
+ "fonts": [],
+ "fonts_note": "不另带字体：标题/标签用引擎自带 PuHui-Heavy / PuHui-Bold（思源黑体 GB2312 子集，OFL 1.1）",
+ "palette": "纸 #DCCFB4｜纸2 #CDBE9E｜赭金 #D9A441｜深赭 #9A6A1A｜钢蓝灰 #5E7A94｜深蓝灰 #3E4E60｜墨褐 #2B1D14｜米白 #ECE3CF｜警示红 #B03225",
+ "api": "K.bg K.shape K.bar K.shatter K.text K.plate K.popText K.callout K.tag K.stamp K.axis K.finish K.chapterCard K.cardCenter K.subtitle K.at K.pop K.once K.t0 K.round K.circle K.world",
+ "notes": "语义：赭金整块＝收入/席位/确定性；钢灰蓝碎块＝股价/用量/不确定性；红只用于下跌数字与结论，面积<5%。K.shape(c,poly,colorKey,{x,y,rot,scale,alpha,seed,cell,bias}) 把多边形切成渐变三角刻面，按 key 缓存成位图再贴，逐帧只做仿射；K.shatter(c,x,y,w,h,prog,col) 从整块碎成掉落的 N 块。",
+ "placeholder_bg": "K.bg(c, t, {})"
+}
