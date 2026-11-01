@@ -7,9 +7,9 @@
    进度条浮在画面底部（渐变压暗），暂停时显示；播放时隐去，只留底边一根细进度线。点画面任意处切换播放/暂停。
    时间永远取口播 <audio> 的 currentTime，画面每帧实时画（不经 MP4）。 */
 :root {
-  --bg: #0d1117; --ink: #fff; --sub: rgba(255,255,255,.92); --track: rgba(255,255,255,.3); --fill: #fff;
+  --bg: #f7f2e7; /* 2026-11-01 黑底改书架纸色（同写书 build.mjs 的 --paper），宽屏两侧不再是黑边 */ --ink: #fff; --sub: rgba(255,255,255,.92); --track: rgba(255,255,255,.3); --fill: #fff;
   --ui: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;   /* 与书目录页一致；dark 嵌进浅色页的 iframe 会被浏览器垫成不透明深底 */
 }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflow: hidden; -webkit-tap-highlight-color: transparent; }
@@ -18,6 +18,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 .player { container-type: inline-size; position: relative; overflow: hidden; height: 100%; flex: none;
   width: min(100vw, 100vh * 9.3 / 16); width: min(100vw, 100dvh * 9.3 / 16); }   /* 9.3 不是 9：容差，App 里 393×695 这种比 9:16 宽一丝的区域照样贴满，不露 1px 黑边 */
 .frame { position: absolute; inset: 0; background: #10181b; cursor: pointer; }
+/* 宽屏时 9:16 画面像放在纸面上：一圈很淡的暖色投影；手机竖屏画面撑满，投影落在屏外看不到 */
+.player { box-shadow: 0 0 48px rgba(90,70,40,.16), 0 0 0 1px rgba(90,70,40,.06); }
 /* 铺满（cover）：高 = max(放映区高, 宽×16/9)，宽按 9:16 跟着走，居中裁 */
 #c { position: absolute; top: 50%; left: 50%; height: max(100%, 100cqw * 16 / 9); width: auto; aspect-ratio: 9 / 16; transform: translate(-50%, -50%); display: block; }
 .cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.4cqw; background: rgba(0,0,0,.28); }
