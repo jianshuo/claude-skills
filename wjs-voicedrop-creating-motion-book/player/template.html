@@ -17,7 +17,11 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 /* 1cqw = 放映区宽的 1%；按钮、字号都按它算，任何尺寸比例一致 */
 .player { container-type: inline-size; position: relative; overflow: hidden; height: 100%; flex: none;
   width: min(100vw, 100vh * 9.3 / 16); width: min(100vw, 100dvh * 9.3 / 16); }   /* 9.3 不是 9：容差，App 里 393×695 这种比 9:16 宽一丝的区域照样贴满，不露 1px 黑边 */
-.frame { position: absolute; inset: 0; background: #10181b; cursor: pointer; }
+.frame { position: absolute; inset: 0; background: #ebe2d0; cursor: pointer; }   /* 首帧画出来前看到的底：比纸色深一档（2026-11-01 由 #10181b 黑改） */
+/* 加载中（.boot，首帧画出来就撤）：画面还是空的浅底，不压黑遮罩、不铺底部渐变，提示字用深暖灰 */
+.player.boot .cover { background: none; }
+.player.boot .status { color: #7a6e5c; text-shadow: none; }
+.player.boot .bar { opacity: 0; pointer-events: none; }
 /* 宽屏时 9:16 画面像放在纸面上：一圈很淡的暖色投影；手机竖屏画面撑满，投影落在屏外看不到 */
 .player { box-shadow: 0 0 48px rgba(90,70,40,.16), 0 0 0 1px rgba(90,70,40,.06); }
 /* 铺满（cover）：高 = max(放映区高, 宽×16/9)，宽按 9:16 跟着走，居中裁 */
@@ -54,7 +58,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
 </style>
 
 <div class="stage">
-  <div class="player" id="player">
+  <div class="player boot" id="player">
     <div class="frame" id="frame">
       <canvas id="c" width="1080" height="1920"></canvas>
       <div class="cover" id="cover">
@@ -108,7 +112,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--ui); overflo
     const wait = () => { if (window.__bootFailed) { status.textContent = '画面加载失败：' + String(window.__bootFailed).slice(0, 120); return; }
       if (!window.__ready) return requestAnimationFrame(wait);
       ready = true; total = window.__total || total; track.setAttribute('aria-valuemax', total.toFixed(0)); show(0);
-      status.textContent = ''; window.renderFrame(0.6); };
+      status.textContent = ''; window.renderFrame(0.6); player.classList.remove('boot'); };
     wait();
   }).catch(e => { status.textContent = '加载失败：' + e.message; });
 
