@@ -1,0 +1,14 @@
+{
+ "name": "shinkai",
+ "label": "新海诚光影（积雨云天空、丁达尔光柱、赛璐珞手与欠条纸、纸质图表卡＋暗靛蓝数据舞台）",
+ "grammar": "35_shinkai 光影＋t3_finance_chart（图表放在纸质图表卡/暗舞台上，不画在天上）",
+ "recipe": "35_shinkai",
+ "from_book": "债券到底怎么投（zhaiquan）",
+ "fits": "金融投资/债券/理财、经济与商业叙事、需要一件「贯穿物」（欠条/信/票据）串起全书的书；情绪随章节变化（晴/黄昏/阴/夜/云海）；有数据图的章",
+ "avoid": "生物医学、硬科技/机械拆解；需要大量人物表演（手只会递/指，没有人物）；极小字号信息图；要强纸感/手绘笔触的书",
+ "fonts": [],
+ "palette": "天 #0F55C4→#8EC8F5｜云白 #F7FAFF｜云影 #3A4570｜靛蓝舞台 #1B2760/#0F1848｜欠条纸 #FBF6E6｜纸边红 #C4574E｜标签灰蓝 #5A6485｜面值红 #D9534A｜票息蓝 #4A78C8｜期限绿 #3A9A74｜金 #F2B33D",
+ "api": "K.C K.at K.pop K.once K.t0 K.round K.circle K.world K.sky(c,t,{mood:day|dusk|overcast|night|cloudsea,calm,dim,sun,beams,dust,bloom}) K.bg(=sky) K.stage(c,{y0,alpha,grid}) K.paper(c,x,y,w,h,{rot,scale,alpha,tint:cream|warm|cool|faded,frame,seed,shadow,draw}) K.iou(c,x,y,w,h,{rows,title,stamp:{s,at,lt},…paper}) K.chartCard(c,x,y,w,h,{title,series[≤2],xLabels,ymin,ymax,p,marks[≤3],demo}) K.hand(c,x,y,{rot,scale,flip,hold}) K.give(c,x,y,w,h,{t,bob,…iou}) K.cel K.stamp(c,s,x,y,lt,at,{r,rot,col}) K.coin(c,x,y,r,{flip,label,glint}) K.arrow(c,x0,y0,x1,y1,{p,col,lw}) K.tag(c,s,x,y,{fill,col,size,align}) K.text K.split2 K.popText K.callout K.finish K.CHAPTER_NAMES K.CARD_MOODS K.cardToken K.chapterCard K.subtitle",
+ "notes": "①字一律 PuHui-Black/Heavy/Bold（引擎自带），不要放字体文件；只用 GB2312 字。②图表不画在天上：数据用 K.chartCard（纸质，≤2 条线/2 组柱、≤3 个标注、必带「示意」角标，三色语义面值=K.C.face 红/票息=coupon 蓝/期限=term 绿，col 可直接写 'face'|'coupon'|'term'），底下的天用 K.sky({calm:0.6~0.85}) 退成低对比；大字结论用 K.stage + 白字（popText size≥100，标签 tag≥52，图内字≥44）。③浅色字（白）自带靛蓝软影；放在纸面上的字要传 col:K.C.navy（深色自动不带影）。亮蓝天中下部白字不稳，要么用 K.tag 胶囊，要么 K.stage。④K.sky 的云/光柱/星空首次调用缓存到离屏（每种 mood 一份，约 100–200ms），之后每帧只 drawImage 平移＋光晕＋光尘＋泛光；同一章连续用同一 mood 最省。⑤引擎自带 P.cel 的 clip 大矩形只覆盖画布正象限，在以纸/手中心为原点的局部坐标里会切出方块阴影；本套件用 K.cel（超大矩形），自己画赛璐珞部件也请用 K.cel 而不是 PAINT.cel。⑥K.hand 局部原点＝指尖捏纸右缘，纸画在原点左侧；K.give 是 手＋欠条 一整套（x,y=纸中心），bob=0 可定住。⑦K.stamp 的参数是 lt（镜头本地秒）和 at（砸下时刻）；传进 K.iou 的 stamp:{s,at,lt} 会盖在纸面右下。⑧欠条贯穿：每章开头 K.give 递出→缩成角落小卡（K.iou 小尺寸）→章末 K.stamp 盖章；通胀章用 tint:'faded'；信用章可在纸上加虚线。⑨K.finish 压暗 y1330–1640，主体放 y200–1350；K.subtitle 画在 y≈1480。⑩pop 回弹起步会出负半径，套件已全局把 arc/ellipse/createRadialGradient 的负半径当 0。⑪天色建议：叙事=day、结论/收益=cloudsea、风险/通胀=overcast、利率变动/转折=dusk、章末总结/反思=night；章节卡按 K.CARD_MOODS 随章号轮换。⑫overcast 的云团偏「棉球」，适合配 calm≥0.4 当背景，不要当主角。",
+ "placeholder_bg": "K.bg(c, t, {mood:'day'})"
+}
