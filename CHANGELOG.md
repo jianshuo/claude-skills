@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-01]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — five new art style kits harvested from the Tokyo VPS, each born from a production book run:
+  - **`shadowpuppet`** (中国皮影): Chinese shadow-puppet theatre aesthetic — translucent cloth screen with lantern backlight, carved leather puppets with rivet joints, three screen-tone rotations (day warm cream / dusk rose / night cool blue). Stick to thought-and-humanities topics, Chinese history, and parable-style storytelling; avoid dense data charts and hard-science mechanism. Applied to `awe-before-knowledge`.
+  - **`vangogh`** (后印象派·梵高笔触): Post-Impressionist Van Gogh style — cobalt-blue swirling night sky, warm lantern-yellow and ochre-gold, terracotta floor, deep-indigo outlines, short-stroke fill throughout. One-table-one-lamp-one-person static-observation narrative; suits loneliness, persistence, night-time introspection, literary biography. Applied to `stay-at-the-table` (《留在牌桌上》).
+  - **`shinkai`** (新海诚光影): Makoto Shinkai–inspired sky and light — cumulonimbus clouds, Tyndall light shafts, cel-shaded hands holding promissory notes, pale-paper chart cards on a dark-indigo data stage. Fits finance / bonds / investment, economic narrative, books needing a recurring prop (IOUs / tickets / notes) across chapters. Applied to `zhaiquan` (《债券到底怎么投》).
+  - **`impression`** (印象派·莫奈): Monet Impressionist pointillism — teal-sea short-stroke base, warm orange sunrise, cream-white paper cards for data, whale as through-line character; animated via light patches / water ripples / tail-wag / spout rather than moving positions. Fits financial-tool and market-narrative books (big money, order flow, dark pools, options); gentle, poetic, non-intimidating. Applied to `unusual-whales`.
+  - **`cubism`** (分析立体主义): Analytic Cubism — rice-beige paper ground, semi-transparent ochre-gold and steel-grey-blue facets, Braque-style small brushstrokes, dark-brown thick outlines, warning-red strictly for downward numbers and conclusions (<5% area). Fits enterprise-software / earnings / valuation, business-model teardowns, "one whole broken into fragments" narratives. Applied to `servicenow-ai-repricing`.
+  - **Art style assignments recorded** (2026-11-01): `stay-at-the-table` → vangogh, `zhaiquan` → shinkai, `unusual-whales` → impression, `servicenow-ai-repricing` → cubism. (Also: `awe-before-knowledge` → shadowpuppet, recorded 2026-10-31.) The kit library now totals **18 styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`, `shadowpuppet`, `vangogh`, `shinkai`, `impression`, `cubism`.
+- **`wjs-voicedrop-creating-motion-book`** — HTML player template (`player/template.html`) updated twice (2026-11-01): minor refinements to the in-browser playback experience.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 18-kit art style library (shadowpuppet, vangogh, shinkai, impression, and cubism added).
+
 ## [2026-10-31]
 
 ### Changed
