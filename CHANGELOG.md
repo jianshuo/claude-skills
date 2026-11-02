@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-02]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — one new art style kit harvested from the Tokyo VPS, and one style usage recorded:
+  - **`roman`** (罗马古典画风): new art style kit added to the library from a production run; applied to `no-progress-axiom`.
+  - **Art style assignment recorded** (2026-11-02): `coursera-fall` → pop. The kit library now totals **19 styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`, `shadowpuppet`, `vangogh`, `shinkai`, `impression`, `cubism`, `roman`.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the 19-kit art style library (`roman` added).
+
 ## [2026-11-01]
 
 ### Changed
