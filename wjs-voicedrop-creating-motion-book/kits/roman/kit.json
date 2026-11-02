@@ -1,0 +1,15 @@
+{
+  "name": "roman",
+  "label": "庞贝马赛克（flat2026 画法 + 全画面石块后处理：8px 石块、暖灰灰浆缝、斜面高光；文字另层保持清晰嵌字）",
+  "grammar": "y4_storytime（角色叙事）＋y1_kurzgesagt（图示段落）；画面按「一个大物件＋大字」构图",
+  "recipe": "04_roman",
+  "fits": "哲学/思想实验/制度与文明的沉重推演；古典、石刻、「公理」「契约」「默认值」这类要钉死在墙上的概念；少数据",
+  "avoid": "大量小字标注、细折线/多系列图表；需要人物表情细节的情绪题材；低端手机（每帧约 3.2 万块石头重画）",
+  "from_book": "no-progress-axiom（如果人类不会更好）",
+  "fonts": [],
+  "fonts_note": "同 flat2026（PuHui 系，随引擎）",
+  "palette": "纸 #F6EFE2｜纸2 #EEDFC7｜藏青字 #262A5C｜珊瑚 #E8655A｜芥黄 #F2B33D｜绿 #2F8A5D｜粉 #F5CDC6｜薄荷 #D6ECE0｜淡紫 #E7DEF3（只做小色斑）｜成片整体经马赛克量化，灰浆 #9a8870；大块色面比小细节安全",
+  "api": "D.bg D.disc D.decos D.deco D.stipple D.grainIn D.flat D.blob D.damped D.last D.text D.split2 D.tag D.popText D.callout D.person（pose: stand walk think shrug cheer slump point hug wave heart facepalm open；mood: calm happy sad shock worry closed angry none；返回 head/top/handL/handR/chest 锚点） D.POSES D.mini D.crowd D.thought D.speech D.emote（spark heart sweat question exclaim zzz scribble rain sparkle bulb） D.rings D.arrow D.bars D.split D.timeline D.plant D.ballotBox D.book D.phone D.cup D.bulb D.scales D.clock D.sun D.brain D.heart D.window D.world D.finish D.chapterCard D.cardToken D.CARD_TINTS D.subtitle",
+  "notes": "接口与 flat2026 完全相同（D.person/D.bars 等），差别只在 K.finish 末尾做 K.mosaic；K.text 的字在石块之上原样重画（再盖半透明缝叠层）。细线、<30px 的图形会碎，脸部五官基本糊成点，人物请用姿势和大色块表达，不依赖表情。字幕在 finish 之后另画，不受影响。",
+  "placeholder_bg": "K.bg(c, t, {})"
+}
