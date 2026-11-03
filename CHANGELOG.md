@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-03]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — six art style kits newly documented (two overlooked in the 2026-11-02 refresh + four harvested since then), all from Tokyo VPS production book runs:
+  - **`klimt`** (克里姆特金叶): Gustav Klimt–inspired golden-leaf decorative style. Applied to `hotel-iot-jv`. *(harvested 2026-11-01, missed in prior refresh)*
+  - **`renaissance`** (文艺复兴古典): Renaissance classical painting aesthetic. Applied to `anfulu-fall`. *(harvested 2026-11-01, missed in prior refresh)*
+  - **`nouveau`** (新艺术运动): Art Nouveau organic-curve style kit added to the library. Applied to `neocloud`.
+  - **`picasso_blue`** (毕加索蓝色时期): Picasso Blue Period–inspired style kit added to the library. (`who-decides` was produced using the existing `flat2026` style in the same run.)
+  - **`cave`** (洞穴壁画): Cave-painting aesthetic style kit added to the library. Applied to `weight-of-the-world` and `dalio-trading-machine`.
+  - **`rubberhose`** (1920s 橡皮管动画): 1920s rubber-hose animation aesthetic style kit added to the library. Applied to `ai-kuihua`.
+  - **Art style assignments recorded** (2026-11-01/02/03): `hotel-iot-jv` → klimt, `anfulu-fall` → renaissance, `neocloud` → nouveau, `who-decides` → flat2026, `weight-of-the-world` → cave, `dalio-trading-machine` → cave, `ai-kuihua` → rubberhose. The kit library now totals **25 styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`, `shadowpuppet`, `vangogh`, `shinkai`, `impression`, `cubism`, `roman`, `klimt`, `renaissance`, `nouveau`, `picasso_blue`, `cave`, `rubberhose`.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 25-kit art style library (`klimt`, `renaissance`, `nouveau`, `picasso_blue`, `cave`, `rubberhose` added; corrects the 2026-11-02 count of 19 → actual 25).
+
+
 ## [2026-11-02]
 
 ### Changed
@@ -48,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed (docs)
 
 - **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 13-kit art style library (haring, raytrace, and ghibli added).
+
 
 ## [2026-10-30]
 
