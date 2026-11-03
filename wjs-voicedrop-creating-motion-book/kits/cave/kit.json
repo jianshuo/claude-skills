@@ -1,15 +1,15 @@
 {
-  "name": "cave",
-  "label": "40,000 BC 洞穴岩画（纯代码：暖赭岩壁 fbm 法线浮雕；炭笔 fuzz 喷点毛边＋ink 颗粒图案＋平涂剪影，颜料整层 source-atop 叠岩面贴图「吃进岩石」；负形喷绘手印母题＝「只有你能签字」的手；火光 overlay 摇曳、余烬上漂；贯穿物＝负形小手印）",
-  "grammar": "y2_vox（事件史：场景重现、原话、时间线——岩壁上逐行写下的话与记号）＋y4_storytime（人物与情绪靠剪影与构图：红赭人形只有侧影与杏仁眼，庄重克制，不靠表情）",
-  "recipe": "01_cave",
-  "fits": "历史、远古、考古、人类学、文明源头、庄重的事件史叙事（重大决策、战争与危机、探险与发现）；适合「一句话刻在墙上」式的核心句表达；章内以岩壁装饰（手印/点列/裂缝）疏密轮换场景",
-  "avoid": "数据密集与精确读数（没有图表件）；现代科技产品与界面；轻松搞笑、高饱和消费题材；需要细腻人物表情的情感叙事（人不画写实脸）；明亮欢快的儿童题材",
-  "from_book": "weight-of-the-world",
-  "fonts": [],
-  "fonts_note": "不另带字体：标题/大字用引擎自带的 PuHui-Black / PuHui-Heavy，字幕 PuHui-Bold（都是思源黑体 Noto Sans SC 的 GB2312 子集，SIL OFL 1.1，随引擎分发）。「×」可用；「＝」不在子集里（缺字），等号一律用 K.equals 手画两条炭杠；GB2312 以外的字不许出现。",
-  "palette": "暖赭岩壁 #ce925a/#6e4426/#b6643a（底，relief 明暗）｜炭黑 #21150d（线、字）｜白垩 #f0dfbf（字幕字、负形内填、杏仁眼）｜红赭 #9c3520/#8e2a1a（只给重点：关键行、手印、本站记号）｜余烬金 #ffe082。3+1 纪律：赭/炭/垩为底，红赭只给重点；不用蓝紫、冷灰、渐变霓虹",
-  "api": "K.W K.H K.TAU K.C K.SAFE | K.at K.pop K.once K.t0 K.ease | K.round K.circle K.ellipse K.poly K.smooth K.world | K.bg(c,t,{seed,hands,dots,dim,warm,light}) K.paint(c,fn(g)) K.finish(c) | K.shape(g,path,fill,lw,t) K.inkLine K.spray | K.text(g,s,x,y,{size,col:ink|red|chalk,t,maxW,rot}) K.write(…,lt,at,dur,{mode:wipe|type}) K.equals(手画等号) K.popText(≥100px) K.callout(≥52px) | K.handStencil(c,x,y,{s,rot,col,seed,p,inner}) K.handPath | K.figure(g,x,y,{pose:stand|reach|carry|squat,s,f,col}) K.animal(g,x,y,{kind:bison|horse,s,f,t,ph}) | K.fire(c,t,{fx,fy,k,glow}) K.embers(c,t,{groups,y0,y1}) | K.CHAPTER_NAMES K.chapterCard(c,lt,t,n,title) K.cardToken K.subtitle",
-  "notes": "分层铁律：K.bg（岩壁，缓存）→ K.paint(c,g=>{…一切图形与字…})（整层 source-atop 叠岩面贴图，全屏合成每帧仅此 1 次）→ K.fire（overlay）→ K.embers → K.finish（颗粒＋字幕带 y1380–1560 压暗）。字与图形只有画进 K.paint 才「吃进岩面」；直接画在主 ctx 上是浮在墙上的现代字，禁止。文字字号纪律：主词 ≥100px、标签 ≥52px。炭点 9fps 沸腾由图案 setTransform 驱动，几何不动、省且不变形。手印是负形喷绘（高斯喷点云 destination-out 手形蒙版），大手（s>1.5）喷点随 s² 加密、内填白垩降到 0.12；手形块必须逐块 fill 进蒙版（子路径绕向相反会出缺口）。人只出 K.figure 剪影（侧影＋一只杏仁眼，不画写实五官），动物 K.animal 两张姿态每 7 帧交替是原始「动画」。随机全部走 U.hash/U.rng 种子（确定性）。relief/贴图/手印全部 P.cached，不许每帧算。主体放 y200–1350；裂缝生成时已钳出字幕带。火光用 overlay 不用 lighter（lighter 会把赭石洗成粉白）。章节卡 token 是负形小手印，可被 props.js 覆盖 K.cardToken。",
-  "placeholder_bg": "K.bg(c, t, {})"
+ "name": "cave",
+ "label": "洞穴岩画（赭土岩壁带起伏明暗与裂纹、炭笔粗边＋喷点毛边＋赭石/白垩平涂、红赭手印、岩刻齿轮为贯穿物；数据用石柱/炭刻曲线/岩面十字）",
+ "grammar": "y1_kurzgesagt（图示）＋t3_finance_chart（拆块式图表，换成石柱/炭线/十字）",
+ "recipe": "01_cave",
+ "fits": "金融×AI、规则/机器/系统类叙事、‘把直觉写成规则’的古老对现代反差、数据概念多的章（柱图含负值、曲线、四象限、占比）、一镜一个主数字",
+ "avoid": "需要精细写实人脸/温暖情绪的人物故事；密表、细刻度、多系列折线（线宽≥10px 画不下）；热力图/矩阵；医学机制",
+ "from_book": "达利欧机器（dalio-trading-machine）",
+ "fonts": [],
+ "fonts_note": "不另带字体：标题/标签用引擎自带 PuHui-Heavy / PuHui-Bold（思源黑体 GB2312 子集，OFL 1.1）",
+ "palette": "岩壁 #CE925A/#6E4426/#B6643A｜炭 #21150D｜红赭 #A8331F（下行/风险/警示/结论）｜赭黄 #E3A526（上行/黄金/alpha）｜白垩 #F0DFBF（字）｜砂岩 #E8CE9A（石板底，配炭字 #2B1A12）｜野牛褐 #8C3D22（股票）｜炭灰蓝 #566D78（少量，增长）｜手印 #8E2A1A",
+ "api": "K.bg K.finish K.text K.stone K.plate K.popText K.callout K.tag K.stamp K.arrow K.hand K.icons(bison/sun/wave/human/arrow/coin) K.icon K.gear K.bars K.line K.quad K.shape K.ink K.slab K.rough K.poly K.smooth K.chapterCard K.cardCenter K.subtitle K.at K.pop K.once K.t0 K.round K.circle K.world K.C K.CHAPTER_NAMES",
+ "notes": "统一画法：K.shape(填充形)/K.ink(炭线)＝喷点毛边＋炭边＋平涂，炭颗粒每1/9秒平移『沸腾』；K.bg 必须每镜先调（缓存岩壁、同时设炭线沸腾时间），K.finish 最后调（整层叠岩面明暗颗粒＋火光＋字幕带压暗）。文字平涂白垩＋炭边，石板标签＝砂岩底＋炭字。K.bars(c,[{v,label,col?,hi?}],{x,y,w,h,prog,fmt}) 石柱含负值（负柱红向下）；K.line(c,pts,{prog,segCol,marks,axes,zero}) 炭刻曲线可描点挂标签；K.quad(c,{cols,rows,cells:[{label,sub,icon,hi,hand}],prog}) 岩面十字；K.gear(c,x,y,r,{lit,label,minis}) lit<1 只剩虚线轮廓（未完成草图）、minis 咬合小齿轮（每个代表一类资产）。图标：野牛=股票、太阳=黄金、波浪=债、人形、箭头、币=现金。线宽≥10px、字≥52px。章节卡：顶部 N 站进度点（N=章数）＋第 n 章＋砂岩石板章名＋大齿轮刻章号；换贯穿物改 K.cardCenter(c,lt,t,n)。",
+ "placeholder_bg": "K.bg(c, t, {})"
 }

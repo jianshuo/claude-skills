@@ -1,417 +1,273 @@
-// 画风套件 cave（配方 huashu-art-motion 01_cave「40,000 BC 洞穴岩画，纯代码」）：竖屏 1080×1920。导出 window.K（章节代码里写 const D = K）。
-// 核心手法「颜料吃进岩面」：岩壁 relief（半分辨率 fbm 高度场 × 法线 × 左上光）与岩面贴图全部 P.cached；
-//   一切图形画进 K.paint 的颜料层（K.shape：fuzz 炭点毛边 + ink 炭笔图案描边 + 平涂；K.text 同理），
-//   整层 source-atop 叠一次岩面贴图（全屏合成每帧仅此 1 次），炭点图案 9fps 错位「沸腾」。
-// 分层顺序：K.bg（岩壁/裂缝/旧手印装饰）→ K.paint(g=>{…图形/字/手印/人/动物…}) → K.fire（overlay 火光）→ K.embers → K.finish（颗粒＋字幕带压暗）。
-// 铁律：3+1 色板（赭墙/炭黑/白垩＋红赭），红赭只给重点；人不画写实五官（侧影＋杏仁眼）；主体 y200–1350，字幕带 y1380–1560 不放内容；
-//   全部确定性（U.hash/U.rng 种子）；字体只用引擎自带 PuHui-Black/Heavy/Bold；GB2312 以外的字不许出现。
+// 画风套件 cave（配方 huashu-art-motion 01_cave「洞穴岩画」，来自《达利欧机器》）：竖屏 1080×1920，导出 window.K。
+// 规矩：岩壁赭土底（缓存）＋所有图形同一种画法「炭笔粗边＋喷点毛边＋赭石/白垩平涂」，K.finish 时整层再叠一次岩面明暗与颗粒；
+//       文字＝平涂白垩/炭黑＋炭边（不被纹理打碎）；数据图元：石柱 K.bars、炭刻曲线 K.line、岩面十字 K.quad、齿轮 K.gear（贯穿物）。
+//       红赭＝下行/风险/警示，赭黄＝上行/黄金/alpha，炭灰蓝只给股票/增长。线宽≥10px，字≥52px。随机一律种子化。
 (() => {
 const W = 1080, H = 1920, TAU = Math.PI * 2, { clamp, lerp, rng } = U, P = PAINT;
-const D = window.K = { W, H, TAU };
-// 兜底：负半径直接抛错（backOut 过冲/进度插值会算出负半径），一律按 0 画。
+const K = window.K = { W, H, TAU };
 for (const proto of [CanvasRenderingContext2D.prototype, Path2D.prototype]) {
-  const arc = proto.arc, ell = proto.ellipse; if (typeof arc !== 'function' || typeof ell !== 'function' || arc.__cav) continue;
-  proto.arc = function (x, y, r, ...rest) { return arc.call(this, x, y, r > 0 ? r : 0, ...rest); }; proto.arc.__cav = 1;
+  const arc = proto.arc, ell = proto.ellipse; if (typeof arc !== 'function' || typeof ell !== 'function') continue;
+  proto.arc = function (x, y, r, ...rest) { return arc.call(this, x, y, r > 0 ? r : 0, ...rest); };
   proto.ellipse = function (x, y, rx, ry, ...rest) { return ell.call(this, x, y, rx > 0 ? rx : 0, ry > 0 ? ry : 0, ...rest); };
 }
+{ const rg = CanvasRenderingContext2D.prototype.createRadialGradient;
+  if (typeof rg === 'function') CanvasRenderingContext2D.prototype.createRadialGradient = function (x0, y0, r0, x1, y1, r1) { return rg.call(this, x0, y0, r0 > 0 ? r0 : 0, x1, y1, r1 > 0 ? r1 : 0); }; }
 
-// ---------- 色板（3+1：赭墙 / 炭黑 / 白垩 ＋ 红赭只给重点） ----------
-const C = D.C = {
-  wallL: '#ce925a', wallD: '#6e4426', wallR: '#b6643a',           // 岩壁（亮赭/暗/红斑）
-  ink: '#21150d',                                                  // 炭黑（线、字）
-  chalk: '#f0dfbf',                                                // 白垩（高光、字幕字、负形内填）
-  red: '#9c3520', redD: '#74261a', hand: '#8e2a1a',                // 红赭（重点字、手印、重点记号）
-  ochre: '#c9772f', bison: '#8c3d22', horse: '#cf8236',            // 动物平涂
-  ember: '#ffe082', board: '#160b04',                              // 余烬 / 字幕底板
-};
-D.SAFE = { top: 200, bot: 1350, sub: 1480 };   // 主体区 y200–1350；字幕带 1380–1560
+const C = K.C = { wallL: [206, 146, 90], wallD: [110, 68, 38], wallR: [182, 100, 58],
+  charcoal: '#21150d', red: '#a8331f', redD: '#74261a', chalk: '#f0dfbf', ochre: '#c9772f', gold: '#e3a526', bison: '#8c3d22', stone: '#e8ce9a', stoneD: '#c9a46a', blue: '#566d78', hand: '#8e2a1a' };
+K.at = (lt, a, d) => clamp((lt - a) / d);
+K.pop = (lt, a, d = 0.5) => { const q = K.at(lt, a, d); return q <= 0 ? 0 : MO.backOut(q, 1.3); };
+K.cache = {}; K.once = (k, f) => K.cache[k] || (K.cache[k] = f());
+K.t0 = id => { const e = ERAS.find(x => x.id === id); if (!e) throw new Error('K.t0: 段落表里没有 ' + id); return e.t0; };
+K.round = (x, y, w, h, r) => { const p = new Path2D(); p.roundRect(x, y, w, h, r); return p; };
+K.circle = (x, y, r) => { const p = new Path2D(); p.arc(x, y, r, 0, TAU); return p; };
+K.world = (c, cam, fn) => CAM.with(c, cam, fn);
+K._t = 0;
+const hash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+const ez = q => MO.cubicOut(clamp(q));
 
-// ---------- 进度 / 缓存 / 相机 ----------
-D.at = (lt, a, d) => clamp((lt - a) / d);
-D.pop = (lt, a, d = 0.5) => { const q = D.at(lt, a, d); return q <= 0 ? 0 : MO.backOut(q, 1.5); };
-D.cache = {}; D.once = (k, f) => D.cache[k] || (D.cache[k] = f());
-D.t0 = id => { const e = ERAS.find(x => x.id === id); if (!e) throw new Error('D.t0: 段落表里没有 ' + id); return e.t0; };
-D.ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
-D.round = (x, y, w, h, r) => { const p = new Path2D(); p.roundRect(x, y, w, h, r); return p; };
-D.circle = (x, y, r) => { const p = new Path2D(); p.arc(x, y, r, 0, TAU); return p; };
-D.ellipse = (x, y, rx, ry, a = 0) => { const p = new Path2D(); p.ellipse(x, y, rx, ry, a, 0, TAU); return p; };
-D.poly = (pts, closed = true) => { const p = new Path2D(); pts.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); if (closed) p.closePath(); return p; };
-D.smooth = (pts, closed = true) => RIG.smooth(pts, closed);
-D.world = (c, cam, fn) => CAM.with(c, cam, fn);
+// ---------- 炭笔/喷点图案（沸腾：每 1/9 秒随机平移，几何不动） ----------
+const inkTile = () => P.cached('kcv_ink', 256, 256, g => { const img = g.createImageData(256, 256), d = img.data, r = rng(91);
+  for (let i = 0; i < 65536; i++) { const x = i % 256, y = (i / 256) | 0, n = P.noise(x * 0.09, y * 0.09) * 0.5 + P.noise(x * 0.3 + 9, y * 0.3) * 0.5, hole = r() < 0.05 || n > 0.6;
+    d[i * 4] = 33; d[i * 4 + 1] = 21; d[i * 4 + 2] = 13; d[i * 4 + 3] = hole ? 255 * r() * 0.4 : 232 + r() * 23; } g.putImageData(img, 0, 0); });
+const fuzzTile = () => P.cached('kcv_fuzz', 256, 256, g => { const r = rng(57); g.fillStyle = '#21150d'; for (let i = 0; i < 2600; i++) { g.globalAlpha = 0.35 + r() * 0.6; g.beginPath(); g.arc(r() * 256, r() * 256, 0.7 + r() * 1.5, 0, TAU); g.fill(); } });
+let PATS = null, PSEED = -1;
+const pat = (c, k) => { if (!PATS) { PATS = { ink: c.createPattern(inkTile(), 'repeat'), fuzz: c.createPattern(fuzzTile(), 'repeat') }; }
+  const s = Math.floor(K._t * 9); if (s !== PSEED) { PSEED = s; const r = rng(s * 13 + 3); PATS.ink.setTransform(new DOMMatrix().translate((r() * 256) | 0, (r() * 256) | 0)); PATS.fuzz.setTransform(new DOMMatrix().translate((r() * 256) | 0, (r() * 256) | 0)); }
+  return PATS[k]; };
 
-// ---------- 炭笔图案（fuzz 喷点毛边 / ink 炭黑颗粒 / red 红赭颗粒），9fps 沸腾 ----------
-const mkTile = (key, r0, g0, b0, seed) => P.cached(key, 256, 256, (g) => {
-  const img = g.createImageData(256, 256), d = img.data, r = rng(seed);
-  for (let i = 0; i < 256 * 256; i++) {
-    const x = i % 256, y = (i / 256) | 0, n = P.noise(x * 0.09, y * 0.09) * 0.5 + P.noise(x * 0.3 + 9, y * 0.3) * 0.5;
-    const hole = r() < 0.07 || n > 0.58;
-    d[i * 4] = r0; d[i * 4 + 1] = g0; d[i * 4 + 2] = b0; d[i * 4 + 3] = hole ? 255 * r() * 0.35 : 225 + r() * 30;
-  }
-  g.putImageData(img, 0, 0);
-});
-const fuzzTile = () => P.cached('cv_fuzzpat', 256, 256, (g) => {
-  const r = rng(57); g.fillStyle = '#21150d';
-  for (let i = 0; i < 2600; i++) { g.globalAlpha = 0.35 + r() * 0.6; g.beginPath(); g.arc(r() * 256, r() * 256, 0.7 + r() * 1.5, 0, TAU); g.fill(); }
-});
-const PATM = new WeakMap();
-const pat = (g, t, tile) => {
-  let m = PATM.get(g); if (!m) { m = {}; PATM.set(g, m); }
-  let p = m[tile]; if (!p) { p = m[tile] = g.createPattern(tile(), 'repeat'); }
-  const r = rng(P.boilSeed(t, 9) * 7 + 3);                 // 9fps 图案整体错位 → 炭点「沸腾」（几何不动）
-  p.setTransform(new DOMMatrix().translate((r() * 256) | 0, (r() * 256) | 0)); return p;
-};
-const inkPat = (g, t) => pat(g, t, () => mkTile('cv_inkpat', 33, 21, 13, 91));
-const redPat = (g, t) => pat(g, t, () => mkTile('cv_redpat', 156, 53, 32, 133));
-const fuzzPat = (g, t) => pat(g, t, fuzzTile);
+// ---------- 路径工具 ----------
+const poly = (pts, closed = true) => { const p = new Path2D(); pts.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); if (closed) p.closePath(); return p; };
+const smooth = (pts, closed = true) => { const p = new Path2D(), n = pts.length; if (n < 3) return poly(pts, closed);
+  if (closed) { const m = i => [(pts[i][0] + pts[(i + 1) % n][0]) / 2, (pts[i][1] + pts[(i + 1) % n][1]) / 2]; let s = m(n - 1); p.moveTo(s[0], s[1]); for (let i = 0; i < n; i++) { const e = m(i); p.quadraticCurveTo(pts[i][0], pts[i][1], e[0], e[1]); } p.closePath(); }
+  else { p.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < n - 1; i++) p.quadraticCurveTo(pts[i][0], pts[i][1], (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2); p.lineTo(pts[n - 1][0], pts[n - 1][1]); }
+  return p; };
+K.poly = poly; K.smooth = smooth;
+// 粗糙矩形石板（带手抖，种子固定）
+K.rough = (x, y, w, h, seed = 1, amp = 5) => { const r = rng(seed * 11 + 2), j = () => (r() - .5) * amp * 2, n = Math.max(2, Math.round(w / 160)), m = Math.max(2, Math.round(h / 160)), pts = [];
+  for (let i = 0; i < n; i++) pts.push([x + w * i / n + j(), y + j()]); for (let i = 0; i < m; i++) pts.push([x + w + j(), y + h * i / m + j()]);
+  for (let i = n; i > 0; i--) pts.push([x + w * i / n + j(), y + h + j()]); for (let i = m; i > 0; i--) pts.push([x + j(), y + h * i / m + j()]); return poly(pts, true); };
+K.slab = (x, y, w, h, seed = 1, amp = 7) => { const r = rng(seed * 7 + 1), j = () => (r() - .5) * amp * 2;
+  return smooth([[x + j(), y + j()], [x + w / 2, y + j() * .5], [x + w + j(), y + j()], [x + w + j(), y + h / 2], [x + w + j(), y + h + j()], [x + w / 2, y + h + j() * .5], [x + j(), y + h + j()], [x + j(), y + h / 2]], true); };
 
-// ---------- 颜料图形的统一画法 ----------
-// K.shape(g,path,fill,lw,t,alpha)：先 fuzz 宽描（外半圈喷点毛边）再 ink 实描，最后平涂 fill 盖住内半圈
-D.shape = (g, path, fill, lw, t, alpha = 1) => {
-  if (lw) { g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = fuzzPat(g, t); g.lineWidth = lw * 2 + 7; g.stroke(path); g.strokeStyle = inkPat(g, t); g.lineWidth = lw * 2; g.stroke(path); }
-  if (fill) { g.globalAlpha = alpha; g.fillStyle = fill; g.fill(path); g.globalAlpha = 1; }
-};
-// K.inkLine(g,path,lw,t)：纯炭线（不填色），四肢/轮廓/引线用
-D.inkLine = (g, path, lw, t) => { if (lw > 3.5) { g.strokeStyle = fuzzPat(g, t); g.lineWidth = lw + 5; g.lineCap = 'round'; g.stroke(path); } g.strokeStyle = inkPat(g, t); g.lineWidth = lw; g.lineCap = 'round'; g.lineJoin = 'round'; g.stroke(path); };
-// K.spray(g,cx,cy,sigma,n,col,seed,…)：高斯喷点（手印/点列/炭灰）
-D.spray = (g, cx, cy, sigma, n, col, seed, rmin = 0.8, rmax = 3.2, amin = 0.25, amax = 0.75) => {
-  const r = rng(seed); g.fillStyle = col;
-  for (let i = 0; i < n; i++) { const a = r() * TAU, rr = Math.sqrt(-2 * Math.log(1 - r() * 0.999)) * sigma; g.globalAlpha = amin + r() * (amax - amin); g.beginPath(); g.arc(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, rmin + r() * (rmax - rmin), 0, TAU); g.fill(); }
-  g.globalAlpha = 1;
-};
+// ---------- 统一画法：炭边＋喷点毛边＋平涂 ----------
+// 填充形：先喷点毛边，再炭边，再平涂盖住内半圈
+K.shape = (c, path, fill, lw = 7) => { c.save(); c.lineJoin = 'round'; c.lineCap = 'round';
+  if (lw) { c.strokeStyle = pat(c, 'fuzz'); c.lineWidth = lw * 2 + 8; c.stroke(path); c.strokeStyle = pat(c, 'ink'); c.lineWidth = lw * 2; c.stroke(path); }
+  if (fill) { c.fillStyle = fill; c.fill(path); } c.restore(); };
+// 炭线：lw 为线芯宽；col 给了就在炭边里填一道彩线（炭边宽出每侧 ~4.5px）
+K.ink = (c, path, lw = 12, col = null) => { c.save(); c.lineJoin = 'round'; c.lineCap = 'round';
+  c.strokeStyle = pat(c, 'fuzz'); c.lineWidth = lw + (col ? 17 : 5); c.stroke(path); c.strokeStyle = pat(c, 'ink'); c.lineWidth = lw + (col ? 9 : 0); c.stroke(path);
+  if (col) { c.strokeStyle = col; c.lineWidth = lw; c.stroke(path); } c.restore(); };
 
 // ---------- 岩壁（全部缓存） ----------
-const HW = 540, HH = 960;
-const relief = () => P.cached('cv_relief', HW, HH, (g) => {
-  const WL = [206, 146, 90], WD = [110, 68, 38], WR = [182, 100, 58];
+const HW = 270, HH = 480, S = 4; let SHADE = null;
+const relief = () => P.cached('kcv_relief', HW, HH, g => {
   const hgt = new Float32Array((HW + 1) * (HH + 1));
-  for (let y = 0; y <= HH; y++) for (let x = 0; x <= HW; x++) { const X = x * 2, Y = y * 2;
-    hgt[y * (HW + 1) + x] = P.fbm(X * 0.0022 + 3, Y * 0.0022, 4) * 1.0 + P.fbm(X * 0.011, Y * 0.011 + 7, 3) * 0.16 + P.noise(X * 0.05, Y * 0.05) * 0.03; }
-  const img = g.createImageData(HW, HH), d = img.data, L = [-0.55, -0.62, 0.56];
-  const shade = new Float32Array(HW * HH);
-  for (let y = 0; y < HH; y++) for (let x = 0; x < HW; x++) {
-    const i = y * (HW + 1) + x, dx = (hgt[i + 1] - hgt[i]) * 52, dy = (hgt[i + HW + 1] - hgt[i]) * 52;
-    const nl = Math.hypot(dx, dy, 1), dot = (-dx * L[0] - dy * L[1] + L[2]) / nl;
-    const s = clamp(0.5 + (dot - 0.56) * 0.9); shade[y * HW + x] = s;
-    const X = x * 2, Y = y * 2, n2 = P.fbm(X * 0.0016 + 11, Y * 0.0016 + 2, 3), n3 = P.fbm(X * 0.004 + 40, Y * 0.004, 2);
-    let col = P.mix(WL, WD, clamp(0.35 - n2 * 1.3)); col = P.mix(col, WR, clamp(n3 * 1.4, 0, 0.45));
-    const k = 0.72 + s * 0.55, j = (y * HW + x) * 4;
-    d[j] = col[0] * k; d[j + 1] = col[1] * k; d[j + 2] = col[2] * k; d[j + 3] = 255;
-  }
-  g.putImageData(img, 0, 0); g.__shade = shade;
-});
-// 岩面贴图（颜料层 source-atop 用）：阴影处压暗、亮处提暖 + 颗粒 + 低频干湿斑
-const figTex = () => P.cached('cv_figtex', W, H, (g) => {
-  const sh = relief().getContext('2d').__shade;
+  for (let y = 0; y <= HH; y++) for (let x = 0; x <= HW; x++) { const X = x * S, Y = y * S; hgt[y * (HW + 1) + x] = P.fbm(X * 0.0022 + 3, Y * 0.0022, 4) + P.fbm(X * 0.011, Y * 0.011 + 7, 3) * 0.16 + P.noise(X * 0.05, Y * 0.05) * 0.03; }
+  const img = g.createImageData(HW, HH), d = img.data, L = [-0.55, -0.62, 0.56], shade = new Float32Array(HW * HH);
+  for (let y = 0; y < HH; y++) for (let x = 0; x < HW; x++) { const i = y * (HW + 1) + x, dx = (hgt[i + 1] - hgt[i]) * 52 * 1.2, dy = (hgt[i + HW + 1] - hgt[i]) * 52 * 1.2, nl = Math.hypot(dx, dy, 1);
+    const s = clamp(0.5 + ((-dx * L[0] - dy * L[1] + L[2]) / nl - 0.56) * 0.9, 0, 1); shade[y * HW + x] = s;
+    const X = x * S, Y = y * S, n2 = P.fbm(X * 0.0016 + 11, Y * 0.0016 + 2, 3), n3 = P.fbm(X * 0.004 + 40, Y * 0.004, 2);
+    let col = P.mix(C.wallL, C.wallD, clamp(0.4 - n2 * 0.95, 0, 0.8)); col = P.mix(col, C.wallR, clamp(n3 * 1.1, 0, 0.3)); const k = 0.8 + s * 0.42, j = (y * HW + x) * 4;
+    d[j] = col[0] * k; d[j + 1] = col[1] * k; d[j + 2] = col[2] * k; d[j + 3] = 255; }
+  g.putImageData(img, 0, 0); SHADE = shade; });
+// 整层岩面明暗：阴影→炭黑、亮处→暖白、颗粒、低频干湿斑；K.finish 时整帧叠一次
+const figTex = () => P.cached('kcv_figtex', W, H, g => { relief(); const sh = SHADE;
   const s = P.canvas(HW, HH), sg = s.getContext('2d'), img = sg.createImageData(HW, HH), d = img.data;
-  for (let i = 0; i < HW * HH; i++) { const v = sh ? sh[i] : 0.5; const dk = v < 0.5; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = dk ? 20 : 255; if (!dk) { d[i * 4 + 1] = 236; d[i * 4 + 2] = 200; } d[i * 4 + 3] = (dk ? (0.5 - v) * 150 : (v - 0.5) * 50); }
+  for (let i = 0; i < HW * HH; i++) { const v = sh[i], dk = v < 0.5; d[i * 4] = dk ? 20 : 255; d[i * 4 + 1] = dk ? 20 : 236; d[i * 4 + 2] = dk ? 20 : 200; d[i * 4 + 3] = dk ? (0.5 - v) * 90 : (v - 0.5) * 40; }
   sg.putImageData(img, 0, 0); g.imageSmoothingQuality = 'high'; g.drawImage(s, 0, 0, W, H);
-  g.drawImage(P.grain('cv_fdk', 0.14, [30, 18, 8], 0.32), 0, 0);
-  g.drawImage(P.grain('cv_flt', 0.05, [255, 236, 200], 0.22), 0, 0);
-  const m = P.canvas(135, 240), mg = m.getContext('2d'), mi = mg.createImageData(135, 240);
-  for (let i = 0; i < 135 * 240; i++) { const x = i % 135, y = (i / 135) | 0, n = P.fbm(x * 0.08 + 21, y * 0.08, 3); mi.data[i * 4] = mi.data[i * 4 + 1] = mi.data[i * 4 + 2] = n > 0 ? 255 : 0; mi.data[i * 4 + 3] = Math.abs(n) * 70; }
-  mg.putImageData(mi, 0, 0); g.drawImage(m, 0, 0, W, H);
-});
-// 裂缝（随机游走；钳出 y1330–1600 字幕带）
-const cracks = (g, seed) => {
-  const r = rng(seed * 977 + 404);
-  const starts = [[300, 0, 1.3], [520, 0, 1.75], [920, 0, 1.95], [0, 480, -0.12], [0, 1080, 0.12], [1080, 660, 3.1], [1080, 1220, 3.35], [140, 1920, -1.35], [880, 1920, -1.8], [0, 1650, 0.35]];
-  const walk = (x, y, a, n, w, depth) => {
-    const pts = [[x, y]];
-    for (let s = 0; s < n; s++) { a += (r() - .5) * 0.9; const l = 14 + r() * 26; x += Math.cos(a) * l; y += Math.sin(a) * l;
-      if (y > 1330 && y < 1600) y = y < 1465 ? 1330 : 1600;
-      pts.push([x, y]);
-      if (depth < 2 && r() < 0.12) walk(x, y, a + (r() < .5 ? 1 : -1) * (0.6 + r() * 0.6), (n - s) * 0.5 | 0, w * 0.7, depth + 1); }
-    g.lineJoin = 'round';
-    g.strokeStyle = 'rgba(255,226,180,.22)'; g.lineWidth = w + 1; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0] + 1.6, p[1] + 1.6) : g.moveTo(p[0] + 1.6, p[1] + 1.6)); g.stroke();
-    g.strokeStyle = 'rgba(40,22,10,.62)'; g.lineWidth = w; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke();
-  };
-  starts.forEach(([x, y, a]) => walk(x, y, a, 12 + (r() * 14 | 0), 2.2, 0));
-};
+  g.drawImage(P.grain('kcv_fdk', 0.12, [30, 18, 8], 0.26), 0, 0); g.drawImage(P.grain('kcv_flt', 0.05, [255, 236, 200], 0.2), 0, 0);
+  const m = P.canvas(108, 192), mg = m.getContext('2d'), mi = mg.createImageData(108, 192);
+  for (let i = 0; i < 108 * 192; i++) { const x = i % 108, y = (i / 108) | 0, n = P.fbm(x * 0.08 + 21, y * 0.08, 3); mi.data[i * 4] = mi.data[i * 4 + 1] = mi.data[i * 4 + 2] = n > 0 ? 255 : 0; mi.data[i * 4 + 3] = Math.min(26, Math.abs(n) * 70); }
+  mg.putImageData(mi, 0, 0); g.drawImage(m, 0, 0, W, H); });
 
-// ---------- 负形喷绘手印（岩画母题＝「只有你能签字」的手） ----------
-// K.handPath(s)：手形块数组（中心原点、指尖朝上；逐块填，避免 Path2D 子路径绕向相反的缺口）
-D.handPath = (s = 1) => {
-  const out = [], pal = new Path2D(); pal.ellipse(0, 8 * s, 26 * s, 31 * s, 0, 0, TAU); out.push(pal);
-  [[-0.5, 54, -17], [-0.17, 64, -6], [0.14, 62, 6], [0.46, 50, 17], [-1.25, 46, -20]].forEach(([a, l, ox], k) => {
-    const A = k < 4 ? [ox * s, -8 * s] : [-18 * s, 18 * s], B = [A[0] + Math.sin(a) * l * s, A[1] - Math.cos(a) * l * s];
-    const p = new Path2D(); const n = Math.atan2(B[1] - A[1], B[0] - A[0]) + Math.PI / 2, w = (k < 4 ? 7 : 8) * s;
-    p.moveTo(A[0] + Math.cos(n) * w, A[1] + Math.sin(n) * w); p.lineTo(B[0] + Math.cos(n) * w * 0.85, B[1] + Math.sin(n) * w * 0.85);
-    p.arc(B[0], B[1], w * 0.85, n, n + Math.PI, true); p.lineTo(A[0] - Math.cos(n) * w, A[1] - Math.sin(n) * w); p.closePath(); out.push(p); });
-  const wr = new Path2D(); wr.rect(-16 * s, 26 * s, 32 * s, 46 * s); out.push(wr); return out;
-};
-// 手印画布（缓存）：高斯喷点云 − destination-out 实心手形 + 手形淡填白垩
-const stencilCvs = (s, col, seed, inner) => {
-  const size = Math.ceil(320 * Math.max(1, s * 1.35));
-  return P.cached(`cv_hand_${size}_${s}_${seed}_${col}_${inner}`, size, size, (g) => {
-    const mid = size / 2, dn = Math.max(1, s * s * 0.6), rf = Math.max(1, s * 0.55);
-    D.spray(g, mid, mid, 46 * s, Math.round(3200 * dn), col, seed, 0.8 * rf, 3.2 * rf, 0.15, 0.6);
-    D.spray(g, mid, mid, 28 * s, Math.round(1400 * dn), col, seed + 1, 1 * rf, 3.5 * rf, 0.3, 0.75);
-    const mk = P.canvas(size, size), mg = mk.getContext('2d'); mg.translate(mid, mid); mg.fillStyle = '#f6e2bc'; D.handPath(s).forEach(p => mg.fill(p));
-    g.save(); g.translate(mid, mid); g.restore();
-    g.globalCompositeOperation = 'destination-out'; g.globalAlpha = 0.95; g.drawImage(mk, 0, 0);
-    g.globalCompositeOperation = 'source-over'; g.globalAlpha = inner; g.drawImage(mk, 0, 0);
-  });
-};
-// K.handStencil(c,x,y,o)：o { s 缩放(1≈手掌 220px), rot, col(默认 hand 红赭), seed, p 0..1 按上墙的进度(1.05→1 缩放＋淡入), alpha, inner 负形内填白垩强度 }
-D.handStencil = (c, x, y, o = {}) => {
-  const s = o.s || 1, p = o.p ?? 1; if (p <= 0 || (o.alpha ?? 1) <= 0) return;
-  const cv = stencilCvs(s, o.col || C.hand, o.seed || 31, o.inner ?? (s > 1.5 ? 0.12 : 0.3)), size = cv.width, k = 1.05 - 0.05 * clamp(p);
-  c.save(); c.translate(x, y); c.rotate(o.rot || 0); c.scale(k, k); c.globalAlpha *= clamp(p) * (o.alpha ?? 1);
-  c.drawImage(cv, -size / 2, -size / 2); c.restore();
-};
+function spray(g, cx, cy, sigma, n, col, seed, rmin = 0.8, rmax = 3.2, amin = 0.25, amax = 0.75) { const r = rng(seed); g.fillStyle = col;
+  for (let i = 0; i < n; i++) { const a = r() * TAU, rr = Math.sqrt(-2 * Math.log(1 - r() * 0.999)) * sigma; g.globalAlpha = amin + r() * (amax - amin); g.beginPath(); g.arc(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, rmin + r() * (rmax - rmin), 0, TAU); g.fill(); } g.globalAlpha = 1; }
+function handPaths() { const out = [], pal = new Path2D(); pal.ellipse(0, 8, 26, 31, 0, 0, TAU); out.push(pal);
+  [[-0.5, 54, -17], [-0.17, 64, -6], [0.14, 62, 6], [0.46, 50, 17], [-1.25, 46, -20]].forEach(([a, l, ox], k) => { const A = k < 4 ? [ox, -8] : [-18, 18], B = [A[0] + Math.sin(a) * l, A[1] - Math.cos(a) * l];
+    const p = new Path2D(), n = Math.atan2(B[1] - A[1], B[0] - A[0]) + Math.PI / 2, w = k < 4 ? 7 : 8;
+    p.moveTo(A[0] + Math.cos(n) * w, A[1] + Math.sin(n) * w); p.lineTo(B[0] + Math.cos(n) * w * .85, B[1] + Math.sin(n) * w * .85); p.arc(B[0], B[1], w * .85, n, n + Math.PI, true); p.lineTo(A[0] - Math.cos(n) * w, A[1] - Math.sin(n) * w); p.closePath(); out.push(p); });
+  const wr = new Path2D(); wr.rect(-16, 26, 32, 46); out.push(wr); return out; }
+// 红赭手印（负形：喷点盖住手，手形处留岩面）。按 (col, seed) 缓存成 320² 位图，逐帧只贴图
+function handTile(col, seed) { return P.cached('kcv_hand_' + col + seed, 320, 320, tg => {
+  spray(tg, 160, 160, 46, 3200, col, seed, .8, 3.2, .15, .6); spray(tg, 160, 160, 28, 1400, col, seed + 1, 1, 3.5, .3, .75);
+  const mk = P.canvas(320, 320), mg = mk.getContext('2d'); mg.translate(160, 160); mg.fillStyle = '#f6e2bc'; handPaths().forEach(p => mg.fill(p));
+  tg.globalCompositeOperation = 'destination-out'; tg.globalAlpha = .95; tg.drawImage(mk, 0, 0); tg.globalCompositeOperation = 'source-over'; tg.globalAlpha = .3; tg.drawImage(mk, 0, 0); }); }
+// K.hand(c,x,y,{scale=1,rot=0,col,seed=31,alpha=1,flip}) 手印约 190px 高 @scale1
+K.hand = (c, x, y, o = {}) => { const { scale = 1, rot = 0, col = C.hand, seed = 31, alpha = 1, flip = false } = o;
+  c.save(); c.globalAlpha *= alpha; c.translate(x, y); c.rotate(rot); c.scale(flip ? -scale : scale, scale); c.drawImage(handTile(col, seed), -160, -160); c.restore(); };
+function cracks(g) { const r = rng(404);
+  const walk = (x, y, a, n, w, dp) => { const pts = [[x, y]]; for (let s = 0; s < n; s++) { a += (r() - .5) * .9; const l = 14 + r() * 26; x += Math.cos(a) * l; y += Math.sin(a) * l; pts.push([x, y]); if (dp < 2 && r() < .12) walk(x, y, a + (r() < .5 ? 1 : -1) * (.6 + r() * .6), (n - s) * .5 | 0, w * .7, dp + 1); }
+    g.lineJoin = 'round'; g.strokeStyle = 'rgba(255,226,180,.22)'; g.lineWidth = w + 1; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0] + 1.6, p[1] + 1.6) : g.moveTo(p[0] + 1.6, p[1] + 1.6)); g.stroke();
+    g.strokeStyle = 'rgba(40,22,10,.62)'; g.lineWidth = w; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); };
+  [[300, 0, 1.6], [820, 0, 1.5], [0, 700, 0.1], [1080, 900, 3.1], [200, 1920, -1.5], [900, 1920, -1.6], [0, 1500, .2], [1080, 1500, 3.2]].forEach(([x, y, a]) => walk(x, y, a, 14 + (r() * 12 | 0), 2.4, 0)); }
+const wall = hands => P.cached('kcv_bg' + (hands ? 'H' : ''), W, H, g => {
+  g.imageSmoothingQuality = 'high'; g.drawImage(relief(), 0, 0, W, H);
+  g.drawImage(P.grain('kcv_wdk', .2, [60, 36, 18], .3), 0, 0); g.drawImage(P.grain('kcv_wlt', .1, [255, 238, 205], .26), 0, 0); cracks(g);
+  if (hands) [[110, 180, -.35, 1], [990, 150, .3, .95], [80, 1290, .25, .9], [1000, 1330, -.2, 1], [1010, 1700, .3, .9], [90, 1760, -.3, .9]].forEach(([x, y, a, s], k) => { g.save(); g.translate(x, y); g.rotate(a); g.scale(s, s); g.drawImage(handTile(C.hand, 31 + k * 17), -160, -160); g.restore(); });
+  const v = g.createRadialGradient(540, 760, 380, 540, 960, 1300); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(20,8,0,.62)'); g.fillStyle = v; g.fillRect(0, 0, W, H); });
+// K.bg(c,t,{hands=true})：岩壁（缓存，每帧一次 drawImage）。必须每镜先调，它同时设定炭笔“沸腾”的时间。
+K.bg = (c, t, o = {}) => { K._t = t || 0; c.drawImage(wall(o.hands !== false), 0, 0); };
+// 收尾：整层岩面明暗＋火光＋字幕带压暗
+K.finish = c => { c.drawImage(figTex(), 0, 0); const t = K._t;
+  const fl = .13 + .08 * P.noise(t * 9.5, 3.3) + .03 * Math.sin(t * 23), fx = 540 + P.noise(t * 3.1, 1.7) * 60, fy = 900 + P.noise(t * 2.3, 8.1) * 40;
+  const gr = c.createRadialGradient(fx, fy, 10, fx, fy, 900); gr.addColorStop(0, `rgba(255,196,110,${fl * 2.4})`); gr.addColorStop(.5, `rgba(255,160,80,${fl * 1.2})`); gr.addColorStop(1, 'rgba(255,140,60,0)');
+  c.save(); c.globalCompositeOperation = 'overlay'; c.fillStyle = gr; c.fillRect(0, 0, W, H); c.restore();
+  const sb = c.createLinearGradient(0, 1360, 0, 1640); sb.addColorStop(0, 'rgba(24,12,4,0)'); sb.addColorStop(.35, 'rgba(24,12,4,.34)'); sb.addColorStop(.7, 'rgba(24,12,4,.34)'); sb.addColorStop(1, 'rgba(24,12,4,0)'); c.fillStyle = sb; c.fillRect(0, 1360, W, 280); };
 
-// ---------- 底：岩壁 ----------
-// K.bg(c,t,o)：o { seed(默认 1，决定裂缝/装饰布局), hands 四角旧手印装饰(默认 true), dots 顶部红点列(默认 true),
-//   dim 额外压暗 0..1, warm 额外暖光 0..1, light 整体提亮 0..1 }
-D.bg = (c, t, o = {}) => {
-  const seed = o.seed || 1, hands = o.hands !== false, dots = o.dots !== false;
-  const key = `cv_bg_${seed}_${hands ? 1 : 0}_${dots ? 1 : 0}`;
-  const img = P.cached(key, W, H, (g) => {
-    g.imageSmoothingQuality = 'high'; g.drawImage(relief(), 0, 0, W, H);
-    g.drawImage(P.grain('cv_wdk', 0.22, [60, 36, 18], 0.32), 0, 0);
-    g.drawImage(P.grain('cv_wlt', 0.10, [255, 238, 205], 0.28), 0, 0);
-    cracks(g, seed);
-    if (hands) { const rr = rng(seed * 31 + 7);
-      [[120, 300, -0.3, 0.85], [950, 220, 0.25, 0.8], [108, 880, -0.15, 0.7], [968, 640, 0.3, 0.62]].forEach(([x, y, a, s], k) =>
-        D.handStencil(g, x, y, { s, rot: a, seed: 31 + k * 17 + seed, alpha: 0.85 + rr() * 0.15 })); }
-    if (dots) for (let k = 0; k < 13; k++) { const x = 200 + k * 56, y = 148 + Math.sin(k * 1.7) * 8;
-      D.spray(g, x, y, 3.5, 30, '#9a2e1c', 200 + k + seed * 13, 0.8, 2, 0.4, 0.8); g.fillStyle = '#9a2e1c'; g.globalAlpha = 0.75; g.beginPath(); g.arc(x, y, 5.5, 0, TAU); g.fill(); g.globalAlpha = 1; }
-    const v = g.createRadialGradient(540, 900, 300, 540, 960, 1500); v.addColorStop(0, 'rgba(30,14,4,0)'); v.addColorStop(0.55, 'rgba(30,14,4,.18)'); v.addColorStop(1, 'rgba(18,8,2,.82)');
-    g.fillStyle = v; g.fillRect(0, 0, W, H);
-    const fl = g.createRadialGradient(540, 1000, 20, 540, 1000, 700); fl.addColorStop(0, 'rgba(255,190,110,.32)'); fl.addColorStop(0.5, 'rgba(255,150,70,.13)'); fl.addColorStop(1, 'rgba(255,150,70,0)');
-    g.globalCompositeOperation = 'lighter'; g.fillStyle = fl; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over';
-  });
-  c.drawImage(img, 0, 0);
-  if (o.light) { c.save(); c.globalCompositeOperation = 'soft-light'; c.fillStyle = `rgba(255,230,190,${clamp(o.light)})`; c.fillRect(0, 0, W, H); c.restore(); }
-  if (o.warm) { c.save(); c.globalCompositeOperation = 'lighter'; const w = c.createRadialGradient(540, 1000, 20, 540, 1000, 800); w.addColorStop(0, `rgba(255,180,100,${0.3 * clamp(o.warm)})`); w.addColorStop(1, 'rgba(255,150,70,0)'); c.fillStyle = w; c.fillRect(0, 0, W, H); c.restore(); }
-  if (o.dim) { c.fillStyle = `rgba(14,6,2,${clamp(o.dim)})`; c.fillRect(0, 0, W, H); }
-};
-// K.paint(c,fn)：颜料层。fn(g) 里画一切图形/字（K.shape/K.text/K.handStencil/K.figure/K.animal…），
-//   整层 source-atop 叠岩面贴图后贴上墙——这是「颜料吃进岩面」的唯一入口，全屏合成每帧仅此 1 次。
-D.paint = (c, fn) => {
-  const L = P.scratch('cv_fig'), g = L.getContext('2d');
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H);
-  fn(g);
-  g.globalCompositeOperation = 'source-atop'; g.drawImage(figTex(), 0, 0); g.globalCompositeOperation = 'source-over';
-  c.drawImage(L, 0, 0);
-};
+// ---------- 文字：平涂 + 炭边（不叠纹理） ----------
+K.CHAPTER_NAMES = (window.BOOK_META || {}).chapters || [];
+K.text = (c, s, x, y, o = {}) => { const { size = 60, fam = 'PuHui-Heavy', col = C.chalk, align = 'center', alpha = 1, scale = 1, rot = 0, track = 0, lw = Math.max(5, size / 10) } = o;
+  c.save(); c.globalAlpha *= alpha; c.translate(x, y); c.rotate(rot); c.scale(scale, scale); c.font = `${size}px "${fam}"`; c.textAlign = align; c.textBaseline = 'middle'; c.lineJoin = 'round'; if (track) c.letterSpacing = track + 'px';
+  if (lw) { c.strokeStyle = pat(c, 'fuzz'); c.lineWidth = lw * 2 + 5; c.strokeText(s, 0, 0); c.strokeStyle = pat(c, 'ink'); c.lineWidth = lw * 2; c.strokeText(s, 0, 0); }
+  c.fillStyle = col; c.fillText(s, 0, 0); c.restore(); };
+// 石板标签（砂岩底＋炭字）。size≥52。o:{col 字色, fill 板色, w,h 指定尺寸, rot, scale, alpha, seed}
+K.stone = (c, s, x, y, o = {}) => { const { size = 56, fam = 'PuHui-Heavy', col = '#2b1a12', fill = C.stone, scale = 1, alpha = 1, rot = 0, seed = hash(s) % 97 } = o;
+  c.save(); c.font = `${size}px "${fam}"`; const w = o.w || c.measureText(s).width + size * 1.1, h = o.h || size * 1.55;
+  c.globalAlpha *= alpha; c.translate(x, y); c.rotate(rot); c.scale(scale, scale);
+  K.shape(c, K.slab(-w / 2, -h / 2, w, h, seed, 5), fill, 7);
+  c.strokeStyle = 'rgba(120,80,40,.35)'; c.lineWidth = 4; c.lineCap = 'round'; const r = rng(seed + 5); for (let i = 0; i < 3; i++) { const px = (r() - .5) * w * .8, py = h / 2 - 12 - r() * 6; c.beginPath(); c.moveTo(px, py); c.lineTo(px + 18 + r() * 24, py - 3); c.stroke(); }
+  c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, 0, 3); c.restore(); };
+K.plate = K.stone;
+K.popText = (c, s, x, y, lt, at, o = {}) => { const p = K.pop(lt, at, o.dur || 0.5); if (p <= 0) return; (o.plate || o.stone ? K.stone : K.text)(c, s, x, y, { ...o, scale: p, alpha: clamp(p * 2) * (o.alpha ?? 1) }); };
+// 引线标签：炭线(粗8)从 (ax,ay) 画到 (bx,by)，端点一个炭点，标签是石板
+K.callout = (c, s, ax, ay, bx, by, lt, at, o = {}) => { const p1 = ez(K.at(lt, at, 0.35)); if (p1 <= 0) return;
+  K.ink(c, poly([[ax, ay], [lerp(ax, bx, p1), lerp(ay, by, p1)]], false), 8);
+  c.save(); c.fillStyle = C.charcoal; c.beginPath(); c.arc(ax, ay, 13, 0, TAU); c.fill(); c.restore();
+  const q = K.pop(lt, at + 0.25, 0.45); if (q > 0) K.stone(c, s, bx, by, { size: o.size || 52, col: o.col, scale: q }); };
+// 旗标：左尖右方的红赭条（只给警示/结论）
+K.tag = (c, s, x, y, o = {}) => { const { size = 52, col = C.red, tc = C.chalk } = o; c.save(); c.font = `${size}px "PuHui-Heavy"`; const w = c.measureText(s).width + 40, h = size * 1.45;
+  K.shape(c, poly([[x, y], [x + 28, y - h / 2], [x + 28 + w, y - h / 2], [x + 28 + w, y + h / 2], [x + 28, y + h / 2]]), col, 6);
+  c.fillStyle = tc; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(s, x + 48, y + 3); c.restore(); };
+// 红赭印：砸下的方章（结论/下跌）
+K.stamp = (c, s, x, y, lt, at, o = {}) => { if (lt < at) return; const { size = 80, rot = -0.1, col = C.red } = o, k = MO.slamK((lt - at) / 0.17);
+  c.save(); c.translate(x, y); c.rotate(rot); c.scale(k, k); c.font = `${size}px "PuHui-Heavy"`; const w = c.measureText(s).width + size * 0.8, h = size * 1.4;
+  K.shape(c, K.slab(-w / 2, -h / 2, w, h, hash(s) % 97, 5), col, 8); c.fillStyle = C.chalk; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, 0, 3); c.restore(); };
 
-// ---------- 文字（炭笔字，画进 K.paint 才会吃岩面） ----------
-// K.text(g,s,x,y,o)：(x,y) 基线中点；o { size(≥52), col 'ink'(默认)|'red'|'chalk', t(沸腾时钟), align, alpha, rot, maxW, fam }
-D.text = (g, s, x, y, o = {}) => {
-  const { size = 100, col = 'ink', t = 0, align = 'center', alpha = 1, rot = 0, maxW = 0, fam = 'PuHui-Black' } = o;
-  g.save(); g.globalAlpha *= alpha; g.translate(x, y); if (rot) g.rotate(rot);
-  g.font = `${size}px "${fam}"`; g.textAlign = align; g.textBaseline = 'alphabetic';
-  let k = 1; if (maxW) { const w = g.measureText(s).width; if (w > maxW) k = maxW / w; } g.scale(k, k);
-  g.lineJoin = 'round'; g.strokeStyle = fuzzPat(g, t); g.lineWidth = size * (col === 'chalk' ? 0.08 : 0.1) + 5; g.strokeText(s, 0, 0);
-  g.fillStyle = col === 'chalk' ? C.chalk : (col === 'red' ? redPat(g, t) : inkPat(g, t)); g.fillText(s, 0, 0);
-  g.restore();
-};
-// K.write(g,s,x,y,lt,at,dur,o)：炭笔写上动画。o.mode 'wipe'(默认，左→右擦出＋笔头炭点) | 'type'(逐字蹦上)；其余同 K.text。返回进度 0..1。
-D.write = (g, s, x, y, lt, at, dur, o = {}) => {
-  const p = MO.smooth(D.at(lt, at, dur)); if (p <= 0) return 0;
-  const size = o.size || 100, t = o.t || 0, seed = o.seed || 11;
-  if (o.mode === 'type') {
-    const a = [...s], k = Math.round(p * a.length);
-    if (k > 0) D.text(g, a.slice(0, k).join(''), x, y, o);
-    if (p < 1 && k > 0) { g.save(); g.font = `${size}px "${o.fam || 'PuHui-Black'}"`; const w = g.measureText(s).width, wk = g.measureText(a.slice(0, k).join('')).width; g.restore();
-      const hx = x - w / 2 + wk + size * 0.1, hy = y - size * 0.4, r = rng(seed + P.boilSeed(t, 24));
-      g.fillStyle = '#160d07'; g.beginPath(); g.arc(hx + (r() - .5) * 5, hy + (r() - .5) * 5, size * 0.07, 0, TAU); g.fill(); }
-    return p;
-  }
-  g.save(); g.font = `${size}px "${o.fam || 'PuHui-Black'}"`; const w = g.measureText(s).width; g.restore();
-  const pad = size * 0.3, x0 = x - w / 2 - pad;
-  g.save(); g.beginPath(); g.rect(x0 - 4, y - size * 1.3, (w + pad * 2) * p + 8, size * 1.65); g.clip();
-  D.text(g, s, x, y, o); g.restore();
-  if (p < 1) { const hx = x0 + (w + pad * 2) * p, hy = y - size * 0.42, r = rng(seed + P.boilSeed(t, 24));
-    g.fillStyle = '#160d07'; g.beginPath(); g.arc(hx + (r() - .5) * 5, hy + (r() - .5) * 5, size * 0.08, 0, TAU); g.fill();
-    D.spray(g, hx, hy, size * 0.07, 10, C.ink, seed * 7 + P.boilSeed(t, 12), 0.6, 1.7, 0.3, 0.7); }
-  return p;
-};
-// K.popText(g,s,x,y,lt,at,o)：backOut 弹出的炭笔字。o { size(≥100), col, dur, alpha, rot, maxW }
-D.popText = (g, s, x, y, lt, at, o = {}) => { const k = D.pop(lt, at, o.dur || 0.5); if (k <= 0) return;
-  D.text(g, s, x, y, { ...o, size: Math.max(100, o.size || 120) * k * (o.scale || 1), alpha: clamp(k * 2) * (o.alpha ?? 1) }); };
-// K.equals(g,x,y,o)：手画等号（PuHui GB2312 子集没有「＝」，缺字！等号一律用它画两条炭杠）。o { size(杠长,默认90), t, col 'ink'|'red' }
-D.equals = (g, x, y, o = {}) => {
-  const s = o.size || 90, t = o.t || 0, red = o.col === 'red', lw = Math.max(9, s * 0.15);
-  for (const dy of [-s * 0.2, s * 0.2]) {
-    const p = D.poly([[x - s / 2, y + dy + (U.hash(dy, 7) - .5) * 5], [x + s / 2, y + dy + (U.hash(dy, 3) - .5) * 5]], false);
-    if (red) { g.save(); g.strokeStyle = redPat(g, t); g.lineWidth = lw; g.lineCap = 'round'; g.stroke(p); g.restore(); }
-    else D.inkLine(g, p, lw, t);
-  }
-};
-// K.callout(g,s,ax,ay,bx,by,lt,at,o)：炭线从锚点 (ax,ay) 长到 (bx,by)，末端逐字写上标签（≥52）。o { size, col, hot(红赭), seed }
-D.callout = (g, s, ax, ay, bx, by, lt, at, o = {}) => {
-  const t = o.t || 0, p1 = MO.cubicOut(D.at(lt, at, 0.35)); if (p1 <= 0) return;
-  const ex = lerp(ax, bx, p1), ey = lerp(ay, by, p1);
-  const lp = new Path2D(); P.roughPath({ moveTo: (...a) => lp.moveTo(...a), lineTo: (...a) => lp.lineTo(...a), beginPath() {} }, [[ax, ay], [ex, ey]], { amp: 2, seed: o.seed || 5, step: 10 });
-  D.inkLine(g, lp, 4, t);
-  g.fillStyle = o.hot ? C.red : C.ink; g.beginPath(); g.arc(ax, ay, 7 * Math.min(1, p1 * 3), 0, TAU); g.fill();
-  D.spray(g, ax, ay, 4, 16, o.hot ? C.red : C.ink, (o.seed || 5) * 3 + 1, 0.7, 1.8, 0.3, 0.7);
-  const q = D.at(lt, at + 0.3, [...s].length / 16); if (q <= 0) return;
-  const a = [...s], k = Math.round(clamp(q) * a.length);
-  D.text(g, a.slice(0, k).join(''), bx, by, { size: Math.max(52, o.size || 56), col: o.hot ? 'red' : (o.col || 'ink'), t, fam: 'PuHui-Heavy', align: o.align || 'center' });
-};
+// ---------- 箭头 ----------
+// K.arrow(c,x1,y1,x2,y2,{col=red,lw=16,prog=1,head=46}) 炭边彩芯粗箭头，任意方向，prog 控制画出进度
+K.arrow = (c, x1, y1, x2, y2, o = {}) => { const { col = C.red, lw = 16, head = 46, prog = 1 } = o, p = clamp(prog); if (p <= 0) return;
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, ex = x1 + dx * p, ey = y1 + dy * p, r = rng(hash([x1, y1, x2, y2].join()) % 997);
+  const mx = (x1 + ex) / 2 - uy * (r() - .5) * 8, my = (y1 + ey) / 2 + ux * (r() - .5) * 8;
+  c.save(); c.lineJoin = 'round'; c.lineCap = 'round'; const shaft = poly([[x1, y1], [mx, my], [ex - ux * 6, ey - uy * 6]], false); K.ink(c, shaft, lw, col);
+  if (p > .6) { const a = Math.atan2(uy, ux), hd = new Path2D(); hd.moveTo(ex - Math.cos(a - .5) * head, ey - Math.sin(a - .5) * head); hd.lineTo(ex, ey); hd.lineTo(ex - Math.cos(a + .5) * head, ey - Math.sin(a + .5) * head); K.ink(c, hd, lw, col); }
+  c.restore(); };
 
-// ---------- 人（岩画人形：红赭/炭黑剪影，侧脸只留一只杏仁眼，不画写实五官） ----------
-const limb = (A, B, wA, wB) => { const n = Math.atan2(B[1] - A[1], B[0] - A[0]) + Math.PI / 2, ca = Math.cos(n), sa = Math.sin(n), p = new Path2D();
-  p.moveTo(A[0] + ca * wA, A[1] + sa * wA); p.lineTo(B[0] + ca * wB, B[1] + sa * wB); p.arc(B[0], B[1], wB, n, n + Math.PI, true);
-  p.lineTo(A[0] - ca * wA, A[1] - sa * wA); p.arc(A[0], A[1], wA, n + Math.PI, n, true); p.closePath(); return p; };
-// K.figure(g,x,y,o)：(x,y) 脚底中点，朝 +x（f:-1 镜像），身高约 600·s。
-//   o { pose 'stand'|'reach'(伸手)|'carry'(抬物过肩)|'squat'(蹲), s, f, col(默认 red 红赭), lw, t, eye(默认 true) }
-//   返回锚点 { head, hand, hand2 }（世界坐标），方便接续画手里/肩上的物。
-D.figure = (g, x, y, o = {}) => {
-  const { pose = 'stand', s = 0.9, f = 1, t = 0 } = o, col = o.col || C.red, lw = o.lw || 6;
-  const A = {};   // 局部锚点
-  g.save(); g.translate(x, y); g.scale(s * f, s);
-  const head = (hx, hy, tilt = 0) => {
-    const hp = new Path2D(); hp.ellipse(hx, hy, 34, 38, tilt, 0, TAU); D.shape(g, hp, col, lw, t);
-    const nose = D.poly([[hx + 30, hy - 8], [hx + 44, hy + 2], [hx + 30, hy + 10]]); D.shape(g, nose, col, lw * 0.6, t);
-    if (o.eye !== false) { g.save(); g.translate(hx + 12, hy - 6); g.rotate(tilt);
-      g.fillStyle = C.chalk; g.beginPath(); g.ellipse(0, 0, 9, 5, -0.1, 0, TAU); g.fill();
-      g.fillStyle = C.ink; g.beginPath(); g.arc(1.5, 0, 2.8, 0, TAU); g.fill(); g.restore(); }
-    A.head = [hx, hy];
-  };
-  if (pose === 'squat') {
-    const hip = [0, -215], knee = [100, -200], foot = [100, 0], sh = [42, -400];
-    D.shape(g, limb([-24, -210], [70, -196], 26, 18), col, lw, t); D.shape(g, limb([70, -196], [70, 0], 18, 12), col, lw, t);   // 远腿
-    D.shape(g, limb(hip, knee, 30, 20), col, lw, t); D.shape(g, limb(knee, foot, 20, 13), col, lw, t);
-    D.shape(g, limb(hip, sh, 56, 46), col, lw, t);                                                                                 // 躯干（前倾）
-    D.shape(g, limb(sh, [140, -300], 20, 11), col, lw, t); A.hand = [140, -300];                                                    // 臂前伸
-    D.shape(g, limb([sh[0] - 8, sh[1] + 20], [96, -262], 18, 10), col, lw, t); A.hand2 = [96, -262];
-    head(sh[0] + 18, sh[1] - 52, 0.1);
-  } else {
-    const lean = pose === 'reach' ? 14 : 0, hip = [0, -330], sh = [8 + lean, -498];
-    D.shape(g, limb([-12, -330], [-30, 0], 26, 14), col, lw, t); D.shape(g, limb([16, -330], [38, 0], 26, 14), col, lw, t);         // 双腿
-    D.shape(g, limb(hip, sh, 60, 50), col, lw, t);                                                                                 // 躯干
-    if (pose === 'reach') { D.shape(g, limb(sh, [168, -548], 22, 12), col, lw, t); A.hand = [168, -548];
-      D.shape(g, limb([sh[0] - 10, sh[1] + 26], [-34, -300], 20, 11), col, lw, t); A.hand2 = [-34, -300]; }
-    else if (pose === 'carry') { D.shape(g, limb(sh, [74, -618], 22, 12), col, lw, t); A.hand = [74, -618];
-      D.shape(g, limb([sh[0] - 12, sh[1] + 24], [122, -596], 20, 11), col, lw, t); A.hand2 = [122, -596]; }
-    else { D.shape(g, limb(sh, [36, -282], 22, 12), col, lw, t); A.hand = [36, -282];
-      D.shape(g, limb([sh[0] - 12, sh[1] + 24], [-6, -286], 20, 11), col, lw, t); A.hand2 = [-6, -286]; }
-    head(sh[0] + 16, sh[1] - 56, pose === 'reach' ? 0.12 : 0);
-  }
-  g.restore();
-  const W2 = p => [x + p[0] * s * f, y + p[1] * s];
-  return { head: W2(A.head), hand: W2(A.hand), hand2: W2(A.hand2) };
-};
+// ---------- 图标（岩画符号，s=1 约 150px） ----------
+const I = K.icons = {};
+I.bison = (c, x, y, s = 1, o = {}) => { const { col = C.bison } = o; c.save(); c.translate(x, y); c.scale(s * .7, s * .7);
+  [[-70, 30, -78, 100], [-30, 40, -34, 104], [34, 40, 40, 104], [72, 30, 84, 98]].forEach(([a, b, c2, d]) => K.ink(c, poly([[a, b], [c2, d]], false), 18));
+  K.ink(c, smooth([[-96, -10], [-120, 10], [-112, 50]], false), 9);
+  K.shape(c, smooth([[-100, 12], [-72, -34], [-20, -78], [30, -102], [68, -86], [104, -40], [136, -16], [146, 30], [124, 56], [102, 52], [92, 76], [60, 54], [0, 54], [-70, 48]], true), col, 8);
+  K.ink(c, smooth([[112, -34], [124, -62], [146, -66]], false), 9); K.ink(c, smooth([[-52, -22], [-6, -66], [44, -64]], false), 9, '#5a2412');
+  c.fillStyle = C.chalk; c.beginPath(); c.arc(120, 2, 6, 0, TAU); c.fill(); c.restore(); };
+I.sun = (c, x, y, s = 1, o = {}) => { const { col = C.gold } = o; c.save(); c.translate(x, y); c.scale(s, s);
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU + .1; K.ink(c, poly([[Math.cos(a) * 52, Math.sin(a) * 52], [Math.cos(a) * 84, Math.sin(a) * 84]], false), 12); }
+  K.shape(c, K.circle(0, 0, 40), col, 8); c.restore(); };
+I.wave = (c, x, y, s = 1, o = {}) => { const { col = C.chalk } = o; c.save(); c.translate(x, y); c.scale(s, s);
+  [-42, 0, 42].forEach(dy => { const pts = []; for (let i = 0; i <= 8; i++) pts.push([-80 + i * 20, dy + (i % 2 ? -16 : 16)]); K.ink(c, smooth(pts, false), 12, col); }); c.restore(); };
+I.human = (c, x, y, s = 1, o = {}) => { const { col = C.redD } = o; c.save(); c.translate(x, y); c.scale(s, s);
+  K.ink(c, poly([[0, -22], [0, 34]], false), 26, col); K.ink(c, poly([[-4, -18], [-40, -52]], false), 14, col); K.ink(c, poly([[4, -18], [40, -52]], false), 14, col);
+  K.ink(c, poly([[-3, 30], [-30, 82]], false), 15, col); K.ink(c, poly([[3, 30], [32, 82]], false), 15, col); K.shape(c, K.circle(0, -52, 20), col, 7); c.restore(); };
+I.arrow = (c, x, y, s = 1, o = {}) => { const { col = o.dir === 'down' ? C.red : C.gold, dir = 'up' } = o, d = dir === 'down' ? 1 : -1;
+  K.arrow(c, x, y - d * 52 * s, x, y + d * 52 * s, { col, lw: 18 * s, head: 44 * s }); };
+I.coin = (c, x, y, s = 1, o = {}) => { const { col = C.gold } = o; c.save(); c.translate(x, y); c.scale(s, s); K.shape(c, K.circle(0, 0, 54), col, 8);
+  K.ink(c, K.circle(0, 0, 32), 7); c.restore(); };
+K.icon = (c, name, x, y, s = 1, o = {}) => { if (!I[name]) throw new Error('K.icon: 没有这个图标 ' + name + '（有 ' + Object.keys(I).join('/') + '）'); I[name](c, x, y, s, o); };
 
-// ---------- 动物（野牛/马剪影；两张姿态每 7 帧交替＝原始「动画」） ----------
-const BISON_B = [[470, 300], [495, 280], [545, 268], [595, 250], [632, 240], [660, 246], [682, 268], [692, 300], [686, 330], [668, 350], [640, 356], [590, 352], [530, 348], [488, 342], [468, 324]];
-const BISON_H = [[672, 270], [698, 280], [716, 302], [724, 326], [714, 340], [696, 338], [682, 326], [668, 300]];
-const HORSE_B = [[452, 474], [470, 458], [510, 456], [548, 452], [566, 432], [582, 414], [598, 410], [614, 432], [612, 444], [598, 444], [586, 438], [578, 458], [574, 478], [540, 488], [486, 488], [458, 486]];
-const LEGS = {
-  bison: [[[652, 340, 648, 392], [632, 346, 618, 396], [500, 340, 504, 394], [520, 344, 530, 394]],
-          [[652, 340, 698, 384], [632, 346, 672, 394], [500, 340, 458, 378], [520, 344, 482, 390]]],
-  horse: [[[566, 486, 562, 528], [552, 488, 544, 530], [484, 488, 488, 528], [470, 486, 466, 526]],
-          [[566, 486, 596, 520], [552, 488, 580, 528], [484, 488, 456, 520], [470, 486, 442, 516]]],
-};
-// K.animal(g,x,y,o)：(x,y) 身体中心；o { kind 'bison'(默认)|'horse', s, f 镜像, t, ph 姿态 0/1(默认 t 每 7 帧交替), col }
-D.animal = (g, x, y, o = {}) => {
-  const kind = o.kind || 'bison', s = o.s || 1, f = o.f || 1, t = o.t || 0, ph = o.ph ?? Math.floor(t * 60 / 7) % 2;
-  const cx = kind === 'bison' ? 585 : 523, cy = kind === 'bison' ? 318 : 463, TP = p => [x + (p[0] - cx) * s * f, y + (p[1] - cy) * s];
-  g.save();
-  LEGS[kind][ph].forEach(([x0, y0, x1, y1]) => D.inkLine(g, D.smooth([TP([x0, y0]), TP([(x0 + x1) / 2, (y0 + y1) / 2 + 2]), TP([x1, y1])], false), 5.5 * s, t));
-  if (kind === 'bison') {
-    const B = D.smooth(BISON_B.map(TP));
-    D.shape(g, B, o.col || C.bison, 6 * s, t, 0.95);
-    g.save(); g.clip(B); g.strokeStyle = 'rgba(70,24,10,.55)'; g.lineWidth = 20 * s; g.lineCap = 'round';
-    g.stroke(D.smooth([[480, 292], [545, 276], [600, 258], [640, 252], [672, 268]].map(TP), false)); g.restore();
-    const hcx = 698, hcy = 300, rot = (ph ? 0.12 : -0.09) * f;
-    g.save(); g.translate(...TP([hcx, hcy])); g.rotate(rot); g.translate(-TP([hcx, hcy])[0], -TP([hcx, hcy])[1]);
-    D.shape(g, D.smooth(BISON_H.map(TP)), '#76301a', 5 * s, t);
-    D.inkLine(g, D.smooth([[700, 284], [708, 262], [722, 248]].map(TP), false), 4.5 * s, t);
-    D.inkLine(g, D.smooth([[688, 280], [688, 258], [698, 242]].map(TP), false), 4 * s, t);
-    g.fillStyle = C.ink; g.beginPath(); g.arc(...TP([704, 304]), 3.5 * s, 0, TAU); g.fill(); g.restore();
-    g.fillStyle = C.ink; for (let k = 0; k < 6; k++) { g.beginPath(); g.arc(...TP([538 + k * 13, 301]), 3 * s, 0, TAU); g.fill(); }
-    D.inkLine(g, D.smooth([[468, 296], [452, 314], [446, 336]].map(TP), false), 4 * s, t);
-  } else {
-    const B = D.smooth(HORSE_B.map(TP));
-    const hcx = 590, hcy = 440, rot = (ph ? -0.08 : 0.1) * f;
-    g.save(); g.translate(...TP([hcx, hcy])); g.rotate(rot); g.translate(-TP([hcx, hcy])[0], -TP([hcx, hcy])[1]);
-    D.shape(g, B, o.col || C.horse, 5.5 * s, t, 0.95);
-    D.shape(g, D.poly([[592, 414], [598, 396], [606, 414]].map(TP)), o.col || C.horse, 3 * s, t);
-    for (let k = 0; k < 6; k++) { const p = new Path2D(); p.moveTo(...TP([566 + k * 4.5, 446 - k * 6])); p.lineTo(...TP([558 + k * 4.5, 438 - k * 6])); D.inkLine(g, p, 3 * s, t); }
-    g.fillStyle = C.ink; g.beginPath(); g.arc(...TP([600, 424]), 3 * s, 0, TAU); g.fill(); g.restore();
-    D.inkLine(g, D.smooth([[454, 468], [440, 480], [432, 500]].map(TP), false), 4 * s, t);
-  }
-  g.restore();
-};
+// ---------- 齿轮（贯穿物） ----------
+const gearPath = (ro, ri, n, rot) => { const p = []; for (let i = 0; i < n; i++) { const a = rot + i / n * TAU, w = TAU / n; [[-.3, ri], [-.2, ro], [.2, ro], [.3, ri]].forEach(([o, r]) => p.push([Math.cos(a + o * w * 1.6) * r, Math.sin(a + o * w * 1.6) * r])); } return poly(p); };
+// K.gear(c,x,y,r,{rot=t*.35, teeth=12, lit=1, spokes=6, label, size, hub=red, fill, minis:[{a,r,teeth,label,fill}], alpha, lw=9})
+// lit<1：只画炭线轮廓（未完成的草图），lit→1 填色点亮；minis 为咬合在大轮外沿的小齿轮（a=方位角弧度，r=半径），按真实齿比反向转
+K.gear = (c, x, y, r, o = {}) => { const { rot = K._t * .35, teeth = 12, lit = 1, spokes = 6, label, hub = C.red, fill = '#dc8a3a', alpha = 1, lw = 9, minis = [], size = Math.round(r * .4) } = o;
+  const ro = r, ri = r * .81, one = (cx, cy, R, n, rt, fl, L, lbl, ls) => { c.save(); c.translate(cx, cy);
+    const gp = gearPath(R, R * .81, n, rt), hole = K.circle(0, 0, R * .64), hb = K.circle(0, 0, R * .29);
+    if (L < .98) { c.save(); c.globalAlpha *= 1 - L * .0; c.setLineDash([R * .12, R * .07]); K.ink(c, gp, lw + 2); K.ink(c, hole, 7); c.setLineDash([]); c.restore(); }
+    if (L > .02) { c.save(); c.globalAlpha *= L; K.shape(c, gp, fl, lw); K.shape(c, hole, '#b8844a', 7);
+      for (let i = 0; i < spokes; i++) { const a = rt + i / spokes * TAU; K.ink(c, poly([[Math.cos(a) * R * .35, Math.sin(a) * R * .35], [Math.cos(a) * R * .62, Math.sin(a) * R * .62]], false), Math.max(10, R * .06)); }
+      K.shape(c, hb, hub, 8); c.restore(); }
+    if (lbl) K.text(c, lbl, 0, 0, { size: ls, alpha: Math.max(L, .35) }); c.restore(); };
+  c.save(); c.globalAlpha *= alpha;
+  minis.forEach(m => { const mr = m.r, mn = m.teeth || Math.max(6, Math.round(teeth * mr / r)), pr = (ro + ri) / 2 + (mr + mr * .81) / 2, rt = -rot * teeth / mn + m.a * (1 + teeth / mn) + Math.PI / mn;
+    one(x + Math.cos(m.a) * pr, y + Math.sin(m.a) * pr, mr, mn, rt, m.fill || C.stone, lit, m.label, m.size || Math.round(mr * .5)); });
+  one(x, y, r, teeth, rot, fill, lit, label, size); c.restore(); };
 
-// ---------- 环境层 ----------
-// K.fire(c,t,o)：火光摇曳（overlay 提亮暖化，不洗白颜料）＋暗部呼吸。o { fx, fy(默认 1420，火在画面外下方), k 强度(默认 1), glow [x,y,p] 重点物上的独立跳动暖光 }
-D.fire = (c, t, o = {}) => {
-  const n1 = P.noise(t * 3.1, 1.7), n2 = P.noise(t * 2.3, 8.1), kk = o.k ?? 1;
-  const fl = (0.14 + 0.11 * P.noise(t * 9.5, 3.3) + 0.04 * Math.sin(t * 23) + 0.03 * Math.sin(t * 37)) * kk;
-  const fx = (o.fx ?? 470) + n1 * 70, fy = (o.fy ?? 1420) + n2 * 42;
-  const gr = c.createRadialGradient(fx, fy, 10, fx, fy, 1000 + n2 * 70); gr.addColorStop(0, `rgba(255,196,110,${fl * 2.2})`); gr.addColorStop(0.5, `rgba(255,160,80,${fl * 1.1})`); gr.addColorStop(1, 'rgba(255,140,60,0)');
-  c.save(); c.globalCompositeOperation = 'overlay'; c.fillStyle = gr; c.fillRect(0, 0, W, H);
-  c.globalCompositeOperation = 'source-over';
-  const dk = c.createRadialGradient(fx, fy, 480, fx, fy, 1450); dk.addColorStop(0, 'rgba(20,8,2,0)'); dk.addColorStop(1, `rgba(20,8,2,${0.2 - fl * 0.4})`);
-  c.fillStyle = dk; c.fillRect(0, 0, W, H);
-  if (o.glow) { const [gx, gy, gp] = o.glow, v = clamp(0.5 + 0.9 * P.noise(t * 7, 3.7)) * (gp ?? 1);
-    if (v > 0.05) { c.globalCompositeOperation = 'lighter';
-      const hg = c.createRadialGradient(gx, gy, 5, gx, gy, 300); hg.addColorStop(0, `rgba(255,150,80,${0.22 * v})`); hg.addColorStop(1, 'rgba(255,120,60,0)'); c.fillStyle = hg; c.fillRect(gx - 300, gy - 300, 600, 600); } }
+// ---------- 柱图（石柱，含负值） ----------
+// K.bars(c, items, {x,y,w,h, prog=1, fmt, size=64, lsize=52, gap=.28, zero:true})
+// items:[{v, label, col?, hi?}]；(x,y,w,h) 是柱区方框（不含数字与标签）：正柱从零线向上、负柱向下(红)，柱端数字在方框外 ≤70px，
+// 标签在 y+h+150 一行（过宽自动折两行，或写 \n）。因此方框上下各留 ~80px，标签行下留 ~70px。
+K.bars = (c, items, o = {}) => { const { x = 100, y = 520, w = 880, h = 700, prog = 1, fmt = v => String(v), size = 64, lsize = 52, gap = .28 } = o, n = items.length;
+  const mx = Math.max(0, ...items.map(i => i.v)), mn = Math.min(0, ...items.map(i => i.v)), span = (mx - mn) || 1, zy = y + h * mx / span, slot = w / n, bw = slot * (1 - gap);
+  if (o.zero !== false) K.ink(c, poly([[x - 10, zy], [x + w + 10, zy]], false), 9);
+  items.forEach((it, i) => { const pi = clamp(prog * (1 + .35 * (n - 1)) - .35 * i), q = ez(pi); if (q <= 0) return; const cx = x + slot * (i + .5), full = Math.abs(it.v) / span * h, bh = Math.max(14, full) * q, up = it.v >= 0;
+    const col = it.col || (up ? C.gold : C.red), x0 = cx - bw / 2, y0 = up ? zy - bh : zy, r = rng(i * 17 + 3), j = () => (r() - .5) * 10;
+    const path = smooth([[x0 + j(), y0 + j()], [cx, y0 + j() * .5], [x0 + bw + j(), y0 + j()], [x0 + bw + j(), y0 + bh / 2], [x0 + bw + j(), y0 + bh + j()], [cx, y0 + bh + j() * .5], [x0 + j(), y0 + bh + j()], [x0 + j(), y0 + bh / 2]], true);
+    c.save(); K.shape(c, path, col, it.hi ? 11 : 7); c.clip(path); c.strokeStyle = 'rgba(40,22,10,.22)'; c.lineWidth = 5; c.lineCap = 'round';   // 石柱地层刻痕
+    for (let k = 1; k < 4; k++) { const yy = y0 + bh * k / 4; c.beginPath(); c.moveTo(x0, yy + j()); c.lineTo(x0 + bw, yy + j()); c.stroke(); }
+    c.fillStyle = 'rgba(255,236,200,.22)'; c.fillRect(x0 + 6, y0, bw * .16, bh); c.restore();
+    if (pi > .75) { const a = clamp((pi - .75) * 4); K.text(c, fmt(it.v), cx, up ? y0 - 52 : y0 + bh + 52, { size, col: up ? C.chalk : '#ffd9c2', alpha: a, scale: .8 + .2 * a }); }
+    const lab = String(it.label ?? ''); if (lab) { c.save(); c.font = `${lsize}px "PuHui-Heavy"`; let ls = lab.split('\n'); if (ls.length === 1 && c.measureText(lab).width > slot * .98) { const m = Math.ceil(lab.length / 2); ls = [lab.slice(0, m), lab.slice(m)]; } c.restore();
+      ls.forEach((t, k) => K.text(c, t, cx, y + h + 150 + k * lsize * 1.15, { size: lsize, alpha: clamp(pi * 3), lw: 5 })); } }); };
+
+// ---------- 折线/曲线（炭刻，可描点） ----------
+// K.line(c, pts, {prog=1, lw=14, col=gold, segCol:(i)=>色, smooth=true, axes:{x,y,w,h}|false, zero:y, marks:[{i, text, dx=0, dy=-90, hand, col}]})
+// pts 为屏幕像素坐标 [[x,y],…]；segCol(i) 给第 i→i+1 段着色（如回撤段红）；marks 在第 i 个原始点处挖凹坑并挂石板标签；返回 {tip:[x,y]} 当前笔尖
+K.line = (c, pts, o = {}) => { const { prog = 1, lw = 14, col = C.gold, segCol, marks = [] } = o, sm = o.smooth !== false, N = 12;
+  if (o.axes) { const a = o.axes; K.ink(c, poly([[a.x, a.y], [a.x, a.y + a.h], [a.x + a.w, a.y + a.h]], false), 10); }
+  if (o.zero != null) { c.save(); c.setLineDash([26, 20]); c.strokeStyle = C.chalk; c.lineWidth = 7; c.lineCap = 'round'; c.beginPath(); c.moveTo(60, o.zero); c.lineTo(W - 60, o.zero); c.stroke(); c.restore(); }
+  const r = rng(hash(JSON.stringify(pts.slice(0, 3))) % 997), jp = pts.map(p => [p[0] + (r() - .5) * 5, p[1] + (r() - .5) * 5]), dense = [], seg = [];
+  if (sm && jp.length > 2) { for (let i = 0; i < jp.length - 1; i++) { const p0 = jp[Math.max(0, i - 1)], p1 = jp[i], p2 = jp[i + 1], p3 = jp[Math.min(jp.length - 1, i + 2)];
+      for (let k = 0; k < N; k++) { const u = k / N, u2 = u * u, u3 = u2 * u; dense.push([0, 1].map(d => .5 * (2 * p1[d] + (-p0[d] + p2[d]) * u + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * u2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * u3))); seg.push(i); } }
+    dense.push(jp[jp.length - 1]); seg.push(jp.length - 2); }
+  else { for (let i = 0; i < jp.length; i++) { dense.push(jp[i]); seg.push(Math.min(i, jp.length - 2)); } }
+  const cum = [0]; for (let i = 1; i < dense.length; i++) cum.push(cum[i - 1] + Math.hypot(dense[i][0] - dense[i - 1][0], dense[i][1] - dense[i - 1][1]));
+  const tot = cum[cum.length - 1] || 1, tgt = clamp(prog) * tot, cut = []; let cs = []; let tip = dense[0];
+  for (let i = 0; i < dense.length; i++) { if (cum[i] <= tgt) { cut.push(dense[i]); cs.push(seg[i]); tip = dense[i]; } else { const f = (tgt - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1); tip = [lerp(dense[i - 1][0], dense[i][0], f), lerp(dense[i - 1][1], dense[i][1], f)]; cut.push(tip); cs.push(seg[i]); break; } }
+  if (cut.length < 2 || prog <= 0) return { tip };
+  c.save(); c.lineJoin = 'round'; c.lineCap = 'round';
+  const full = poly(cut, false); c.strokeStyle = pat(c, 'fuzz'); c.lineWidth = lw + 17; c.stroke(full); c.strokeStyle = pat(c, 'ink'); c.lineWidth = lw + 9; c.stroke(full);
+  const SC = i => (segCol && segCol(i)) || col; let run = [cut[0]], rc = SC(cs[0]); const flush = () => { if (run.length > 1) { c.strokeStyle = rc; c.lineWidth = lw; c.stroke(poly(run, false)); } };
+  for (let i = 1; i < cut.length; i++) { const cc = SC(cs[i - 1]); if (cc !== rc) { flush(); run = [cut[i - 1]]; rc = cc; } run.push(cut[i]); } flush();
   c.restore();
-};
-// K.embers(c,t,o)：金色余烬上漂（默认 y1350→140，不进字幕带）。o { groups [[x0,x1,n]…], y0, y1, life }
-D.embers = (c, t, o = {}) => {
-  const groups = o.groups || [[0, 240, 13], [840, 1080, 13], [240, 840, 5]], y0 = o.y0 ?? 1350, y1 = o.y1 ?? 140;
-  c.save(); c.globalCompositeOperation = 'lighter';
-  groups.forEach(([x0, x1, n], s) => {
-    P.particles(n, 300 + s * 31, t, { x0, x1, y0, y1, drift: 22, life: o.life || 5.5 }).forEach(p => {
-      const tw = 0.3 + 0.7 * Math.abs(Math.sin(t * 7 + p.i * 1.9)), fade = Math.sin(p.q * Math.PI), r0 = 1.8 + p.s * 2.0;
-      c.fillStyle = `rgba(255,170,60,${0.26 * tw * fade})`; c.beginPath(); c.arc(p.x, p.y, r0 * 3.0, 0, TAU); c.fill();
-      c.fillStyle = `rgba(255,224,130,${0.95 * tw * fade})`; c.beginPath(); c.arc(p.x, p.y, r0, 0, TAU); c.fill();
-    });
-  });
-  c.restore();
-};
-// 每镜收尾：颗粒＋字幕带 y1380–1560 压暗（深褐渐变，不放内容）
-D.finish = (c, o = {}) => {
-  c.drawImage(P.grain('cavekit', 0.05, [40, 24, 12], 0.12), 0, 0);
-  const b = c.createLinearGradient(0, 1340, 0, 1620); b.addColorStop(0, 'rgba(16,7,2,0)'); b.addColorStop(0.28, `rgba(16,7,2,${o.band ?? 0.66})`); b.addColorStop(0.72, `rgba(16,7,2,${o.band ?? 0.66})`); b.addColorStop(1, 'rgba(16,7,2,0)');
-  c.fillStyle = b; c.fillRect(0, 1340, W, 280);
-};
+  marks.forEach((m, k) => { const p = jp[m.i], at0 = (() => { let d = 0; for (let i = 0; i < m.i; i++) d += Math.hypot(jp[i + 1][0] - jp[i][0], jp[i + 1][1] - jp[i][1]); return d / tot; })(), at = Math.min(at0, .92); if (clamp(prog) < at) return;
+    const q = ez((clamp(prog) - at) / .08); K.shape(c, K.circle(p[0], p[1], 22 * q), m.col || C.chalk, 8);
+    if (m.hand) K.hand(c, p[0], p[1], { scale: .8 * q, seed: 40 + k, alpha: .95 });
+    if (m.text && q > .3) { const dx = m.dx ?? 0, dy = m.dy ?? -90; K.ink(c, poly([[p[0], p[1] + Math.sign(dy) * 24], [p[0] + dx, p[1] + dy - Math.sign(dy) * ((m.size || 52) * .78 + 2)]], false), 8); K.stone(c, m.text, p[0] + dx, p[1] + dy, { size: m.size || 52, scale: q, col: m.tc }); } });
+  return { tip }; };
 
-// ---------- 章节卡 / 字幕 ----------
-D.CHAPTER_NAMES = (window.BOOK_META || {}).chapters || [];   // 章名来自 book.json（assemble 写进 scenes/book/meta.js）
-// 贯穿物 token：负形小手印在站间跳跃（呼应全书「只有你能签字」的手）。props.js 可覆盖 K.cardToken。
-D.cardToken = D.cardToken || ((c, x, y, lt, t, walking) =>
-  D.handStencil(c, x, y, { s: 0.5, rot: walking ? Math.sin(lt * 9) * 0.3 : -0.06, seed: 77 }));
-// K.chapterCard(c,lt,t,n,title)：「第 N 章」（红赭）＋章名（炭黑）逐字写上岩壁；底部 N 站进度线，小手印从上一站跳到本站。
-D.chapterCard = (c, lt, t, n, title = '', o = {}) => {
-  D.bg(c, t, { seed: n * 3 + 1, hands: true, dots: true, dim: 0.06 });
-  const N = Math.max(D.CHAPTER_NAMES.length, n, 2), x0 = 110, x1 = 970, y = 1150, X = i => lerp(x0, x1, i / (N - 1));
-  const walkEnd = 1.2, q = MO.cubicInOut(D.at(lt, 0.15, walkEnd - 0.15)), from = n > 1 ? X(n - 2) : x0 - 40, done = X(n - 1);
-  D.paint(c, g => {
-    D.write(g, `第 ${n} 章`, 540, 350, lt, 0.1, 0.55, { size: 118, col: 'red', t, mode: 'type', seed: 5 });
-    const ts = Math.max(100, Math.min(132, 900 / Math.max(1, [...title].length) * 1.6));
-    D.write(g, title, 540, 590, lt, 0.6, Math.max(0.5, [...title].length / 11), { size: ts, t, mode: 'type', seed: 9, maxW: 920 });
-    // 中部章徽：淡淡的负形手印（呼应「签字的手」）
-    D.handStencil(g, 540, 890, { s: 1.5, rot: -0.05, alpha: 0.42, inner: 0.1, p: D.ease(D.at(lt, 1.0, 0.6)), seed: 90 });
-    // 进度线：炭线 + 站（过了的站红实、本站大红、未到站白垩淡点）
-    const lp = new Path2D(); lp.moveTo(x0 - 24, y); lp.lineTo(x1 + 24, y); D.inkLine(g, lp, 4, t);
-    for (let i = 0; i < N; i++) { const past = i < n - 1, cur = i === n - 1;
-      const pp = cur ? D.pop(lt, walkEnd, 0.45) : 1, r = cur ? 13 * Math.max(0.6, pp) : past ? 7 : 6;
-      D.spray(g, X(i), y, 3, 12, past || cur ? '#9a2e1c' : '#f0dfbf', 600 + i, 0.7, 1.8, 0.3, 0.7);
-      g.fillStyle = past || cur ? C.red : C.chalk; g.globalAlpha = past ? 0.9 : cur ? clamp(pp * 2) : 0.62;
-      g.beginPath(); g.arc(X(i), y, r, 0, TAU); g.fill(); g.globalAlpha = 1; }
-    const tx = lerp(from, done, q), hop = lt < walkEnd ? -Math.abs(Math.sin(lt * 9)) * 46 : -Math.max(0, 1 - (lt - walkEnd) * 4) * 16;
-    D.cardToken(g, tx, y - 92 + hop, lt, t, lt < walkEnd, walkEnd, o);
-  });
-  D.fire(c, t, { glow: [540, 470, 0.7] });
-  D.embers(c, t, { groups: [[0, 240, 8], [840, 1080, 8]] });
-  D.finish(c, o);
-};
-// K.subtitle(c,text,alpha)：深褐底板＋白垩字，y≈1480，让开视频号底栏（assemble 生成的 subs.js 调它）
-D.subtitle = (c, text, a) => {
-  c.save(); c.globalAlpha = a; c.font = '52px "PuHui-Bold"'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  const w = Math.min(1040, c.measureText(text).width + 68), h = 90, x = 540, y = 1480;
-  c.fillStyle = 'rgba(240,223,191,.85)'; c.fillRect(x - w / 2 + 6, y - h / 2 + 7, w, h);
-  c.fillStyle = 'rgba(22,11,5,.94)'; c.fillRect(x - w / 2, y - h / 2, w, h);
-  c.fillStyle = C.red; c.fillRect(x - w / 2, y - h / 2, 8, h);
-  c.fillStyle = C.chalk; c.fillText(text, x + 4, y + 2, 980); c.restore();
-};
+// ---------- 四象限（岩面十字） ----------
+// K.quad(c, {x=130,y=420,w=820,h=980, cols:['增长↓','增长↑'], rows:['通胀↓','通胀↑'], cells:[{label,sub?,icon?,iconOpt?,col?,hi?,hand?} ×4 左上,右上,左下,右下], prog=1, size=60})
+// 先画十字(prog 0→.4)，再逐格弹出内容。cells[i].hi 高亮（砂岩半透明＋红框）；轴标签在方框外：列标在上、行标在左(竖排)
+K.quad = (c, o = {}) => { const { x = 130, y = 420, w = 820, h = 980, cols = [], rows = [], cells = [], prog = 1, size = 60 } = o, cw = w / 2, ch = h / 2, p = clamp(prog), pc = ez(p / .4);
+  cells.forEach((cl, i) => { const cx = x + (i % 2) * cw, cy = y + Math.floor(i / 2) * ch, q = ez((p - .35 - i * .1) / .25); if (q <= 0) return;
+    if (cl.hi) { c.save(); c.globalAlpha *= q; K.shape(c, K.rough(cx + 14, cy + 14, cw - 28, ch - 28, 40 + i, 4), 'rgba(240,223,191,.34)', 0); c.restore(); K.ink(c, K.rough(cx + 14, cy + 14, cw - 28, ch - 28, 40 + i, 4), 10, null); c.save(); c.strokeStyle = C.red; c.lineWidth = 8; c.globalAlpha *= q; c.stroke(K.rough(cx + 14, cy + 14, cw - 28, ch - 28, 40 + i, 4)); c.restore(); }
+    c.save(); c.translate(cx + cw / 2, cy + ch / 2); c.scale(.7 + .3 * q, .7 + .3 * q); c.globalAlpha *= q;
+    const hasSub = !!cl.sub, iy = -ch * (hasSub ? .22 : .16), ly = ch * (hasSub ? .16 : .26);
+    if (cl.icon) K.icon(c, cl.icon, 0, iy, Math.min(cw, ch) / 330, cl.iconOpt || {});
+    K.text(c, cl.label || '', 0, ly, { size, col: cl.col || C.chalk }); if (hasSub) K.text(c, cl.sub, 0, ly + size * 1.1, { size: 52, col: C.chalk, lw: 5 });
+    if (cl.hand) K.hand(c, cw * .32, -ch * .3, { scale: .8, seed: 70 + i }); c.restore(); });
+  const fr = K.rough(x, y, w, h, 77, 5); c.save(); c.setLineDash([]); if (pc > 0) { c.beginPath(); const hp = poly([[x - 10, y + ch], [x - 10 + (w + 20) * pc, y + ch + 3]], false), vp = poly([[x + cw, y - 10], [x + cw + 3, y - 10 + (h + 20) * pc]], false); K.ink(c, hp, 14); K.ink(c, vp, 14); } c.restore();
+  if (pc > .5) { c.save(); c.globalAlpha *= clamp((pc - .5) * 2); K.ink(c, fr, 8); c.restore(); }
+  const la = clamp((p - .2) * 4); cols.forEach((t, i) => K.text(c, t, x + cw * (i + .5), y - 56, { size, alpha: la })); rows.forEach((t, i) => K.text(c, t, x - 56, y + ch * (i + .5), { size, rot: -Math.PI / 2, alpha: la })); };
+
+// ---------- 章节卡 ----------
+// 中央主物：大齿轮＋刻在轮心的章号；在 props.js 里改 K.cardCenter 换成本书贯穿物
+K.cardCenter = K.cardCenter || ((c, lt, t, n) => { const q = ez(K.at(lt, 0.1, 0.6));
+  K.gear(c, 540, 1100, 300 * (.75 + .25 * q), { rot: t * .3, teeth: 14, spokes: 7, lit: q, alpha: q, minis: [{ a: -0.5, r: 110 }, { a: 2.5, r: 85 }], label: '', size: 1 });
+  if (lt > 0.25) K.text(c, String(n), 540, 1100, { size: 250, col: C.chalk, scale: MO.slamK((lt - 0.25) / 0.17), lw: 16 }); });
+K.chapterCard = (c, lt, t, n, title) => { K.bg(c, t);
+  const N = K.CHAPTER_NAMES.length || 12, step = Math.min(72, 900 / Math.max(1, N - 1)), x0 = 540 - step * (N - 1) / 2;
+  for (let i = 0; i < N; i++) { const cur = i === n - 1, done = i < n - 1; K.shape(c, K.circle(x0 + i * step, 150, cur ? 24 : 15), cur ? C.red : done ? C.gold : 'rgba(240,223,191,.35)', cur ? 8 : 6); }
+  K.text(c, `第 ${n} 章`, 540, 290, { size: 88, col: C.gold, alpha: K.at(lt, 0.15, 0.3) });
+  const size = 72, full = [...title], lines = []; c.save(); c.font = `${size}px "PuHui-Heavy"`; const per = Math.floor(820 / c.measureText('国').width);
+  title.split(/(?<=[：:])/).forEach(seg => { const ch = [...seg], nl = Math.ceil(ch.length / per), ev = Math.ceil(ch.length / nl); for (let i = 0; i < ch.length; i += ev) lines.push(ch.slice(i, i + ev).join('')); }); c.restore();
+  const shown = Math.round(K.at(lt, 0.3, full.length / 18) * full.length), lh = size * 1.28, ty = 470; let used = 0;
+  const bw = 880, bh = lines.length * lh + 60, a = K.at(lt, 0.25, 0.3); if (a > 0) { c.save(); c.globalAlpha *= a; K.shape(c, K.slab(540 - bw / 2, ty - lh / 2 - 22, bw, bh, 9, 7), C.stone, 8); c.restore(); }
+  lines.forEach((ln, k) => { const part = ln.slice(0, Math.max(0, shown - used)); used += ln.length; if (part) K.text(c, part, 540, ty + k * lh, { size, col: '#2b1a12', lw: 0, align: 'center' }); });
+  K.cardCenter(c, lt, t, n); K.finish(c); };
+// ---------- 字幕 ----------
+K.subtitle = (c, text, a) => { c.save(); c.globalAlpha = a; c.font = '52px "PuHui-Bold"'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const w = c.measureText(text).width + 64, h = 88, x = 540, y = 1480; c.fillStyle = 'rgba(33,21,13,.9)'; c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, 12); c.fill();
+  c.fillStyle = C.chalk; c.fillText(text, x, y + 2); c.restore(); };
 })();
