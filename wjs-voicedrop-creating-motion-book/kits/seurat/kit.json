@@ -1,0 +1,15 @@
+{
+  "name": "seurat",
+  "label": "修拉点彩（整幅平涂后重绘成固定六角网格的等大彩点，21 色纯色板按比例并置＝视觉混色；暖纸底；文字是点阵之上的实色字牌；人物无脸色块）",
+  "grammar": "y1_kurzgesagt（图示：台阶、天平、柱图，点彩版）＋y4_storytime（无脸色块人物叙事）",
+  "recipe": "29_seurat",
+  "from_book": "判断的品味（bloom-judgment）",
+  "fits": "认知／教育／思维方法／人文随笔：概念框架、阶梯、对照、日常小场景；冷静偏温暖；数据密度低",
+  "avoid": "密集小字表格与精确图表（点阵会糊）；需要细线、细节的机制图（kurzgesagt）；货币金融（banknote）；紧张/灾难（点彩太静穆）",
+  "fonts": [],
+  "fonts_note": "不另带字体：PuHui-Black/Heavy/Bold（思源黑体 GB2312 子集，OFL，随引擎分发）",
+  "palette": "纸 #f4ecd8｜藏青字 #1a2058｜深蓝 #2a3a9a｜蓝 #3f6fd0｜天蓝 #8fc3ee｜绿 #2f9a5a｜深绿 #1f6a52｜黄绿 #a8c83a｜芥黄 #f2cf3a｜橙 #f08a2a｜朱红 #e0432a｜玫红 #c0306a｜紫 #7a4aa8｜奶白 #f8f4e8｜肤 #e8b48a｜粉 #f2b8c8",
+  "api": "K.W K.H K.TAU K.C | K.at K.pop K.once K.t0 K.round K.circle K.world | K.bg(c,t,{kind:'paper'|'sky'|'green'|'dusk'|'warm'|'night'|'rose', ground:false 去地面}) K.finish(c)（把整幅点彩化再落字，每镜最后调；字幕不在其内） | 文字（排队，点阵后画，实色）：K.text(c,s,x,y,{size,col,align,alpha,scale,rot}) K.tag(c,s,x,y,{size≥52,bg,fg,rot,scale,alpha,padX})→{w,h} K.popText(c,s,x,y,lt,at,{plate,...}) K.callout(c,s,ax,ay,bx,by,lt,at,{size,bg,fg}) K.bigText(c,s,x,y,lt,at,{size≥100,cols,step,shift}) K.queue(c,fn)（自己排队一段在点阵之上画的东西） | 平涂形状：K.disc(c,x,y,r,col) K.blob(c,x,y,rx,ry,col,rot) K.rect(c,x,y,w,h,col,r) K.poly(c,pts,col) K.bar(c,a,b,w,col)（粗线段，最细 16） K.shadowEl K.stairs(c,x,base,n,w,step,lt,at,{cur,cols,h0,gap})→[{x,y,w,h}] K.person(c,x,y脚底,s,{pose:'stand'|'walk'|'think'|'cheer'|'point'|'sit',col,hat,skin,t,flip})→{head,chest,handL,handR} K.book K.check K.cross K.scale(天平) K.magnifier K.pot K.plate K.tree K.sun K.cloud K.arrow K.bars(c,vals,x,y,w,h,lt,at) | K.CHAPTER_NAMES K.chapterCard(c,lt,t,n,title) K.subtitle(c,text,alpha)",
+  "notes": "1) 一切图形用平涂大块面，线至少 16px 粗（K.bar 自带下限），否则点阵会把它吃掉；小于 40px 的图形别指望看清。\n2) 字全部走 K.text/tag/popText/callout/bigText，它们排队到点阵之后画；不要在 draw 里直接 c.fillText（会被点打散）。字牌默认奶白底＋藏青描边。\n3) 点位固定不动，内容变了的地方点才换色；不要做逐帧闪烁。每帧约 30–60ms，镜内别叠超大量渐变。\n4) 主体 y200–1350，字幕带 y1380–1560 不放字牌和关键图形；下半屏空地要用起来（地面、台阶、人物）。\n5) 不画脸；人物是色块（帽子红／衣服藏青），表情靠姿势。\n6) 点阵会把相近色并置，对比靠色相：深浅同色的相邻块会糊，相邻块用不同色相。",
+  "placeholder_bg": "K.bg(c, t, {}); K.finish(c)"
+}
