@@ -1,0 +1,15 @@
+{
+ "name": "dali",
+ "label": "达利超现实（深蓝到暖金的天、固定48%地平线、玻璃海、沙地；渐变加内阴影的无勾线体积感、仿射长影子、软化下垂、拐杖撑物；红色马蹄磁铁为贯穿物；数据用沙板图表）",
+ "grammar": "y1_kurzgesagt（图示）＋t3_finance_chart（拆块式图表，换成沙板上的沙丘折线/沙堆柱/K线/心电图）",
+ "recipe": "23_dali",
+ "fits": "投资/产业链/大宗商品、‘一件东西贯穿全书’的叙事（磁铁、矿、金属）、周期与估值与政策博弈等需要隐喻的章（软钟＝周期、天平＝估值、关口＝政策、长影子剪影＝人物）、需要戏剧性空间感的竖屏长片",
+ "avoid": "需要密表/多系列折线/热力图的数据章（沙板图表只适合单系列）；医学机制；写实人脸人物故事；同一片沙漠连放太久会单调，须靠 mood（dusk/dawn/tense/night）、mesa 左右、道具和构图换章区分",
+ "from_book": "买稀土这件事（rare-earth-investing）",
+ "fonts": [],
+ "fonts_note": "不另带字体：标题/标签用引擎自带 PuHui-Black / PuHui-Heavy / PuHui-Bold（思源黑体 GB2312 子集，OFL 1.1）",
+ "palette": "天空 #24407F→#6B92C2→#E8C27A（紧张时 tense：暗蓝→暗橙）｜沙地 #D9A95F→#B78850→#6B4423｜磁铁红 #C0392B（暗部 #4A0505、高光 #F08070）｜钢极 #C9CACF（暗 #6D7278）｜矿石 #4A3F36（边 #2A2018）｜矿点 青 #6FC3B8 / 金 #E8B93A / 粉 #E0689A（对应镨钕等，全片固定）｜字 奶白 #FFF3D6＋棕描边 #4A2A18｜沙板 #EDD6A0",
+ "api": "K.bg K.sky K.sea K.sand K.mesa K.finish K.text K.popText K.plaque K.tag K.callout K.vol K.shadow K.ground K.droop K.softClock K.magnet K.token K.crutch K.rock K.ore K.powder K.stream K.funnel K.separate K.dune K.table K.scale K.gear K.gate K.fence K.arrow K.icon K.icons(motor/wind/car/coin/chip/bolt/person/battery/phone/flask) K.chart K.line K.bars K.candle K.ecg K.chapterCard K.cardCenter K.subtitle K.moodFor K.MOODS K.HZ K.poly K.smooth K.at K.pop K.once K.t0 K.round K.circle K.world K.C K.CHAPTER_NAMES",
+ "notes": "地平线固定 K.HZ=922(48%)；主体放 y 200–1350，字幕带 y1380–1560 不放字。K.bg(c,t,{mood:'dusk'|'dawn'|'tense'|'night', mesa:'L'|'R'|'both'|null, sea:true}) 必须每镜先调（缓存底图并设时间），K.finish 最后调（颗粒+暗角+字幕带压暗）。章与章用 mood/mesa 区分；章节卡按章号自动轮换 mood（K.moodFor(n)）。体积感统一走 K.vol(c,path,x0,y0,x1,y1,色a,色b,内影色,blur)（渐变+内阴影，无勾线）。长影子：K.shadow(c, g=>K.magnet(g,x,gy,{s}), gy, {kx:.9, ky:.22, alpha:.5})，套件函数在回调里自动画纯黑剪影，kx 随时间 .7→1.2 即影子变长；K.shadow 要在物体之前调。贯穿物 K.magnet(c,x,y,{s,open,melt,field,halo})：x=拱门中线、y=脚着地线，s≈1.6–2 是主镜头大小，拱内腔中心约 (x, y-300*s)；open 裂开两半、melt 软化下垂（周期章）、field 磁感线；极头银灰、红体渐变+颗粒。软钟 K.softClock(c,x,y,r,{sag:0→1.4}) 周期；天平 K.scale(c,x,y,{tilt,left:(c,px,py)=>…,right}) 估值（托盘回调里画磁铁/钱币/矿石）；关口 K.gate(c,x,y,{open}) 政策；拐杖 K.crutch 撑住磁铁肩部；人物只用 K.icon('person') 剪影配长影子。每镜只放一个超现实主体，一镜只用磁铁红＋一个矿点色强调。图表一律走 K.chart(c,{type:'line'|'bar'|'candle'|'ecg',data,labels,x,y,w,h,prog,title,hi,marks})：沙板底+深棕轴线+「示意」章，默认占 y900–1350，字≥44px；line 沙丘折线、bar 沙堆柱(可含负值)、candle 涨红跌青绿、ecg 价格心电图；返回 {tip}。下三分之一沙地偏空：用沙板图表、大数字(K.text size≥120)、K.dune 沙堆、K.ore 矿石堆、长影子填它。漏斗用 K.funnel/K.separate(三色提纯)，s≥1.2 放大。字只用 K.text/popText/plaque/callout（奶白+棕描边，描边克制）。章节卡：顶部 N 站进度（当前章是小磁铁、已过章金点）＋第 n 章＋章名＋立在沙地的大磁铁（拱内刻章号）；换贯穿物改 K.cardCenter（props.js 里重写）。",
+ "placeholder_bg": "K.bg(c, t, {})"
+}
