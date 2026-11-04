@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-04]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — three new art style kits harvested from the Tokyo VPS, plus five art style assignments recorded (two from late 2026-11-03, three from 2026-11-04):
+  - **`seurat`** (修拉点彩): Georges Seurat Pointillist style — warm paper background, fixed hexagonal grid of equal-size color dots using a 21-color pure palette for visual mixing; all text rendered as opaque plates above the dot layer; faceless block-figure characters. Fits education, cognition, and humanist essays with low data density; not suitable for dense tables or precise charts. *(born from `bloom-judgment`, harvested 2026-11-03)*
+  - **`dunhuang`** (敦煌壁画·盛唐): Tang-dynasty Dunhuang mural aesthetic — earth-red crackled ground, iron-wire dark-brown outlines, mineral stone-blue / stone-green / ochre / gold pigments; price curves drawn as layered mountain silhouettes, data points hung on lotus pedestals, numbers on banner cards. Fits finance and market analysis, Silk Road and Eastern history, data narratives that need restraint and texture. *(born from `intc-2026-10`, harvested 2026-11-04)*
+  - **`dali`** (达利超现实): Salvador Dalí–inspired surrealism — deep-blue-to-warm-gold sky with a fixed 48 % horizon, glass sea, sandy ground; gradient volume shading without outlines, long affine shadows, bent and dripping forms; a red horseshoe magnet as the through-line prop; data displayed on sandy-board charts. Fits investment / supply-chain / commodity narratives and books that carry one metaphor-object across all chapters. *(born from `rare-earth-investing`, harvested 2026-11-04)*
+  - **Art style assignments recorded** (2026-11-03/04): `intel-crash` → 8bit, `bloom-judgment` → seurat, `intc-2026-10` → dunhuang, `rare-earth-investing` → dali, `shoucuo-llm` → bauhaus. The kit library now totals **28 harvested styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`, `shadowpuppet`, `vangogh`, `shinkai`, `impression`, `cubism`, `roman`, `klimt`, `renaissance`, `nouveau`, `picasso_blue`, `cave`, `rubberhose`, `seurat`, `dunhuang`, `dali`.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 28-kit art style library (`seurat`, `dunhuang`, `dali` added; corrects the 2026-11-03 count of 25 → 28).
+
+
 ## [2026-11-03]
 
 ### Changed
