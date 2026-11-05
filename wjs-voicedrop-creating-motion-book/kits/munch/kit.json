@@ -1,0 +1,15 @@
+{
+  "name": "munch",
+  "label": "蒙克表现主义（长弯流线笔铺满的流动天空与峡湾，整幅按行列正弦扭动；粗墨描边的平涂道具；无脸剪影人物；文字在扭动之后实色落下）",
+  "grammar": "y1_kurzgesagt（图示：齿轮、靶、线索卡、柱图，表现主义版）＋y4_storytime（无脸剪影人物叙事）",
+  "recipe": "19_munch",
+  "from_book": "工程师造的诡计（higashino-keigo-engineering-mystery）",
+  "fits": "人物传记、心理、悬疑推理、焦虑／孤独／压力、人生低谷与转折；情绪浓烈偏沉郁，一本书里能用冷暖两极的底（橙红天＝激烈，蓝夜＝沉静／离世）",
+  "avoid": "精确数据图表与密集小字（笔触底会吃细节）；轻松搞笑童趣；需要大量真实档案照片的新闻史；货币金融（banknote）",
+  "fonts": [],
+  "fonts_note": "不另带字体：PuHui-Black/Heavy/Bold（思源黑体 GB2312 子集，OFL，随引擎分发）；全角＝等符号 GB2312 里没有，用「即」「是」或手画",
+  "palette": "墨 #1a0f14｜奶白 #f6e9c8｜焦橙 #e2541c｜血红 #c8301e｜芥黄 #f4c03a｜暗红褐 #8a2e1c｜钴蓝 #2c5a8a｜深海军 #14243e｜灰蓝 #4a6aa0｜橄榄 #5a6a2a｜木黄 #c88a42｜紫褐 #5a2a4a",
+  "api": "K.W K.H K.TAU K.C | K.at K.pop K.once K.t0 K.round K.circle K.world | K.bg(c,t,{kind:'dusk'|'blood'|'dawn'|'night'|'calm'|'mist', horizon:1000}) 流线天空＋峡湾（按 8fps 缓存）K.finish(c)（整幅按行列正弦扭动后落排队文字，每镜最后调） | 文字（排队，扭动之后画，实色）：K.text K.tag(size≥52) K.popText(c,s,x,y,lt,at,o) K.callout(c,s,ax,ay,bx,by,lt,at,o) K.bigText(c,s,x,y,lt,at,{size≥100,cols}) K.queue | 描边平涂形状（墨线 6px，轻微抖动）：K.disc K.blob K.rect K.poly K.bar(c,a,b,w,col) K.gear(c,x,y,r,teeth,rot,col) K.target(c,x,y,r) K.arrowShot(c,x,y,len,ang) K.card(c,x,y,w,h,rot,label,col) K.person(c,x,y脚底,s,{pose:'stand'|'walk'|'think'|'cheer'|'point'|'sit',col,t,flip})→{head,chest,handL,handR} K.book K.check K.cross K.arrow K.bars(c,vals,x,y,w,h,lt,at) K.bridge | K.CHAPTER_NAMES K.chapterCard(c,lt,t,n,title) K.subtitle(c,text,alpha)",
+  "notes": "1) 笔触底在整幅里是氛围，道具用粗墨线平涂块面，线≥10px 才不被扭动糊掉。\n2) 文字一律走 K.text/tag/popText/callout/bigText（排队到扭动之后画），不要在 draw 里直接 c.fillText。\n3) 不画脸（套件规则）；人物是深色剪影＋手。\n4) 橙红大面积会燥：天空区占画面一半以内，下半留蓝；离世／低谷章用 night/mist。\n5) 主体 y200–1350；字幕带 y1380–1560 不放字牌与关键图形。\n6) 背景每镜首次绘制较重（约 100ms），之后 8fps 内复用。",
+  "placeholder_bg": "K.bg(c, t, {}); K.finish(c)"
+}
