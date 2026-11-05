@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-05]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — one new art style kit harvested from the Tokyo VPS, and one style usage recorded:
+  - **`monet`** (莫奈印象派): Claude Monet–inspired Impressionist style — cached horizontal short-stroke sky/sea/rock/shore layers with warm-cool contrast, no black in shadows, per-frame shimmering water-glint animation; information displayed on clean cream-white card layers; figures rendered as silhouettes only (no faces). Fits geography and geopolitical history, ocean/coast/harbour/fortress subjects, historically measured narration requiring calm gravitas; single-focus wide scenes (one landmark + water surface + ships); narratives with time-of-day light transitions (dawn–noon–dusk–night). *(born from 《直布罗陀风云录》 `gibraltar`, harvested 2026-11-04)*
+  - **Art style assignment recorded** (2026-11-04): `gibraltar` → monet. The kit library now totals **29 harvested styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`, `shadowpuppet`, `vangogh`, `shinkai`, `impression`, `cubism`, `roman`, `klimt`, `renaissance`, `nouveau`, `picasso_blue`, `cave`, `rubberhose`, `seurat`, `dunhuang`, `dali`, `monet`.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 29-kit art style library (`monet` added; corrects the 2026-11-04 count of 28 → 29).
+
+
 ## [2026-11-04]
 
 ### Changed
