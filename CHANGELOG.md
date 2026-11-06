@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-06]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — two new art style kits harvested from the Tokyo VPS, and three style usages recorded:
+  - **`munch`** (蒙克表现主义): Edvard Munch Expressionist style — entire frame distorted row-by-row via sinusoidal wave (flowing sky and fjord), thick ink flat-colour outlines on props, faceless silhouette characters; warm orange-red sky for high-tension scenes, cool blue-night for stillness or departure. Fits biography, psychology, mystery/thriller, and emotionally intense narratives — human psychology under pressure, loneliness, life low-points and turning-points. *(born from 《工程师造的诡计》 `higashino-keigo-engineering-mystery`, harvested 2026-11-05)*
+  - **`vaporwave`** (2011 蒸汽波/赛博霓虹): 2011 vaporwave / cyber-neon aesthetic — deep-purple night sky, sliced sunset, wireframe mountain, palm-tree silhouettes, cyan perspective grid; all glowing objects rendered as neon tubes (thick glow + white core); Windows 95 dialog as "system narrator"; the invisible track (magenta double-rail neon groove) carries objects along it; people/hands drawn as deep-purple-fill + cyan-neon-outline line art, no faces. Mouse cursor, marching-ants selection box, and "selected / unselected" tags express "choices set in advance". *(born from 《你以为是你在选》 `who-decides`, harvested 2026-11-06)*
+  - **Art style assignments recorded** (2026-11-05/06): `shaoqian` → banknote, `higashino-keigo-engineering-mystery` → munch, `weight-care-lifecycle` → flat2026. The kit library now totals **31 harvested styles**: `kurzgesagt`, `banknote`, `flat2026`, `8bit`, `constructivism`, `ink`, `kusama`, `rickmorty`, `bauhaus`, `kirby`, `haring`, `raytrace`, `ghibli`, `shadowpuppet`, `vangogh`, `shinkai`, `impression`, `cubism`, `roman`, `klimt`, `renaissance`, `nouveau`, `picasso_blue`, `cave`, `rubberhose`, `seurat`, `dunhuang`, `dali`, `monet`, `munch`, `vaporwave`.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry to reflect the full 31-kit art style library (`munch` and `vaporwave` added; updates the 2026-11-05 count of 29 → 31).
+
+
 ## [2026-11-05]
 
 ### Changed
