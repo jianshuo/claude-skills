@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-07]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — three art style usage assignments recorded from Tokyo VPS production runs:
+  - `commanding-heights` → **banknote** (08:23 UTC)
+  - `liuxing-zhiban` → **ghibli** (09:50 UTC)
+  - `x402` → **banknote** (14:44 UTC)
+  - The style kit library remains at **31 harvested styles** (no new kits added today).
+
 ## [2026-11-06]
 
 ### Changed
