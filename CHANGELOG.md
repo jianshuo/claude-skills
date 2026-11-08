@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-08]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — four art style usage assignments recorded (two late on 2026-11-07, two on 2026-11-08):
+  - `bei-jian-qiao` → **picasso_blue** (2026-11-07 18:39 UTC)
+  - `hahaha` → **rubberhose** (2026-11-07 20:09 UTC)
+  - `map-or-landmark` → **rickmorty** (2026-11-08 09:27 UTC)
+  - `atlassian` → **kurzgesagt** (2026-11-08 13:58 UTC)
+  - The style kit library remains at **31 harvested styles** (no new kits added).
+
 ## [2026-11-07]
 
 ### Changed
