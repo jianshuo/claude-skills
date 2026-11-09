@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-09]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — three art style usage assignments recorded (one late on 2026-11-08, two on 2026-11-09):
+  - `good-pillow` → **flat2026** (2026-11-08, after the daily docs refresh)
+  - `alkali-metals` → **kurzgesagt** (2026-11-09)
+  - `ten-years-alone` → **hopper** (2026-11-09) — first production use of the Edward Hopper American Realism style (硬光块面双版本裁切：背光冷青绿／受光暖琥珀，斜光斑缓移；适合孤独克制的金融与人文叙事)
+  - The style kit library remains at **31 harvested styles** (no new kits formally added).
+
 ## [2026-11-08]
 
 ### Changed
