@@ -6,6 +6,7 @@ set -euo pipefail
 MAXH=${MAX_HOURS:-13}
 MB="$(cd "$(dirname "$0")" && pwd)/mb.mjs"
 K=$(grep -E "^(export )?VULTR_API_KEY=" "${MB_ROOT:-/root/motion-book}/secrets.env" | head -1 | sed -E "s/^(export )?VULTR_API_KEY=//; s/^[\"']//; s/[\"']\$//")
+# 注意：Vultr 早已忽略 ?tag= 参数（会返回全部实例），真正的筛选在 mb.mjs stale 里做（标签+label 双重核对）
 curl -4 -sS --fail-with-body -H "Authorization: Bearer $K" "https://api.vultr.com/v2/instances?tag=motion-book&per_page=100" | node "$MB" stale "$MAXH" | while read -r id age label; do
   curl -4 -sS -X DELETE -H "Authorization: Bearer $K" "https://api.vultr.com/v2/instances/$id" && echo "$(date -u +%FT%TZ) 删除超时机器 $id（$label，${age}h）"
 done

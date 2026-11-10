@@ -39,7 +39,13 @@ if (cmd === 'state') {
   console.log(out.join('\n'));
 } else if (cmd === 'stale') {
   const maxh = Number(a[0]);
+  // 2026-11-10 事故：Vultr 已忽略 GET /instances?tag=，返回整个账号的实例，
+  // 旧版只看开机时长，把常驻的 Tokyo VPS 和 claude-server 当「超时机器」删了。
+  // 现在必须自己核对：带 motion-book 标签 且 label 以 motion-book- 开头，缺一不删。
+  const isBookMachine = i => ((i.tags || []).includes('motion-book') || i.tag === 'motion-book')
+    && String(i.label || '').startsWith('motion-book-');
   for (const i of JSON.parse(stdin()).instances || []) {
+    if (!isBookMachine(i)) continue;
     const age = (Date.now() - Date.parse(i.date_created)) / 3600e3;
     if (age > maxh) console.log(`${i.id} ${age.toFixed(2)} ${i.label}`);
   }
