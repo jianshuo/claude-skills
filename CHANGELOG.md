@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-10]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — cloud architecture overhauled: books are now made directly on the permanent **Tokyo VPS mb account** (`bash cloud/run_book.sh <slug>`) rather than spinning up and destroying a fresh Vultr machine for each book. The Vultr one-time machine + reaper workflow is decommissioned; leftover processes from an interrupted run are cleaned automatically at the start of the next book. `cloud/mb.mjs`, `cloud/run_book.sh`, `cloud/setup_worker.sh`, and `cloud/cloud-init.sh` updated accordingly; `cloud/reaper.sh` retained for reference but no longer invoked. The change eliminates the accidental deletion of the permanent Tokyo VPS that the Vultr tag-filter bug (`?tag=` being silently ignored) had been causing.
+- **`wjs-voicedrop-creating-motion-book`** — art style usage recorded: `cycle` → **kurzgesagt**.
+
 ## [2026-11-09]
 
 ### Changed
