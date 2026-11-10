@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-// run_book.sh / reaper.sh 的小工具（以前内嵌在 shell 里的 python 片段都收到这里）。只依赖 Node ≥20。
+// run_book.sh 的小工具（以前内嵌在 shell 里的 python 片段都收到这里）。只依赖 Node ≥20。
 //   node mb.mjs state <state.json> <state> <step> <url> <logTail> <startedSec> <only> <instance>   写进度（logTail 只内部用，接口不往外给）
 //   node mb.mjs event <events.json> <text>      对外日志追加一条（同一句不连着重复记，最多留 300 条）
 //   node mb.mjs get <js 表达式，d 是 stdin 的 JSON>   例：… | node mb.mjs get 'd.instance.id'
 //   node mb.mjs summary <probe JSON> <章数> <kits 目录>   把探针结果翻成对外日志的几句话，一行一句
-//   node mb.mjs stale <小时>                    stdin 是 Vultr 实例列表 JSON，打印超时实例「id 小时数 label」
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -37,16 +36,4 @@ if (cmd === 'state') {
   if (p.html) out.push('打包网页版完成');
   if (p.result) out.push('写好制作说明');
   console.log(out.join('\n'));
-} else if (cmd === 'stale') {
-  const maxh = Number(a[0]);
-  // 2026-11-10 事故：Vultr 已忽略 GET /instances?tag=，返回整个账号的实例，
-  // 旧版只看开机时长，把常驻的 Tokyo VPS 和 claude-server 当「超时机器」删了。
-  // 现在必须自己核对：带 motion-book 标签 且 label 以 motion-book- 开头，缺一不删。
-  const isBookMachine = i => ((i.tags || []).includes('motion-book') || i.tag === 'motion-book')
-    && String(i.label || '').startsWith('motion-book-');
-  for (const i of JSON.parse(stdin()).instances || []) {
-    if (!isBookMachine(i)) continue;
-    const age = (Date.now() - Date.parse(i.date_created)) / 3600e3;
-    if (age > maxh) console.log(`${i.id} ${age.toFixed(2)} ${i.label}`);
-  }
 } else { console.error('用法见文件头'); process.exit(2); }

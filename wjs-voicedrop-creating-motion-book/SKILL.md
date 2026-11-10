@@ -33,15 +33,15 @@ description: Use when the user wants a whole book (usually a VoiceDrop 书架 bo
 
 只改了几镜：改 `chNN.js` → 重跑步 9（HTML 不到 1 秒）；MP4 删掉 `成片_vN_chunks/chNN.mp4` 重跑步 10，其余章复用。
 
-## 云端一次性机器（Tokyo VPS 上一条命令，做完销毁）
+## 云端制作（Tokyo VPS 本机的做书账号 mb，一次一本）
 
-`bash cloud/run_book.sh <slug> [--only ch01,ch02,ch03]`（Tokyo VPS root）：Vultr 开一台 `vhp-8c-16gb-amd`（$0.132/时，东京）→ `cloud/cloud-init.sh` 装 Node 22 / uv / Chromium / Claude Code / 引擎 / 本 skill → 无人值守 `claude -p` 按本 skill 从取书做到 HTML → 拉回 `/root/motion-book/books/<slug>/` → `scripts/publish_video.mjs` 发到书架 **voicedrop.cn/books/<slug>/video/** → 销毁。退出必销毁（`--keep` 除外）；`cloud/reaper.sh` 每 30 分钟删掉开了超过 6 小时的 motion-book 机器。`--dry` 只验环境不派 Claude。
+`bash cloud/run_book.sh <slug> [--only ch01,ch02,ch03]`（Tokyo VPS，root 或 claude-agent）：等 engine-router 租到账号 → 拿 `worker.lock`（一次只做一本，后来的排队）→ `ssh -i $MB_ROOT/worker_id mb@127.0.0.1` 复位做书账号（skill 副本对齐 GitHub、清上一单的套件和会话）→ 无人值守 `claude -p` 按本 skill 从取书做到 HTML → 拉回 `$MB_ROOT/books/<slug>/` → `scripts/publish_video.mjs` 发到书架 **voicedrop.cn/books/<slug>/video/** → 杀掉 mb 名下残留进程、删工作目录（`--keep` 保留）。`--dry` 只验环境不派 Claude。2026-11-10 起不再开一次性 Vultr 机器（Vultr reaper 误删过常驻 VPS），也没有 reaper 了：残留进程由下一单开工时清，Claude 进程自带 `timeout <时限>h`。
 
-- 凭据只读不复制：Vultr key 与火山 ASR 在 `/root/motion-book/secrets.env`；Claude 用写书引擎 `/opt/claude-agent/.env` 的 `CLAUDE_CODE_OAUTH_TOKEN`（setup-token 长期令牌，不轮换，多机共用不互踢；但和写书引擎的 Claude 腿共用订阅额度）；书架发布用 `/opt/claude-agent/.config/voicedrop/credentials`。
-- **无人值守（`claude -p`）时子 agent 只能前台并行**：同一条消息发多个 Agent 调用、等这批全部返回再派下一批；绝不用后台 agent、绝不「等通知」就结束回合——`-p` 一结束回合进程就退出，后台 agent 全被杀（2026-10-25 第一单 20 个 agent 做到一半全没了）。`run_book.sh` 的提示词已写死这条；Claude 退出却没做出网页版时，用 `claude -p --continue` 接着同一会话续跑，最多 3 轮；重开的机器会先把上一轮拉回的半成品传上去接着做。
-- 云端没有 VoiceDrop MCP：取书用 `node $S/fetch_book.mjs <slug> 章名.txt`（读书架公开的 `_src/book.json`，要做的章没写完就退出，不开机）。
-- Vultr API key 有 IP 白名单：Tokyo VPS 的 IPv4 要在控制台 Account → API → Access Control 里放行，curl 用 `-4`。
-- **线上入口（像听书）**：任何人打开 `voicedrop.cn/books/<slug>/video/`，没做过就自动下单；lab 服务 `GET|POST https://lab.jianshuo.dev/api/video-book?slug=`（下单）/ `…/status?slug=`（只查）用 systemd-run 起 `video-<slug>` 单元跑 `run_book.sh`（`MB_ROOT=/opt/claude-agent/motion-book`）。闸：只做写完的书、同时最多 2 本、24 小时内最多开工 5 本（`/opt/claude-agent/.env` 的 `VIDEO_MAX_CONCURRENT` / `VIDEO_MAX_PER_DAY`，代码缺省 1 / 2；实现在 jianshuo.dev 仓库 `claude-agent/src/video-book.ts`）。书架已有 `video/` 时接口答 done，不会重做——要重做整本先删 R2 `books/<slug>/video/`。
+- 做书账号用 `cloud/setup_worker.sh`（root，幂等）装：Node 22 只装在 mb 家目录（系统 Node 20 给 lab/paint/router，不动）、uv、Playwright Chromium、Claude Code、引擎、本 skill；**mb 的 user slice 限 MemoryMax 2.8G / CPUQuota 150%**，做书吃爆也只杀自己，公众号中转和 lab 不受影响。机器是 2 核 4G：`RENDER_SLOTS=1`、子 agent 一批不超过 4 个，一本约 3 小时。MP4 仍由家里 pro 渲（`video-book-sync`）。
+- 凭据只读不复制：火山 ASR 与各账号令牌在 `$MB_ROOT/secrets.env`；缺省 Claude 令牌用写书引擎 `/opt/claude-agent/.env` 的 `CLAUDE_CODE_OAUTH_TOKEN`；书架发布用 `/opt/claude-agent/.config/voicedrop/credentials`。每单开工时写进 mb 的 `~/code/.env`（600）。
+- **无人值守（`claude -p`）时子 agent 只能前台并行**：同一条消息发多个 Agent 调用、等这批全部返回再派下一批；绝不用后台 agent、绝不「等通知」就结束回合——`-p` 一结束回合进程就退出，后台 agent 全被杀（2026-10-25 第一单 20 个 agent 做到一半全没了）。`run_book.sh` 的提示词已写死这条；Claude 退出却没做出网页版时，用 `claude -p --continue` 接着同一会话续跑，最多 3 轮；重做时会先把上一轮拉回的半成品传上去接着做。
+- 云端没有 VoiceDrop MCP：取书用 `node $S/fetch_book.mjs <slug> 章名.txt`（读书架公开的 `_src/book.json`，要做的章没写完就退出，不开工）。
+- **线上入口（像听书）**：任何人打开 `voicedrop.cn/books/<slug>/video/`，没做过就自动下单；lab 服务 `GET|POST https://lab.jianshuo.dev/api/video-book?slug=`（下单）/ `…/status?slug=`（只查）用 systemd-run 起 `video-<slug>` 单元跑 `run_book.sh`（`MB_ROOT=/opt/claude-agent/motion-book`）。闸：只做写完的书、同时最多 1 本（做书账号只有一个，run_book.sh 另有 worker.lock 兜底）、24 小时内最多开工 5 本（`/opt/claude-agent/.env` 的 `VIDEO_MAX_CONCURRENT` / `VIDEO_MAX_PER_DAY`，代码缺省 1 / 2；实现在 jianshuo.dev 仓库 `claude-agent/src/video-book.ts`）。书架已有 `video/` 时接口答 done，不会重做——要重做整本先删 R2 `books/<slug>/video/`。
 - **书架标志**：`publish_video.mjs` 发布成功后往线上 `_src/book.json` 合并 `video: {url, publishedAt, duration, chapters}`（chapters 少于全书章数＝试看版）；写书的 build.mjs 每次整份发布会把它从线上接回来，修书不会抹掉。
 
 ## 省时间的关键
