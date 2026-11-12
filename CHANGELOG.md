@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-12]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — four art style usage assignments recorded (one on 2026-11-11, three on 2026-11-12):
+  - `anxious-dad` → **flat2026** (2026-11-11)
+  - `tcm-analysis` → **kurzgesagt** (2026-11-12)
+  - `decision-rights` → **greek** (2026-11-12) — first production use of the Greek black-figure pottery style (陶土橙底、黑釉剪影＋回纹边框；陶罐/天平/币堆做数据图；适合财经/科技/权力结构/治理/历史制度类叙事)
+  - `japan-rail-signs` → **8bit** (2026-11-12)
+- **`wjs-voicedrop-creating-motion-book`** — six art style kits (added 2026-11-01, now documented) bring the library to **37 harvested styles**:
+  - **`egypt`** (埃及墓室壁画): Egyptian tomb-painting aesthetic — beige-plaster wall, geometric colour-block borders with hieroglyph columns, side-face/front-eye figures; red = logic/pressure, blue = feeling, gold = relationship; suits parenting, family, psychology, governance, and emotionally charged topics with power dynamics.
+  - **`gothic`** (哥特泥金手抄本): Gothic illuminated manuscript — vellum ground, gold-leaf embossing, thick ink lines, vermillion/ultramarine/gold palette, red-white capsule pills as the recurring motif; suits medicine, medical history, alchemy, medieval/religious topics, and "trial-by-trial" narratives.
+  - **`greek`** (阿提卡黑绘陶器): Attic black-figure pottery — terracotta-orange ground, black-glaze silhouettes, meander borders; jars/scales/coin-stacks as data charts; suits finance/tech, governance structures, historical/institutional topics, prospectus and regulatory material.
+  - **`hopper`** (1942 霍珀美国现实主义): Edward Hopper American Realism — hard-light planes in cool cyan-green (backlit) / warm amber (lit), drifting diagonal light slabs; silhouette-only figures; card-table, window, and night-street scenes; suits solitude, investment psychology, risk/probability, personal decision-making.
+  - **`matisse`** (马蒂斯《爵士》剪纸): Matisse Jazz cut-paper collage — dual-blue checkerboard, emerald/yellow/red-pink/black-white, scissor-zigzag edges, gouache-brush overlay; black silhouette figures with red headband; suits health/fitness/lifestyle, habit-formation, and body-action light-science topics.
+  - **`pop`** (1962 波普/利希滕斯坦): 1962 Pop Art / Lichtenstein comic-strip — thick black outlines, Ben-Day dots, explosion frames, speech/thought bubbles, flipping coin as the recurring motif; silhouette hands only; suits finance, quantitative/statistics, economics, market topics with a fast-paced ironic tone.
+
+### Changed (docs)
+
+- **README** — updated `wjs-voicedrop-creating-motion-book` entry: kit count corrected from 31 → 37; `egypt`, `gothic`, `greek`, `hopper`, `matisse`, `pop` added to the style list.
+
 ## [2026-11-10]
 
 ### Changed
