@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-13]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — four art style usage assignments recorded (two on 2026-11-12 after the daily refresh, two on 2026-11-13):
+  - `europes-church-machine` → **banknote** (2026-11-12 18:07 UTC)
+  - `marx-investment-memos` → **banknote** (2026-11-12 20:51 UTC)
+  - `app-store-sells-for-you` → **kurzgesagt** (2026-11-13 11:18 UTC)
+  - `us-treasury-machine` → **banknote** (2026-11-13 15:31 UTC)
+
 ## [2026-11-12]
 
 ### Changed
