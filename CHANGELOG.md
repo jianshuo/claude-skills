@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-14]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — art style usage recorded: `yuexiang` → **kurzgesagt**.
+
 ## [2026-11-13]
 
 ### Changed
