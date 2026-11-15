@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-15]
+
+### Changed
+
+- **Multiple skills** — internal tool paths migrated from `~/code/` to `~/code/lab/` to consolidate under the new lab monorepo layout. Skills updated: `wjs-distilling-style` (Style Cards directory), `wjs-explaining-tv-slang` (vocabulary notebook), `wjs-researching-company`, `wjs-trading-diary`, `wjs-voicedrop-reading-aloud` (TTS synthesizer path), and `wjs-creating-video-book` (book-videos project directory). README detailed sections updated to match.
+- **`wjs-voicedrop-creating-motion-book`** — two more art style usage assignments recorded:
+  - `earthquake-mechanics` → **kurzgesagt** (2026-11-14, after the previous daily docs refresh)
+  - `hanshin-hankyu` → **ghibli** (2026-11-15)
+
 ## [2026-11-14]
 
 ### Changed
