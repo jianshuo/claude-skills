@@ -211,7 +211,7 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 把文字（段落、文件、URL 或 VoiceDrop 文章）重写成有声书朗读脚本，再用火山引擎豆包 seed-tts-2.0 合成 mp3。核心不是照字念，而是**编排**：不同性质的内容（正文叙述、引用、大白话吐槽）分配不同音色，关键转折处加表演指令，合成后 SendUserFile 发回。
 
 - **编排即再创作**：洗掉 markdown 视觉残留，把表格列表改成口语句，标题化进过渡句，主声贯穿全篇，引用/吐槽换声——声音切换是给听众的「格式信号」，等价于视觉上的引用块。
-- **合成工具**：`~/code/volcano-tts/tts.py --script` 模式，支持 `@voice` 声道切换和 `[表演指令]` 嵌入；只用 `_uranus_bigtts` 后缀音色（seed-tts-2.0），裸 API 会把标注原样念出来。
+- **合成工具**：`~/code/lab/volcano-tts/tts.py --script` 模式，支持 `@voice` 声道切换和 `[表演指令]` 嵌入；只用 `_uranus_bigtts` 后缀音色（seed-tts-2.0），裸 API 会把标注原样念出来。
 - **验收**：`afinfo out.mp3` 对时长；疑似标注被念出来时用 ASR 抽查。
 
 > 触发词：`做成有声书` / `朗读出来` / `读给我听` / `念出来` / `read aloud` / `/wjs-voicedrop-reading-aloud`
@@ -431,7 +431,7 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **10 节完整格式**：字面 vs 实际用法 → 来源/为什么这么说 → 语气与分量（正式度/冒犯度/情绪/地域/时代感）→ 你能不能用 → 中文对应说法 → 例句 → 剧里的上下文 → 怎么接话 → 近义/变体/容易混淆 → 发音（连读/吞音）
 - **批量/SRT 模式**：扫字幕文件，跳过普通词汇，逐条速查格式输出 + 末尾汇总表
 - **事实纪律**：剧集出处先 WebSearch 核实，2023 年后网络俚语也先查再答，不确定直说
-- **生词本**：每次解释后自动追加到 `~/code/tv-slang/notebook.md`；用户说「复习」时随机抽题考察
+- **生词本**：每次解释后自动追加到 `~/code/lab/tv-slang/notebook.md`；用户说「复习」时随机抽题考察
 
 > 触发词：`美剧口头语` / `台词什么意思` / `这是什么梗` / `这个口头语怎么用` / `/wjs-explaining-tv-slang`
 
@@ -515,8 +515,8 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **事实骨架纪律**：先把原文信息点列成 bullet，改写只换「怎么说」，不增不减事实——改风格不是改内容。
 - **默认一次性 prompt（日常推荐）**：`references/oneshot-prompts.md` 提供两段自包含提示词——Prompt A（Style Card + 目标文章 → 改写稿）和 Prompt B（样本文章 → Style Card）——内嵌 9 轴指纹、事实骨架纪律和 AI 露馅 6 条反制，把多轮判官循环压缩成一轮内联自检，够用、一把过。
 - **独立判官盲测（深验时启用）**：起一个 subagent，只给它 Style Card + 改写稿，不告诉它是 AI 改的，逐轴评分（1–5），列出具体出戏句；发布级 / 批量高仿真时才跑完整闭环（含图灵判别盲测）。
-- **两种模式**：蒸馏（样本 → `~/code/style-cards/<author>/style-card.md`）/ 改写（目标文本 + Style Card → 改写稿，不达标最多 2–3 轮回炉）。样本 < 3 篇会明确提示用户指纹会不稳。
-- Style Cards 存在本地独立库（`~/code/style-cards/`），不同步到公开 repo，防止他人稿件外泄。
+- **两种模式**：蒸馏（样本 → `~/code/lab/style-cards/<author>/style-card.md`）/ 改写（目标文本 + Style Card → 改写稿，不达标最多 2–3 轮回炉）。样本 < 3 篇会明确提示用户指纹会不稳。
+- Style Cards 存在本地独立库（`~/code/lab/style-cards/`），不同步到公开 repo，防止他人稿件外泄。
 
 > 触发词：`蒸馏文风` / `提炼XX的风格` / `把这篇改成XX的味儿` / `mimic this writer` / `match this author's style` / `/wjs-distilling-style`
 

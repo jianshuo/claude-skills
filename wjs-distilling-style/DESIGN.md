@@ -23,7 +23,7 @@
 ## 存储（独立库，不进公开 repo）
 
 ```
-~/code/style-cards/<author-slug>/
+~/code/lab/style-cards/<author-slug>/
   samples/          # 原始样本文章（喂进来的）
   style-card.md     # 蒸馏出的 Style Fingerprint
   rewrites/         # 历史改写稿（可选留痕）

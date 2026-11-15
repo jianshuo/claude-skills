@@ -7,7 +7,7 @@ description: Use when the user wants text turned into an audiobook / read aloud 
 
 文字 → 有声书 mp3。不是照字面念，而是先**编排**：不同性质的内容换不同声音，关键转折处加语音指令，然后用火山引擎豆包 seed-tts-2.0 合成。
 
-合成工具：`~/code/volcano-tts/tts.py`（先 `source ~/code/.env`）。
+合成工具：`~/code/lab/volcano-tts/tts.py`（先 `source ~/code/.env`）。
 
 ## 铁律
 
@@ -71,7 +71,7 @@ description: Use when the user wants text turned into an audiobook / read aloud 
 
 ```bash
 source ~/code/.env
-python3 ~/code/volcano-tts/tts.py -f script.txt --script -o out.mp3 \
+python3 ~/code/lab/volcano-tts/tts.py -f script.txt --script -o out.mp3 \
   -i "这是一段有声书朗读，自然口语化，像讲故事，不要播音腔"
 ```
 

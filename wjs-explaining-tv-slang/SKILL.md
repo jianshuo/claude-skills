@@ -105,7 +105,7 @@ description: Use when the user asks what an American/British TV show or movie li
 
 ## 生词本
 
-每解释完一条（批量模式每条），追加一行到 `~/code/tv-slang/notebook.md`（不存在就建，表头如下）。**只追加不改历史**；同一个词再次被问到，追加新行并在备注写「复习」。
+每解释完一条（批量模式每条），追加一行到 `~/code/lab/tv-slang/notebook.md`（不存在就建，表头如下）。**只追加不改历史**；同一个词再次被问到，追加新行并在备注写「复习」。
 
 ```markdown
 | 日期 | 原句 | 实际意思 | 冒犯度 | 出处/剧 | 备注 |

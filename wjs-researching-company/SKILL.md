@@ -34,7 +34,7 @@ description: Use when 王建硕 wants a listed company researched end to end and
 
 - 用 `mcp__unusualwhales__uw_stock {action_type:"info", ticker}` 和 `{action_type:"stock_state"}` 确认公司、市值、下次财报日、最新价（盘前/盘中/收盘要标清）。
 - 建目录 `~/code/reports/<TICKER>-<今天>/`。
-- 写 `00-local.md`：在 `~/code/jianshuo-memory`（尤其 `10-investing/`）、`~/code/reports/`、`~/code/wechat-publish/` 里 grep 代码和公司名；有富途 OpenD 时可用 `~/code/futu-tools/query.py` 查持仓。没有就写「无持仓、无旧资料」。
+- 写 `00-local.md`：在 `~/code/jianshuo-memory`（尤其 `10-investing/`）、`~/code/reports/`、`~/code/wechat-publish/` 里 grep 代码和公司名；有富途 OpenD 时可用 `~/code/lab/futu-tools/query.py` 查持仓。没有就写「无持仓、无旧资料」。
 
 ### 1. 收集（三个 agent 并行，一条消息里同时发）
 
@@ -47,7 +47,7 @@ description: Use when 王建硕 wants a listed company researched end to end and
 同时主循环自己跑富途（几秒钟，不用派 agent）：
 
 ```bash
-cd ~/code/futu-tools && .venv/bin/python research.py US.<T> --expiries 3 --out <D>/futu > <D>/04-futu.md
+cd ~/code/lab/futu-tools && .venv/bin/python research.py US.<T> --expiries 3 --out <D>/futu > <D>/04-futu.md
 ```
 
 需要本机 OpenD 在跑并已登录（`nc -z 127.0.0.1 11111`）。没开就请建硕打开 `/Applications/Futu_OpenD.app` 登录，或者跳过这一份并在 00 里注明。脚本只用行情接口，不碰交易。港股、A 股把前缀换成 `HK.` / `SH.` / `SZ.`。注意：财报或大事件后跳空时，期权快照里的「平值」是按上一个收盘价取的，要在 04 里注明。

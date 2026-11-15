@@ -24,7 +24,7 @@ description: Use when the user wants to capture a writer's voice from a few samp
 ## 存储（独立库，不进公开 repo）
 
 ```
-~/code/style-cards/<author-slug>/
+~/code/lab/style-cards/<author-slug>/
   samples/          # 喂进来的原始样本
   style-card.md     # 蒸馏出的 Style Fingerprint（真源，人可读可手改）
   rewrites/         # 历史改写稿（可选）
