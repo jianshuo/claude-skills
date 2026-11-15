@@ -16,7 +16,7 @@ description: Use when the user wants a book turned into YouTube chapter videos �
 | 音轨 | VoiceDrop 读书的章节有声书 mp3（不重新 TTS）|
 | 画面 | 每章 1-3 张 GPT Image 2 生成图，Ken Burns 缓推，段间 1s 交叉淡化 |
 | 文字 | 每个中心思想：大字标题（≤12 字）+ 一句阐释，淡入淡出，Pillow 渲染 |
-| 项目目录 | `~/code/book-videos/<book-slug>/` |
+| 项目目录 | `~/code/lab/book-videos/<book-slug>/` |
 | 输出 | `<slug>-chNN.mp4` × N 章 + `UPLOAD_META.md` |
 | 发布 | `wjs-uploading-video` 上传（横屏普通 video），默认 public |
 
@@ -46,7 +46,7 @@ description: Use when the user wants a book turned into YouTube chapter videos �
 
 ```bash
 SLUG=<book-slug>   # 优先用书的英文名短 slug（如 naval-almanack）；没有英文名才用拼音
-BOOK=~/code/book-videos/$SLUG
+BOOK=~/code/lab/book-videos/$SLUG
 mkdir -p $BOOK/chapters/{01,02,...}   # 每章一个两位数目录
 ```
 
@@ -168,7 +168,7 @@ uvx --with google-auth --with requests python \
 ## 目录结构
 
 ```
-~/code/book-videos/<slug>/
+~/code/lab/book-videos/<slug>/
 ├── style.md                  # 全书视觉风格底稿（一次定）
 ├── <slug>-ch01.mp4 ...       # ⭐ 每章最终视频（在根目录，供 --dir 上传扫描）
 ├── thumb-ch01.jpg ...        # 每章缩略图（YouTube Studio 手动设）
