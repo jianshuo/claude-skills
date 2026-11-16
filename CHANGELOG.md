@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-16]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — two `run_book.sh` reliability improvements:
+  - **Pre-build audio check**: before starting each chapter, `run_book.sh` now reads the existing `<stem>.txt` source file and verifies the audiobook is already present (without triggering new TTS synthesis). If a legacy single-page book returns 404, the script exits immediately rather than renting a compute account or launching a Claude session for a book that cannot be processed.
+  - **Full reset on restart**: `run_book.sh` now clears the entire `~/art-films` directory at the start of each run (previously it only deleted the current book's subdirectory), eliminating stale chapter-name `.txt` files, still frames, and leftover artifacts from previous books that could bleed into the new run.
+- **`wjs-voicedrop-creating-motion-book`** — four art style usage assignments recorded (all 2026-11-16):
+  - `weimob-youzan` → **pop**
+  - `baixing-story` → **hopper**
+  - `hang-seng-index` → **banknote**
+  - `diamond-sutra` → **dunhuang**
+
 ## [2026-11-15]
 
 ### Changed
