@@ -106,10 +106,10 @@ cleanup_worker() { R 'pkill -f "[c]laude -p" ; pkill -f "[c]hrom" ; pkill -f "[r
 ID=local; WD=1; st setup "准备制作环境"; STEP_DESC="准备制作环境"
 R test -f .ready || { STEP_DESC="做书账号没装好"; echo "mb 用户没装好：root 跑一次 cloud/setup_worker.sh"; exit 1; }
 cleanup_worker
-# 工作区复位：skill 副本对齐 GitHub、清掉上一单已收回的新套件（未跟踪文件），删上一单的会话日志和本书旧目录（续做的半成品下面再传上去）
+# 工作区复位：skill 副本对齐 GitHub、清掉上一单已收回的新套件（未跟踪文件），~/art-films 整个清空（上一单的会话日志、章名.txt、静帧、别的书目录都不留；续做的半成品下面再从编排侧传上去）
 R "set -e; cd ~/code/claude-skills && git fetch -q --depth 1 origin main && git reset -q --hard origin/main && git clean -fdq -- wjs-voicedrop-creating-motion-book/kits
    git -C ~/code/huashu-art-motion pull -q --ff-only || true
-   cd ~/art-films && rm -rf claude.jsonl claude.err exit.code prompt.txt '$slug'" || { STEP_DESC="复位做书账号失败"; exit 1; }
+   cd ~/art-films && find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +" || { STEP_DESC="复位做书账号失败"; exit 1; }
 echo "做书账号就绪 $(date -u +%T)"; ev "制作环境就绪（Node、Chromium、Claude Code、动画引擎）"
 if [ "$ENG" = kimi ]; then   # 同 engine-router adapters.ts 的 kimi 腿：换端点，Claude Code 内部各档位（含子 agent）全映射到 Kimi 模型
   KM=$(getenv KIMI_MODEL $ROOT/secrets.env); KM=${KM:-k3[1m]}; KB=$(getenv KIMI_BASE_URL $ROOT/secrets.env); KB=${KB:-https://api.kimi.com/coding/}
