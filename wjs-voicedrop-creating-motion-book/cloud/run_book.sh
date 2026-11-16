@@ -71,6 +71,17 @@ CLAUDE_TK=$(getenv CLAUDE_CODE_OAUTH_TOKEN "$CLAUDE_ENV")
 STEP_DESC="取书"; node "$SK/scripts/fetch_book.mjs" "$slug" "$OUT/章名.txt" ${ONLY:+--only $ONLY} > "$OUT/book_meta.json"
 NCH=$(J 'd.chapters' < "$OUT/book_meta.json"); TITLE=$(J 'd.title' < "$OUT/book_meta.json")
 ev "读到书：《$TITLE》共 $NCH 章${ONLY:+，这次只做 $(echo $ONLY | tr ',' ' ')}"
+# 口播＝听书朗读：要做的每章在听书接口都得有朗读原文（<stem>.txt 纯读、不触发合成）。旧版单页书（book.json legacy:true，
+# 全书一个 index.html、没有 01.html…）这里一律 404——以前要跑满 3 轮 Claude 才失败（2026-11-12 tcm-analysis），现在开工前就退，不租账号。
+STEP_DESC="检查听书口播"
+if [ -n "$ONLY" ]; then STEMS=$(echo "$ONLY" | tr ',' '\n' | sed 's/^ch//'); else STEMS=$(J 'd.stems.join("\n")' < "$OUT/book_meta.json"); fi
+for stem in $STEMS; do
+  code=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "https://jianshuo.dev/voicedrop/books/audiobook/$slug/$stem.txt" || echo 000)
+  if [ "$code" != 200 ]; then
+    STEP_DESC="这本书没有按章的听书口播（旧版单页书），做不了动画版"
+    echo "第 $stem 章听书原文 HTTP $code，不开工"; exit 1
+  fi
+done
 
 # 账号由 engine-router 在 claude-1/2、kimi-1 里按配速和红线挑。挑不出就在开工前排队等（每 10 分钟再问，最多 WAITH 小时），
 # 不再 force 硬拿——2026-10-30 两个 Claude 号就是被视频书 force 吃光的。
