@@ -55,6 +55,9 @@ match the supercut's codec so they play in any HLS player.
 
 3. **Build it:**
 
+   2026-11-17 起本机不常驻 mira 仓库（不是我的 repo，已从 ~/code 清掉）。没有就先拉：
+   `[ -d ~/code/mira ] || git clone git@github.com:miravideo/mira.git ~/code/mira`（build_lesson.py 走线上 search-app API，不需要本地 search.db）。
+
    ```bash
    cd /Users/jianshuo/code/mira/search-app
    python3 scripts/build_lesson.py --word love --lesson /tmp/lesson.json
