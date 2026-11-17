@@ -6,7 +6,7 @@ description: Use when 王建硕 wants a listed company researched end to end and
 # wjs-researching-company — 一家公司，一场多空辩论，一本书
 
 **输入**：股票代码（如 `INTC`），可选公司名、章数（缺省 6）。
-**产出**（全部在 `~/code/reports/<TICKER>-<YYYY-MM-DD>/`）：
+**产出**（全部在 `~/Downloads/<TICKER>-<YYYY-MM-DD>/`）：
 
 | 文件 | 内容 |
 |---|---|
@@ -17,7 +17,7 @@ description: Use when 王建硕 wants a listed company researched end to end and
 | `04-futu.md` + `futu/*.csv` | 富途 OpenD 行情：快照（含盘前/盘后）、一年日线、按日资金流向、大中小单分布、所属板块、近几个到期日期权链 |
 | `debate/` | `bull-1.md bear-1.md`（立论）→ `-2`（反驳）→ `-3`（结辩）→ `judge.md`（裁决） |
 | `book-<slug>/` | 书的工作目录（book.json、chapters/NN.html、reviews/NN.json、cover.jpg） |
-| `~/code/reports/predictions.tsv` | 预测流水（只追加），以后回头打分校准用 |
+| `~/Downloads/predictions.tsv` | 预测流水（只追加），以后回头打分校准用 |
 
 最后一步把书**直接上架** `voicedrop.cn/books/<slug>/`——用写书 skill 的 `build.mjs`，正文就是我们写好的，**不交给云端写书 AI 重写**（MCP `write_book` 只收 20k 字的种子、AI 会自由发挥，不用它）。
 
@@ -33,8 +33,8 @@ description: Use when 王建硕 wants a listed company researched end to end and
 ### 0. 定目标与目录
 
 - 用 `mcp__unusualwhales__uw_stock {action_type:"info", ticker}` 和 `{action_type:"stock_state"}` 确认公司、市值、下次财报日、最新价（盘前/盘中/收盘要标清）。
-- 建目录 `~/code/reports/<TICKER>-<今天>/`。
-- 写 `00-local.md`：在 `~/code/jianshuo-memory`（尤其 `10-investing/`）、`~/code/reports/`、`~/code/wechat-publish/` 里 grep 代码和公司名；有富途 OpenD 时可用 `~/code/lab/futu-tools/query.py` 查持仓。没有就写「无持仓、无旧资料」。
+- 建目录 `~/Downloads/<TICKER>-<今天>/`。
+- 写 `00-local.md`：在 `~/code/jianshuo-memory`（尤其 `10-investing/`）、`~/Downloads/*-20*/`（以前的研究目录）、`~/code/wechat-publish/` 里 grep 代码和公司名；有富途 OpenD 时可用 `~/code/lab/futu-tools/query.py` 查持仓。没有就写「无持仓、无旧资料」。
 
 ### 1. 收集（三个 agent 并行，一条消息里同时发）
 
@@ -70,7 +70,7 @@ cd ~/code/lab/futu-tools && .venv/bin/python research.py US.<T> --expiries 3 --o
 
 新 spawn 一个没参与的 agent，读 00–04 和六份辩稿，写 `judge.md`：逐条判哪方论证更站得住，然后给预测表（1 周 / 1 个月 / 3 个月 / 12 个月）：方向、中枢价、区间、上涨概率、confidence（0–100%）、最关键的三条理由、什么信号出现就说明判断错了。必须和期权隐含区间（价格×IV×√(T/365)）对照，偏离要说理由。
 
-裁决完把预测追加进 `~/code/reports/predictions.tsv`（只追加，表头：`日期	代码	基准价	窗口	方向	中枢	区间低	区间高	上涨概率	confidence	书slug`）。
+裁决完把预测追加进 `~/Downloads/predictions.tsv`（只追加，表头：`日期	代码	基准价	窗口	方向	中枢	区间低	区间高	上涨概率	confidence	书slug`）。
 
 ### 4. 成书（按写书 skill 的科普书写法，直接写）
 
@@ -90,7 +90,7 @@ cat $S/wjs-voicedrop-writing-book/SKILL.md $S/wjs-voicedrop-writing-explainary-b
 5. 看空的人怎么说（空方论证 + 多方反驳的过程）
 6. 裁决：涨还是跌、有多大把握、为什么（预测表 + 证伪信号 + 免责声明）
 
-工作目录用 `~/code/reports/<TICKER>-<日期>/book-<slug>/`。slug 只能用小写字母、数字和连字符，形如 `intc-2026-10`。`book.json` 写 `author: "王建硕"`，owner 写 `users/anon-ae209ac53499d51d513425503bd134b0/`（本机凭据 `~/.config/voicedrop/credentials` 就是这个账号，也是书架发布账号，`GET https://jianshuo.dev/files/api/whoami` 可核对）。
+工作目录用 `~/Downloads/<TICKER>-<日期>/book-<slug>/`。slug 只能用小写字母、数字和连字符，形如 `intc-2026-10`。`book.json` 写 `author: "王建硕"`，owner 写 `users/anon-ae209ac53499d51d513425503bd134b0/`（本机凭据 `~/.config/voicedrop/credentials` 就是这个账号，也是书架发布账号，`GET https://jianshuo.dev/files/api/whoami` 可核对）。
 
 ```bash
 B=~/code/jianshuo.dev/claude-agent/skills/wjs-voicedrop-writing-book/build.mjs
