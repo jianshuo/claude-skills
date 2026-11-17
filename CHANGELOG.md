@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-17]
+
+### Changed
+
+- **`wjs-researching-company`** — output directory moved from `~/code/reports/<TICKER>-<date>/` to `~/Downloads/<TICKER>-<date>/` throughout (SKILL.md, all step descriptions, and `references/prompts.md`). The rolling predictions log likewise moves from `~/code/reports/predictions.tsv` to `~/Downloads/predictions.tsv`. Existing-research grep path updated from `~/code/reports/` to `~/Downloads/*-20*/`.
+- **`wjs-teaching-english`** — added explicit auto-clone step: the mira repo is no longer kept permanently at `~/code/mira` (it is not jianshuo's repo and has been removed). The skill now checks and clones on demand (`[ -d ~/code/mira ] || git clone git@github.com:miravideo/mira.git ~/code/mira`) before running `build_lesson.py`; the online search-app API means no local `search.db` is required.
+- **`wjs-voicedrop-creating-motion-book`** — `run_book.sh` now pins the Playwright version and auto-installs the matching browser when resuming a quota-interrupted run (撞额度换号续跑). One new art style usage recorded:
+  - `sex-emotion-symmetry` → **flat2026** (2026-11-17)
+
 ## [2026-11-16]
 
 ### Changed
