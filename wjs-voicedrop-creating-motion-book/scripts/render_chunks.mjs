@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn, spawnSync, execFileSync } from 'node:child_process';
 import { book, pool } from './common.mjs';
 
 // 可用内存：macOS 的 os.freemem 只算 free 页、偏小，改读 vm_stat（free+inactive+speculative+purgeable）；Linux 的 os.freemem 已是 MemAvailable。
@@ -31,13 +31,18 @@ const total = Math.max(...[...eras.matchAll(/\["\w+", [\d.]+, ([\d.]+)/g)].map(m
 const bounds = keys.map((k, i) => [k, offs[k], i + 1 < keys.length ? offs[keys[i + 1]] : total]);
 const cdir = path.join(path.dirname(out), `${path.basename(out, '.mp4')}_chunks`); fs.mkdirSync(cdir, { recursive: true });
 
+// Playwright 钉版本 + 开渲前确保浏览器在：以前是裸 --with playwright，uv 解析到最新版（2026-11-15 起 1.65.2 要 chromium_headless_shell-1255），
+// worker 上没这版浏览器，每段一开渲就 Executable doesn't exist，连挂 8 本书。install 已装过的秒回。
+const PW = process.env.MB_PLAYWRIGHT || 'playwright==1.65.2';
+if (spawnSync('uv', ['run', '--with', PW, 'python', '-m', 'playwright', 'install', 'chromium'], { cwd: E, stdio: 'inherit' }).status) {
+  console.error(`✗ 装 ${PW} 的浏览器失败`); process.exit(1); }
 const run = (cmd, argv, opt) => new Promise(res => { const c = spawn(cmd, argv, { ...opt, stdio: ['ignore', 'pipe', 'pipe'] }); let o = '';
   c.stdout.on('data', d => (o = (o + d).slice(-1500))); c.stderr.on('data', d => (o = (o + d).slice(-1500))); c.on('close', code => res({ code, o })); c.on('error', e => res({ code: -1, o: String(e) })); });
 const res = await pool(bounds, jobs, async ([k, a, b]) => {
   const seg = path.join(cdir, `${k}.mp4`);
   if (fs.existsSync(seg) && fs.statSync(seg).size > 0) return console.log(`${k} 已有，跳过`), true;
   const tmp = path.join(cdir, `${k}.part.mp4`), st = Date.now();
-  const r = await run('uv', ['run', '--with', 'playwright', 'python', 'render.py', '--film', 'book', '--width', String(W), '--height', String(H), '--fps', fps,
+  const r = await run('uv', ['run', '--with', PW, 'python', 'render.py', '--film', 'book', '--width', String(W), '--height', String(H), '--fps', fps,
     '--from', a.toFixed(4), '--to', b.toFixed(4), '--out', tmp], { cwd: E });
   if (r.code || !fs.existsSync(tmp)) return console.log(`✗ ${k} 渲染失败：\n${r.o}`), false;
   fs.renameSync(tmp, seg); console.log(`${k} 完成 ${(b - a).toFixed(1)}s 用时 ${Math.round((Date.now() - st) / 1000)}s`); return true;

@@ -87,9 +87,13 @@ done
 # 不再 force 硬拿——2026-10-30 两个 Claude 号就是被视频书 force 吃光的。
 # router 只回账号名，凭据取 secrets.env：claude → CLAUDE_TOKEN_<账号 id，- 换 _>；kimi → KIMI_KEY_<账号 id>（可选 KIMI_BASE_URL、KIMI_MODEL）。
 # router 不通 / 没有这个账号的凭据 → 用 CLAUDE_TK（lab .env 那个 = claude-1）照做，不因此停工。
-RURL=$(getenv ROUTER_URL "$CLAUDE_ENV"); RTOK=$(getenv ROUTER_TOKEN "$CLAUDE_ENV"); ACCT="缺省令牌（claude-1）"; ENG=claude; A=""; KIMI_KEY=""
-WAITH=${MB_WAIT_HOURS:-6}; WAITED=0
-if [ -n "$RURL" ] && [ -n "$RTOK" ]; then
+RURL=$(getenv ROUTER_URL "$CLAUDE_ENV"); RTOK=$(getenv ROUTER_TOKEN "$CLAUDE_ENV")
+WAITH=${MB_WAIT_HOURS:-6}; WAITED=0; DEFAULT_TK=$CLAUDE_TK
+# 挑账号：开工时一次；中途撞额度（见下方续跑循环）换号时再来一次。会改 LEASE ENG ACCT A CLAUDE_TK KIMI_KEY WAITED。
+acquire_account() {
+  ACCT="缺省令牌（claude-1）"; ENG=claude; A=""; KIMI_KEY=""; CLAUDE_TK=$DEFAULT_TK; LEASE=""
+  [ -n "$RURL" ] && [ -n "$RTOK" ] || return 0
+  local E T ETA
   while :; do
     E=""; ETA=""; read -r LEASE E A ETA <<< "$(lease)" || true
     if [ "${LEASE:-}" != - ]; then break; fi
@@ -103,7 +107,8 @@ if [ -n "$RURL" ] && [ -n "$RTOK" ]; then
   elif [ -n "$LEASE" ]; then T=$(getenv "CLAUDE_TOKEN_${A//-/_}" $ROOT/secrets.env); fi
   if [ -n "$T" ]; then ENG=${E:-claude}; ACCT=$A; if [ "$ENG" = claude ]; then CLAUDE_TK=$T; fi
   else echo "router 没给出能用的账号（${LEASE:-router 不通} ${A:-}），用缺省令牌"; KIMI_KEY=""; lease_done; fi
-fi
+}
+acquire_account
 echo "引擎账号：${ACCT}${LEASE:+（$ENG，租约 $LEASE）}"; ev "这本由 ${ACCT} 来做"
 
 # 做书账号一次只做一本：拿不到锁就排队（同一账号的 ~/art-films/claude.jsonl、--continue 会话都只有一份）
@@ -122,21 +127,25 @@ R "set -e; cd ~/code/claude-skills && git fetch -q --depth 1 origin main && git 
    git -C ~/code/huashu-art-motion pull -q --ff-only || true
    cd ~/art-films && find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +" || { STEP_DESC="复位做书账号失败"; exit 1; }
 echo "做书账号就绪 $(date -u +%T)"; ev "制作环境就绪（Node、Chromium、Claude Code、动画引擎）"
-if [ "$ENG" = kimi ]; then   # 同 engine-router adapters.ts 的 kimi 腿：换端点，Claude Code 内部各档位（含子 agent）全映射到 Kimi 模型
-  KM=$(getenv KIMI_MODEL $ROOT/secrets.env); KM=${KM:-k3[1m]}; KB=$(getenv KIMI_BASE_URL $ROOT/secrets.env); KB=${KB:-https://api.kimi.com/coding/}
-  { printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport RENDER_SLOTS=1\n' "$ASR_ID" "$ASR_TK"
-    printf 'export ANTHROPIC_BASE_URL=%q\nexport ANTHROPIC_API_KEY=%q\n' "$KB" "$KIMI_KEY"
-    for k in ANTHROPIC_MODEL ANTHROPIC_DEFAULT_FABLE_MODEL ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do printf 'export %s=%q\n' $k "$KM"; done
-    printf 'export CLAUDE_CODE_AUTO_COMPACT_WINDOW=1048576\nexport CLAUDE_CODE_MAX_CONTEXT_TOKENS=1048576\nexport CLAUDE_CODE_EFFORT_LEVEL=high\n'
-    printf 'export CLAUDE_CODE_MAX_OUTPUT_TOKENS=32000\n'   # behavesAs opus 会把 max_tokens 抬到 64000，钉回 Kimi 的 32000
-  } | R 'umask 077; cat > ~/code/.env'
-  # 新版 Claude Code 不认识 k3 会往 stderr 刷 [claude-code:unrecognized_model]：behavesAs 指一个它认识的模型，发出去的模型名不变。
-  # 选 opus-4-8 是因为实测请求和「不认识」时几乎一样（同 beta、同 tools）；sonnet-4-6 会换掉整套 system prompt（2026-10-30）
-  KMJ=$(K="$KM" node -e 'process.stdout.write(JSON.stringify({modelPicker:{options:[{model:process.env.K,behavesAs:"claude-opus-4-8"}]}}))')
-  printf '%s' "$KMJ" | R 'cat > ~/code/kimi.settings.json'
-else
-  printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=1\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
-fi
+# 把当前账号的凭据写进做书账号的 ~/code/.env（换号后再调一次，整份覆盖：kimi→claude 不会残留 ANTHROPIC_BASE_URL）
+push_creds() {
+  if [ "$ENG" = kimi ]; then   # 同 engine-router adapters.ts 的 kimi 腿：换端点，Claude Code 内部各档位（含子 agent）全映射到 Kimi 模型
+    KM=$(getenv KIMI_MODEL $ROOT/secrets.env); KM=${KM:-k3[1m]}; KB=$(getenv KIMI_BASE_URL $ROOT/secrets.env); KB=${KB:-https://api.kimi.com/coding/}
+    { printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport RENDER_SLOTS=1\n' "$ASR_ID" "$ASR_TK"
+      printf 'export ANTHROPIC_BASE_URL=%q\nexport ANTHROPIC_API_KEY=%q\n' "$KB" "$KIMI_KEY"
+      for k in ANTHROPIC_MODEL ANTHROPIC_DEFAULT_FABLE_MODEL ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do printf 'export %s=%q\n' $k "$KM"; done
+      printf 'export CLAUDE_CODE_AUTO_COMPACT_WINDOW=1048576\nexport CLAUDE_CODE_MAX_CONTEXT_TOKENS=1048576\nexport CLAUDE_CODE_EFFORT_LEVEL=high\n'
+      printf 'export CLAUDE_CODE_MAX_OUTPUT_TOKENS=32000\n'   # behavesAs opus 会把 max_tokens 抬到 64000，钉回 Kimi 的 32000
+    } | R 'umask 077; cat > ~/code/.env'
+    # 新版 Claude Code 不认识 k3 会往 stderr 刷 [claude-code:unrecognized_model]：behavesAs 指一个它认识的模型，发出去的模型名不变。
+    # 选 opus-4-8 是因为实测请求和「不认识」时几乎一样（同 beta、同 tools）；sonnet-4-6 会换掉整套 system prompt（2026-10-30）
+    KMJ=$(K="$KM" node -e 'process.stdout.write(JSON.stringify({modelPicker:{options:[{model:process.env.K,behavesAs:"claude-opus-4-8"}]}}))')
+    printf '%s' "$KMJ" | R 'cat > ~/code/kimi.settings.json'
+  else
+    printf 'export VOLC_ASR_APPID=%q\nexport VOLC_ASR_ACCESS_TOKEN=%q\nexport CLAUDE_CODE_OAUTH_TOKEN=%q\nexport RENDER_SLOTS=1\n' "$ASR_ID" "$ASR_TK" "$CLAUDE_TK" | R 'umask 077; cat > ~/code/.env'
+  fi
+}
+push_creds
 
 if [ $DRY = 1 ]; then   # 演习：只验证环境（Node、Claude Code、Chromium 出一张静帧）
   R 'bash -lc "set -e; node --version; claude --version; cd ~/code/huashu-art-motion/scripts/engine && uv run --with playwright python render.py --film gallery --solo 01_cave --stills 1.0 --no-counter --out /tmp/dry && ls -la /tmp/dry"' | tee "$OUT/dry.txt"
@@ -173,7 +182,10 @@ launch() {   # launch <第几轮>：第 1 轮用 PROMPT，之后 --continue 接�
   R "rm -f ~/art-films/exit.code"
   R -n "cd ~/art-films; nohup bash -lc 'source ~/code/.env; timeout ${MAXH}h claude -p $flag \"\$(cat prompt.txt)\" --dangerously-skip-permissions --output-format stream-json --verbose >> claude.jsonl 2>> claude.err; echo \$? > exit.code' > /dev/null 2>&1 < /dev/null &"
 }
-ROUND=1; MAXROUND=3; launch 1
+# 这一轮是不是死在额度上：看做书账号 claude.jsonl 里最后一条 result（stream-json 是紧凑 JSON）
+quota_hit() { R "tail -c 400000 art-films/claude.jsonl" 2>/dev/null | grep -E '"type": ?"result"' | tail -1 \
+  | grep -qiE '"api_error_status": ?429|usage limit|rate.?limit|quota|额度'; }
+ROUND=1; MAXROUND=3; SWAPS=0; MAXSWAP=${MB_MAX_SWAPS:-4}; launch 1
 echo "Claude 开工 $(date -u +%T)"; st making "Claude 开始制作"; STEP_DESC="制作中"
 
 # 进度：每 2 分钟在做书机上跑一次 probe.mjs（开机时随 skill 克隆过去了），里程碑记进对外日志（只记变化），state.json 的 step 是一句总括。
@@ -192,6 +204,20 @@ while :; do
   echo "第 $ROUND 轮 Claude 退出码：$(R cat art-films/exit.code 2>/dev/null || echo 无)"
   [ $TIMEUP = 1 ] && break
   R test -f "art-films/$slug/html/index.html" 2>/dev/null && break
+  # 撞额度（429 / 5 小时用量上限）不是「没做完」，同一个号再续几轮也是白跑——2026-11-16 diamond-sutra：kimi-1 撞 5h 墙，
+  # 第 2、3 轮各 3 分钟又被 429 弹回，3 轮用完收工。改成：交还租约（报错给 router，该号冷却）→ 重新挑号（都挑不出就排队等）
+  # → 写新凭据 → --continue 接着同一个会话（claude↔kimi 跨号续会话实测可用）。换号这轮不占 MAXROUND，最多换 MAXSWAP 次。
+  if quota_hit; then
+    SWAPS=$((SWAPS + 1))
+    [ $SWAPS -gt $MAXSWAP ] && { ev "撞额度换号 $MAXSWAP 次仍没做完，收工"; break; }
+    ev "${ACCT} 撞到额度上限，换个账号接着做"
+    R "cat art-films/claude.jsonl" > "$OUT/claude.jsonl" 2>/dev/null || true   # lease_done 从这里取报错
+    lease_done
+    W0=$WAITED; acquire_account; deadline=$((deadline + WAITED - W0))   # 等额度的时间不算进时限
+    push_creds
+    echo "换号：${ACCT}${LEASE:+（$ENG，租约 $LEASE）}"; ev "改由 ${ACCT} 接着做"
+    ROUND=$((ROUND + 1)); MAXROUND=$((MAXROUND + 1)); launch $ROUND; continue
+  fi
   [ $ROUND -ge $MAXROUND ] && { ev "续跑 $MAXROUND 轮仍没做完，收工"; break; }
   ROUND=$((ROUND + 1)); ev "Claude 中途停了，第 $ROUND 轮接着做"; launch $ROUND
 done
