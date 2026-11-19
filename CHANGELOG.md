@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-19]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — three art style usage assignments recorded:
+  - `no-echo` → **kusama** (2026-11-18, after the previous daily docs refresh)
+  - `sleep-need` → **kurzgesagt** (2026-11-19)
+  - `avoidant-attachment` → **vaporwave** (2026-11-19)
+
 ## [2026-11-18]
 
 ### Changed
