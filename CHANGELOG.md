@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-21]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — three art style usage assignments recorded:
+  - `hangul` → **bauhaus** (2026-11-20)
+  - `weightlessness` → **constructivism** (2026-11-21)
+  - `cycle-investing-mastery` → **kurzgesagt** (2026-11-21)
+
 ## [2026-11-19]
 
 ### Changed
