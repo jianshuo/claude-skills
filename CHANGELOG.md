@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-23]
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — four art style usage assignments recorded (all 2026-11-23):
+  - `bad-mood` → **kusama**
+  - `latest-siri` → **bauhaus**
+  - `one-option-trade` → **banknote**
+  - `steady-in-her-storm` → **egypt**
+
 ## [2026-11-21]
 
 ### Changed
