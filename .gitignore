@@ -10,3 +10,6 @@
 # gstack runtime state
 .claude/worktrees/
 .gstack/
+
+# Python
+__pycache__/
