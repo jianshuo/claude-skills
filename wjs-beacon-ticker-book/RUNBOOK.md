@@ -67,11 +67,15 @@ python3 skill/scripts/build.py <TICKER> && python3 skill/scripts/upload.py <TICK
 对每一章 `kind` 为 `written` 的章节：
 
 1. **写**：按 `WRITING.md` 的「写手提示词要点」写 `books/<TICKER>/chapters/NN.html` 和 `notes/NN.json`。
-2. **评**：按 `WRITING.md` 的「评审提示词」独立评审，把每一个数字对回事实档案，结果写 `reviews/NN.json`。
+2. **评**：按 `WRITING.md` 的「评审提示词」独立评审，把每一个数字对回事实档案，结果写 `reviews/NN.json`，然后**立刻盖章**，把评审和这一版稿子绑在一起：
+   ```bash
+   python3 skill/scripts/stamp_review.py <TICKER> NN
+   ```
 3. **修**：
    - `fail`：把这一轮的评审意见另存为 `reviews/history/NN-roundK.json`，照 `must_fix` 重写有问题的小节，再评。最多 3 轮。
    - 3 轮仍 `fail`：缩小这一章的野心（删掉核实不了的小节），改到能过为止；实在还有没解决的问题，在 `reviews/NN.json` 里写 `"verdict":"pass"` 并加一条 `"caveat":"<如实说明哪一点没核实清楚>"`，页面会把这句话显示在章首。
    - `pass` 但 `must_fix` / `nice_to_have` 里有意见：逐条回原文核实后做最小修改，不重写。
+   - **只要在评审之后动过稿子（哪怕改一个字），就要把改过的地方重新评一遍、更新 `reviews/NN.json`、重新盖章。** 不盖章或指纹对不上的章，`build.py` 不会发布。最后一步永远是评审，不是修改。
 4. **发**：这一章过审后**立刻**
    ```bash
    python3 skill/scripts/build.py <TICKER> && python3 skill/scripts/upload.py <TICKER> --pages
@@ -107,6 +111,22 @@ python3 skill/scripts/build.py <TICKER> --status
 ```
 BEACON_RESULT {"ok":true,"ticker":"<TICKER>","chapters":<过审的章数>,"note":"<一句话：这本书的体检结论>"}
 ```
+
+## 独立复审（任务说「这是独立复审」时，只做这一节）
+
+书已经写完并发布了。你是**另一个全新的会话**，没有参与写作，不知道写手和之前的评审是怎么想的。你的任务是从零把全书核对一遍——之前的评审被抽查出过放水（核对数量不够、对账没看正负号、出处标错没发现、措辞比原文强），你要把这些补上。
+
+1. 读 `WRITING.md` 全文，尤其是「评审提示词」里「打分要有依据，不许放水」那几条。**先不要看 `reviews/` 里已有的评审。**
+2. 对每一章 written 章节：
+   - 把正文和笔记里的每一个数字、日期、比例、人名职务列出来，逐个对回 `data/facts.json` 和 `data/*.txt`；比率、增速、加总自己重算，对账带着正负号加一遍；出处标的文件也核对。
+   - 查措辞有没有比原文强、有没有没标出来的推断、有没有只报喜不报忧。
+   - 把之前的评审另存为 `reviews/history/NN-first.json`，然后发现问题就回原文核实，做**最小修改**（改一句、补半句、换一个出处、把推断标成推断），不重写章节、不改结论的方向——除非结论所依据的数字本来就是错的。
+   - 改完后重读改过的段落，写新的 `reviews/NN.json`（如实打分，写明这次核对了多少个数字、改了哪几处），再盖章：`python3 skill/scripts/stamp_review.py <TICKER> NN`。
+3. 做一遍第 5 步的全书通读（跨章矛盾、叫法不一）。动了哪一章，那一章就要重新评、重新盖章。
+4. 收尾同第 6 步：`build.py` + `upload.py`（不带 `--pages`）+ `build.py --status`，确认所有 written 章节都是 `done`。最后一条消息只输出：
+   ```
+   BEACON_RESULT {"ok":true,"ticker":"<TICKER>","audit":true,"checked":<这次总共核对的数字个数>,"fixed":<改了多少处>,"note":"<一句话：这本书的体检结论>"}
+   ```
 
 ## 红线
 

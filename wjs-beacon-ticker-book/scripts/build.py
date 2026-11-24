@@ -12,7 +12,7 @@
 排版借自 VoiceDrop 写书的模板：暖米纸底、宋体标题、720px 阅读栏、单一强调色，零外部资源。
 体检表（第 0 章）不靠写：从各章 notes/NN.json 自动汇总。
 """
-import html, json, os, re, sys
+import hashlib, html, json, os, re, sys
 from pathlib import Path
 
 # 工作根目录：书稿在 <根>/books/<TICKER>/，渲染结果在 <根>/out/books/<TICKER>/。
@@ -131,6 +131,17 @@ def main():
         if ch["kind"] == "written":
             body, review = load("chapters", no), load("reviews", no)
             verdict = (review or {}).get("verdict")
+            # 评审要和它评的那一版稿子绑定（scripts/stamp_review.py）：稿子在评审之后被改过，这一章就不算过审。
+            # 只有 book.json 写了 review_stamp_required 的书才查——早先写的书没有盖章，不受影响。
+            if body and verdict == "pass" and book.get("review_stamp_required"):
+                h = hashlib.sha256()
+                for rel in (f"chapters/{no:02d}.html", f"notes/{no:02d}.json"):
+                    f = src / rel
+                    h.update(f.read_bytes() if f.exists() else b"")
+                    h.update(b"\0")
+                if (review or {}).get("reviewed_fingerprint") != h.hexdigest()[:16]:
+                    verdict = None
+                    review = None      # 当成还没评审：不发布，--status 里显示 unreviewed
             state[no] = ("done" if body and verdict == "pass" else
                          "unreviewed" if body and not review else
                          "failed" if body else "planned")

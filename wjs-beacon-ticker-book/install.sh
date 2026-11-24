@@ -27,7 +27,7 @@ fi
 check() {
   local d="$REPO/$NAME"
   for f in SKILL.md WRITING.md RUNBOOK.md book.template.json scripts/fetch_facts.py scripts/fetch_events.py \
-           scripts/build.py scripts/upload.py live/common.js live/08.html live/10.html live/12.html; do
+           scripts/build.py scripts/upload.py scripts/stamp_review.py live/common.js live/08.html live/10.html live/12.html; do
     [ -s "$d/$f" ] || { echo "缺文件：$f"; return 1; }
   done
   python3 -m py_compile "$d"/scripts/*.py || return 1
