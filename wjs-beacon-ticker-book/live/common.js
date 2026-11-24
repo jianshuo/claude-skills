@@ -33,10 +33,22 @@ const median = (a) => { const s = a.filter((v) => v != null && isFinite(v)).sort
 const rank = (a, v) => { const s = a.filter((x) => x != null && isFinite(x)); return s.length ? s.filter((x) => x < v).length / s.length : null; };
 const sum = (a) => a.reduce((x, y) => x + (y || 0), 0);
 
+// 一本书第一次被打开时，代理要现拉好几家公司的财务数据，偶尔会超时或撞上游限流；
+// 之后有缓存就快了。所以失败时隔几秒自动再试，最多三次，别让读者自己去刷新。
 async function load(chapter) {
-  const r = await fetch(`/api/book/${BOOK.ticker}/${chapter}`, { cache: "no-store" });
-  if (!r.ok) throw new Error("取数失败（" + r.status + "）");
-  return r.json();
+  let last;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((done) => setTimeout(done, 3000 * attempt));
+    try {
+      const r = await fetch(`/api/book/${BOOK.ticker}/${chapter}`, { cache: "no-store" });
+      if (r.ok) return await r.json();
+      last = new Error("取数失败（" + r.status + "）");
+      if (r.status === 404) break;   // 这本书不存在，重试没用
+    } catch (e) {
+      last = e;
+    }
+  }
+  throw last;
 }
 function stamp(d, quoteTime, sess) {
   $("stamp").textContent = `数据时间：美东 ${fmt.et(quoteTime || d.as_of)}${sess ? "（" + session(sess) + "）" : ""} · 打开页面时实时取数`;
