@@ -42,7 +42,7 @@ if git diff --cached --quiet -- "$NAME"; then
 else
   CHANGED=$(git diff --cached --name-only -- "$NAME" | sed "s#^$NAME/##" | tr '\n' ' ')
   git commit --quiet -m "update $NAME: $CHANGED" -- "$NAME" || exit 1
-  if git push --quiet origin HEAD 2>/dev/null || { git pull --quiet --rebase origin main && git push --quiet origin HEAD; }; then
+  if git push --quiet origin HEAD 2>/dev/null || { git pull --quiet --rebase --autostash origin main && git push --quiet origin HEAD; }; then
     say "已推送 $(git rev-parse --short HEAD)：$CHANGED"
   else
     echo "wjs-beacon-ticker-book：提交了但没推上去，稍后手动跑 ./publish.sh"; exit 1
