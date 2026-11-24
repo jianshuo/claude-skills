@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2026-11-25]
+
+### Added
+
+- **`wjs-beacon-ticker-book`** — new skill: turns a US stock ticker into a 13-chapter "stock book" (9 written chapters + 3 live chapters + a one-page health checklist) published to `beacon.jianshuo.dev` and surfaced in the Beacon app's "Analysis" tab. A writer agent drafts each chapter; an independent reviewer audits every number before it goes live. The server runs fully unattended via `RUNBOOK.md`; `install.sh` self-updates from GitHub before each run. Ships with `scripts/fetch_facts.py`, `scripts/fetch_events.py`, `scripts/build.py`, `scripts/stamp_review.py`, `scripts/upload.py`, three live-chapter page templates (`live/`), `book.template.json`, `WRITING.md`, and `publish.sh`.
+
+### Changed
+
+- **`wjs-voicedrop-creating-motion-book`** — one more art style usage recorded (2026-11-23, after the previous daily docs refresh):
+  - `reflexivity` → **banknote**
+- **`.gitignore`** — added `__pycache__` to avoid committing Python bytecode from the new beacon-ticker-book scripts.
+
 ## [2026-11-23]
 
 ### Changed

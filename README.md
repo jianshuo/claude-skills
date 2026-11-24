@@ -126,6 +126,7 @@ cp -r wjs-transcribing-audio ./.claude/skills/
 | [`wjs-publishing-appstore`](./wjs-publishing-appstore/) | iOS TestFlight build → App Store：截图 + 元数据文案 + 提审（fastlane deliver + release lane） | `提交 App Store` / `准备截图和文案` / `/wjs-publishing-appstore` |
 | [`wangjianshuo-perspective`](./wangjianshuo-perspective/) | 切换到王建硕视角写作与思考 | "用王建硕的角度" → 以他的声音回应，直到用户说"退出" |
 | [`wjs-distilling-style`](./wjs-distilling-style/) | 从少量样文提炼任意作者写作指纹，再把目标文本改写成那种味道；日常用一次性 prompt 一把过，深验时开完整判官盲测闭环 | `蒸馏文风` / `把这篇改成XX的味儿` / `/wjs-distilling-style` |
+| [`wjs-beacon-ticker-book`](./wjs-beacon-ticker-book/) | 给一只美股代码写成 13 章股票书（先弄懂生意、价格最后才看），发布到 beacon.jianshuo.dev 和 Beacon app 的「分析」页签 | `给 AAPL 写一本书` / `写股票书` / `ticker book` / `/wjs-beacon-ticker-book <TICKER>` |
 
 ---
 
@@ -490,6 +491,18 @@ VoiceDrop 新文章的自动后处理——由 launchd `com.jianshuo.voicedrop-p
 - **预测留档**：每次裁决结果追加到 `predictions.tsv`，方便日后回头打分校准。
 
 > 触发词：`研究一下 INTC` / `研究清楚这家公司` / `多空辩论` / `做一本公司研究书` / `/wjs-researching-company <ticker>`
+
+### [`wjs-beacon-ticker-book`](./wjs-beacon-ticker-book/)（Beacon 股票书）
+
+把一只美股代码写成一本「股票书」：先弄懂生意，价格最后才看。写好后发布到 `beacon.jianshuo.dev/books/<TICKER>/`，Beacon app 的「分析」页签和每只股票详情页都会链接到它。
+
+- **13 章结构**：9 章叙述（哪家公司 / 靠什么赚钱 / 谁在付钱 / 护城河 / 公司怎么说 / 数字自洽 / 会先死吗 / 谁在掌舵 / 红旗）+ 3 章实时（便宜还是贵 / 别人怎么看 / 最近表现）+ 1 章一页体检表（12 项自动汇总）
+- **写手 + 评审双 agent**：每章先由写手起草，再由独立评审逐项核对数字；不过评审就打回重写，过审才发布
+- **服务器全自动**：app 点「分析」→ 请求进队列 → 服务器用 `install.sh` 装最新 skill → 照 `RUNBOOK.md` 无人值守完成采集 / 写作 / 发布；本机也可手动触发
+- **只给三档估值**：明显贵 / 明显便宜 / 说不清——不给评级，不给目标价，不预测股价
+- **目前限于美股**（向 SEC 提交 10-K 年报的公司），A 股 / 港股 / 20-F 外国公司尚不支持
+
+> 触发词：`给 AAPL 写一本书` / `写股票书` / `ticker book` / `分析这只股票写成书` / `改写书流程` / `部署写书到 VPS` / `/wjs-beacon-ticker-book <TICKER>`
 
 ---
 
