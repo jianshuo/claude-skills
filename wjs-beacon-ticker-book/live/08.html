@@ -1,0 +1,85 @@
+<p>前面七章讲的都是生意。到这一章才第一次看价格，而且只问一件事：<strong>跟同行比、跟它自己的过去比，现在这个价格处在什么位置？</strong></p>
+
+<p>这一章没有人写正文。下面的数字在你打开页面时现算：价格是此刻的，利润和收入取最近四个季度的合计。</p>
+
+<div class="plain"><p><dfn>市盈率</dfn>：市值 ÷ 一年的净利润，意思是「按现在的赚钱速度，多少年赚回这个市值」。<dfn>市销率</dfn>：市值 ÷ 一年的收入，公司不赚钱或利润大起大落时用它。倍数本身没有贵贱，只有跟同行比、跟自己的历史比才有意义。</p></div>
+
+<p class="live-meta" id="stamp">正在取数…</p>
+<div id="live"><p class="loading">正在取实时数据…</p></div>
+
+<h2>这一章不回答的事</h2>
+<p><strong>「贵」不等于会跌，「便宜」不等于会涨。</strong>倍数高，可能是市场相信利润还会涨很多；倍数低，可能是市场认为利润到顶了。哪一种是对的，取决于前面几章：付钱的客户还能付多久（第 3 章）、毛利率守不守得住（第 4 章）、利润有没有变成现金（第 6 章）。</p>
+<p><strong>市盈率只看过去一年的利润。</strong>对一家收入一年翻一倍的公司，过去一年的利润很快就过时；对一家利润处在周期高点的公司，过去一年的利润又会让它显得便宜。所以表里同时放了收入增速和净利率，让你自己判断这个「一年」有多大代表性。</p>
+
+<script>
+(async () => {
+  let d;
+  try { d = await load("valuation"); } catch (e) { return fail(e); }
+  const calc = (c) => {
+    const q = c.quarters.filter((x) => x.revenue != null);
+    const usd = q.every((x) => !x.currency || x.currency === "USD");
+    const last4 = q.slice(-4), prev4 = q.slice(-8, -4);
+    const rev = sum(last4.map((x) => x.revenue)), ni = sum(last4.map((x) => x.net_income));
+    const cap = c.price && c.shares ? c.price * c.shares : null;
+    const ok = usd && last4.length === 4 && cap;
+    return { ...c, cap, rev, ni, asOf: last4.at(-1)?.end,
+      pe: ok && ni > 0 ? cap / ni : null, ps: ok && rev > 0 ? cap / rev : null,
+      growth: prev4.length === 4 ? rev / sum(prev4.map((x) => x.revenue)) - 1 : null, margin: rev ? ni / rev : null };
+  };
+  const all = d.companies.map(calc), me = all[0], peers = all.slice(1);
+  stamp(d, me.time, me.session);
+
+  // 自己的历史：每个季度末，用当时的周收盘价 × 现在的股本 ÷ 当时最近四季的净利 / 收入
+  const q = d.companies[0].quarters, weekly = d.weekly, hist = [];
+  for (let i = 3; i < q.length; i++) {
+    const end = q[i].end, w = weekly.filter((x) => x[0] <= end).at(-1);
+    if (!w || weekly[0][0] > end) continue;
+    const ni = sum(q.slice(i - 3, i + 1).map((x) => x.net_income)), rev = sum(q.slice(i - 3, i + 1).map((x) => x.revenue));
+    hist.push({ end, pe: ni > 0 ? (w[1] * me.shares) / ni : null, ps: rev > 0 ? (w[1] * me.shares) / rev : null });
+  }
+  const pes = hist.map((h) => h.pe), pss = hist.map((h) => h.ps);
+  const peMed = median(pes), psMed = median(pss), peerPe = median(peers.map((p) => p.pe)), peerPs = median(peers.map((p) => p.ps));
+  const r1 = me.pe && peMed ? me.pe / peMed : null, r2 = me.pe && peerPe ? me.pe / peerPe : null;
+  let verdict = "说不清", why;
+  if (r1 == null || r2 == null) why = "数据不全，没法比。";
+  else if (r1 >= 1.3 && r2 >= 1.3) { verdict = "明显贵"; why = "比自己过去五年的中位数、比同行中位数都高出三成以上。"; }
+  else if (r1 <= 0.7 && r2 <= 0.7) { verdict = "明显便宜"; why = "比自己过去五年的中位数、比同行中位数都低三成以上。"; }
+  else why = "两个参照没有同时指向同一边。";
+
+  const minmax = (a) => { const s = a.filter((v) => v != null); return s.length ? [Math.min(...s), Math.max(...s)] : [null, null]; };
+  const [peLo, peHi] = minmax(pes), [psLo, psHi] = minmax(pss);
+  const row = (c, bold) => [
+    bold ? `<strong>${name(c.ticker)}</strong>` : name(c.ticker), fmt.big(c.cap), fmt.x(c.pe) === "—" && c.ni < 0 ? "亏损" : fmt.x(c.pe), fmt.x(c.ps),
+    `<span class="${cls(c.growth)}">${fmt.pct(c.growth, 0)}</span>`, fmt.plainPct(c.margin, 0), c.asOf || "—"];
+
+  $("live").innerHTML = `
+    <div class="verdict"><b>${verdict}</b><span>${why}</span></div>
+    <h2>现在</h2>
+    ${table(["", "数值", "怎么算的"], [
+      ["现价", `${fmt.price(me.price)} 美元`, `<span class="${cls(me.price - me.prev_close)}">${fmt.pct(me.price / me.prev_close - 1, 2)}</span>（对昨收 ${fmt.price(me.prev_close)}）`],
+      ["市值", fmt.big(me.cap, "美元"), `现价 × 股本 ${fmt.big(me.shares, "股")}`],
+      ["最近四季收入", fmt.big(me.rev, "美元"), `截至 ${me.asOf} 的四个季度合计`],
+      ["最近四季净利润", fmt.big(me.ni, "美元"), `净利率 ${fmt.plainPct(me.margin, 0)}`],
+      ["市盈率", fmt.x(me.pe), "市值 ÷ 最近四季净利润"],
+      ["市销率", fmt.x(me.ps), "市值 ÷ 最近四季收入"],
+    ], "kv")}
+    <h2>跟同行比</h2>
+    ${table(["公司", "市值（美元）", "市盈率", "市销率", "收入增速", "净利率", "财报截至"], [row(me, true), ...peers.map((p) => row(p))])}
+    <p><small class="src">同行市盈率中位数 ${fmt.x(peerPe)}，市销率中位数 ${fmt.x(peerPs)}。收入增速 = 最近四季收入 ÷ 再往前四季收入 − 1。${BOOK.peers_note || ""}</small></p>
+    <h2>跟自己的过去比</h2>
+    ${table(["", "现在", "五年中位数", "五年最低", "五年最高", "现在排在"], [
+      ["市盈率", fmt.x(me.pe), fmt.x(peMed), fmt.x(peLo), fmt.x(peHi), me.pe ? `${Math.round(rank(pes, me.pe) * 100)}% 的位置` : "—"],
+      ["市销率", fmt.x(me.ps), fmt.x(psMed), fmt.x(psLo), fmt.x(psHi), me.ps ? `${Math.round(rank(pss, me.ps) * 100)}% 的位置` : "—"],
+    ])}
+    <p>市盈率，${hist[0]?.end.slice(0, 7)} 至今每个季度末一个点，圆点是现在：</p>
+    ${lineChart([...pes, me.pe], { baseline: peMed, labels: [hist[0]?.end.slice(0, 7) || "", "现在"] })}
+    <p><small class="src">「排在 20% 的位置」指过去五年里有 20% 的季度末比现在更便宜。历史倍数是近似值：用当时的复权股价乘以现在的股本，没有扣除这几年回购减少的股数（每年约 1%）。虚线是五年中位数。</small></p>
+    <h2>三档判断的规则</h2>
+    <p>规则是事先定死的，不看心情：现在的市盈率同时比<strong>自己五年中位数</strong>和<strong>同行中位数</strong>高三成以上，算「明显贵」；同时低三成以上，算「明显便宜」；其余一律「说不清」。</p>
+    ${table(["参照", "现在 ÷ 参照", "读法"], [
+      ["自己五年中位数", r1 ? r1.toFixed(2) : "—", r1 ? (r1 >= 1.3 ? "高出三成以上" : r1 <= 0.7 ? "低三成以上" : "在三成以内") : "—"],
+      ["同行中位数", r2 ? r2.toFixed(2) : "—", r2 ? (r2 >= 1.3 ? "高出三成以上" : r2 <= 0.7 ? "低三成以上" : "在三成以内") : "—"],
+    ])}
+    <div class="note"><p>按事先定好的规则，现在是<strong>${verdict}</strong>。市盈率 ${fmt.x(me.pe)}，自己五年中位数 ${fmt.x(peMed)}，同行中位数 ${fmt.x(peerPe)}。</p></div>`;
+})();
+</script>

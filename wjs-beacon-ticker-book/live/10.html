@@ -1,0 +1,80 @@
+<p>前面的判断都是你自己从公司文件里读出来的。这一章换个方向：<strong>内部人、大机构、做空的人、期权市场、卖方分析师——他们各自用真金白银或者名声，表达了什么看法？</strong></p>
+
+<p>用法只有一条：<strong>用外部视角检验自己的结论，而不是代替自己的结论。</strong>下面的数字在你打开页面时现取，没有人写正文。</p>
+
+<div class="plain"><p>这些信息的可靠程度不一样，按「撒谎的成本」排：内部人买卖和机构持仓是向监管部门申报的，造假要坐牢；空头和期权数据是交易所和清算机构统计的；分析师的评级和目标价只是观点，说错了没有代价。</p></div>
+
+<p class="live-meta" id="stamp">正在取数…</p>
+<div id="live"><p class="loading">正在取实时数据…</p></div>
+
+<script>
+(async () => {
+  let d;
+  try { d = await load("others"); } catch (e) { return fail(e); }
+  stamp(d);
+  const S = d.shares;
+
+  // 内部人
+  const buys = sum(d.insider_daily.map((r) => r.buys)), sells = sum(d.insider_daily.map((r) => r.sells));
+  const buyV = sum(d.insider_daily.map((r) => r.buy_value)), sellV = Math.abs(sum(d.insider_daily.map((r) => r.sell_value)));
+  const flow = d.insider_flow.map((r) => [r.date, r.side === "buy" ? '<span class="up">买入</span>' : '<span class="down">卖出</span>',
+    fmt.big(Math.abs(r.shares), "股"), fmt.big(Math.abs(r.value), "美元"), fmt.price(r.avg_price),
+    r.transactions ? `${r.planned}/${r.transactions} 笔` : "—"]);
+
+  // 机构
+  const inst = d.institutions.map((r) => [r.name, fmt.big(r.shares, "股"), S ? fmt.plainPct(r.shares / S, 2) : "—",
+    r.change == null ? "—" : `<span class="${cls(r.change)}">${r.change > 0 ? "+" : ""}${fmt.big(r.change, "股")}</span>`, r.report_date]);
+  const topPct = S ? sum(d.institutions.map((r) => r.shares)) / S : null;
+
+  // 空头
+  const sh = d.shorts, s0 = sh[0], sOld = sh.at(-1);
+  // 期权
+  const v = d.volatility, o = d.options;
+  const daily = v ? v.iv / Math.sqrt(252) : null;
+  // 财报
+  const done = d.earnings.filter((r) => r.actual != null).slice(0, 8), next = d.earnings.find((r) => r.actual == null);
+  const beat = done.filter((r) => r.estimate != null && r.actual > r.estimate).length;
+  const earn = done.map((r) => { const sp = r.estimate ? r.actual / r.estimate - 1 : null;
+    return [r.report_date, fmt.price(r.estimate), fmt.price(r.actual), `<span class="${cls(sp)}">${fmt.pct(sp)}</span>`,
+      r.expected_move_pct == null ? "—" : "±" + fmt.plainPct(r.expected_move_pct), `<span class="${cls(r.move_1d)}">${fmt.pct(r.move_1d)}</span>`]; });
+  // 分析师
+  const act = { upgraded: "上调", downgraded: "下调", maintained: "维持", initiated: "首次覆盖", reiterated: "重申", target_raised: "上调目标价", target_lowered: "下调目标价" };
+  const rate = { buy: "买入", hold: "持有", sell: "卖出", "strong buy": "强烈买入", outperform: "跑赢", underperform: "跑输", neutral: "中性", overweight: "超配", underweight: "低配" };
+  const an = d.analysts.map((r) => [fmt.et(r.time).slice(0, 5), r.firm, act[r.action] || r.action || "—", rate[(r.rating || "").toLowerCase()] || r.rating || "—", r.target ? fmt.price(r.target) : "—"]);
+
+  $("live").innerHTML = `
+    <h2>内部人：过去一年卖了多少、买了多少</h2>
+    <p>过去 12 个月，高管和董事申报卖出 <strong>${sells} 笔</strong>，合计约 ${fmt.big(sellV, "美元")}；申报买入 <strong>${buys} 笔</strong>，合计约 ${fmt.big(buyV, "美元")}。</p>
+    ${table(["交易日", "方向", "股数", "金额", "均价", "其中预设计划"], flow)}
+    <p><small class="src">「预设计划」指按事先向监管部门备案的卖出计划（10b5-1）执行的交易：卖出时点早就定好，不代表当时的看法。内部人卖出的理由很多（缴税、分散资产），<strong>买入的理由通常只有一个</strong>；所以要看的是模式——有没有人在计划之外集中卖出，有没有人自掏腰包买。持股和薪酬结构见第 9 章。</small></p>
+
+    <h2>机构：前十大持有人</h2>
+    ${table(["机构", "持股", "占总股本", "上季增减", "持仓日期"], inst)}
+    <p><small class="src">前十大合计约占总股本的 ${fmt.plainPct(topPct, 1)}。数据来自机构每季度向美国证监会申报的持仓（13F），<strong>有最长一个半月的滞后</strong>，只能看出上个季度末的状态。排在前面的多是指数基金，它们按指数权重被动持有，增减不代表看法。</small></p>
+
+    <h2>空头：有多少人在赌它跌</h2>
+    ${s0 ? `<p>截至 ${s0.date}，被借来卖空的股票有 <strong>${fmt.big(s0.shares, "股")}</strong>，占流通股的 <strong>${fmt.plainPct(s0.pct_float, 2)}</strong>；按日均成交量算，空头全部买回要 ${s0.days_to_cover} 天。${sOld ? `${sOld.date} 这个比例是 ${fmt.plainPct(sOld.pct_float, 2)}。` : ""}</p>
+    ${lineChart(sh.map((r) => r.pct_float).reverse(), { height: 110, labels: [sOld.date, s0.date] })}
+    <p><small class="src">空头比例每半个月公布一次。一般来说，超过流通股 10% 才算有很多人在赌它跌，低于 2% 说明几乎没人做空。</small></p>` : "<p>暂无空头数据。</p>"}
+
+    <h2>期权市场：它在给多大的波动定价</h2>
+    ${v ? table(["", "数值", "读法"], [
+      ["隐含波动率", fmt.plainPct(v.iv, 0), `期权价格里包含的年化波动预期，折成每天约 ±${fmt.plainPct(daily, 1)}`],
+      ["过去一年的区间", `${fmt.plainPct(v.iv_low, 0)} – ${fmt.plainPct(v.iv_high, 0)}`, `现在排在 ${Math.round(v.iv_rank)}% 的位置（100% 是一年里最高）`],
+      ["已实现波动率", fmt.plainPct(v.rv, 0), "最近实际走出来的年化波动"],
+      ...(o ? [["今日看跌 ÷ 看涨成交量", o.calls ? (o.puts / o.calls).toFixed(2) : "—", `看涨 ${fmt.big(o.calls, "张")}，看跌 ${fmt.big(o.puts, "张")}（${o.date}）`]] : []),
+    ], "kv") : "<p>暂无期权数据。</p>"}
+    <p><small class="src"><dfn>隐含波动率</dfn>是从期权价格倒推出来的：买期权的人愿意付多少钱，就等于在给未来的波动幅度报价。它只说幅度，不说方向。隐含波动率处在一年里的高位，说明市场认为接下来不会平静。</small></p>
+
+    <h2>财报：市场预期和实际差多少，第二天怎么走</h2>
+    ${table(["财报日", "预期每股收益", "实际", "超出预期", "期权预期波动", "次日涨跌"], earn)}
+    <p>最近 ${done.length} 次财报里有 ${beat} 次每股收益高于市场预期。${next ? `下一次财报预计在 <strong>${next.report_date}</strong>，目前的市场预期是每股 ${fmt.price(next.estimate)} 美元。` : ""}</p>
+    <p><small class="src">注意看最后两列：超出预期不等于第二天涨。股价反应的是「比预期好多少」加上公司对下一季的指引，而预期本身会在财报前被不断调高。每股收益是分析师口径（剔除了股权激励等项目），和年报里的每股收益不完全一样。</small></p>
+
+    <h2>卖方分析师：最近的动作</h2>
+    ${table(["日期", "机构", "动作", "评级", "目标价（美元）"], an)}
+    <p><small class="src">这一栏是第三方观点，放在这里是为了让你知道市场上流行的说法，<strong>不是这本书的判断</strong>。卖方的评级绝大多数时候是「买入」，信息量很低；值得看的是他们调整目标价时给出的理由。用它们的论据，弃它们的结论。</small></p>
+
+    <div class="note"><p>过去一年内部人卖出 ${sells} 笔、买入 ${buys} 笔；空头占流通股 ${s0 ? fmt.plainPct(s0.pct_float, 2) : "—"}；隐含波动率处在一年里 ${v ? Math.round(v.iv_rank) + "%" : "—"} 的位置。</p></div>`;
+})();
+</script>

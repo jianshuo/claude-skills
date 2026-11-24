@@ -1,0 +1,74 @@
+<p>价格放在全书最后，是有意的。<strong>先看生意变没变，再解释价格</strong>——顺序反过来，价格就会替你下结论：涨了觉得公司好，跌了觉得公司出事了。</p>
+
+<p>这一章没有人写正文。下面的数字在你打开页面时现算；每一个大波动日旁边，配的是那一天前后公司向美国证监会提交的公告。</p>
+
+<p class="live-meta" id="stamp">正在取数…</p>
+<div id="live"><p class="loading">正在取实时数据…</p></div>
+
+<h2>怎么用这一章</h2>
+<p><strong>大波动日对得上公告的</strong>，回到前面的章节去看那件事改变了什么：财报改的是第 6、7 章的数字，高管变动改的是第 9、11 章的判断。生意的事实变了，结论才该变。</p>
+<p><strong>大波动日对不上公告的</strong>，多半是整个市场或整个行业在动，或者是别家公司的消息。那不是这门生意的新信息，前面十一章的结论不用改。</p>
+<p><strong>没有大波动的日子</strong>不需要解释。把每天的涨跌都找一个理由，是被噪音带着走的开始。</p>
+
+<script>
+(async () => {
+  let d;
+  try { d = await load("recent"); } catch (e) { return fail(e); }
+  const q = d.quote, bars = d.daily.slice();
+  stamp(d, q?.time, q?.session);
+  // 把此刻的价格并到日线末尾：今天还没有日线就加一根，已经有了就用最新价替换收盘价
+  const todayET = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(q?.time || Date.now()));
+  if (q?.price) {
+    if (bars.at(-1)[0] < todayET) bars.push([todayET, q.price, q.price, q.price, q.price, 0]);
+    else bars[bars.length - 1] = [...bars.at(-1).slice(0, 4), q.price, bars.at(-1)[5]];
+  }
+  const close = bars.map((b) => b[4]), n = close.length - 1, now = close[n];
+  const back = (k) => (n - k >= 0 ? now / close[n - k] - 1 : null);
+  const yearStart = bars.findIndex((b) => b[0].slice(0, 4) === bars[n][0].slice(0, 4));
+  const ytd = yearStart > 0 ? now / close[yearStart - 1] - 1 : null;
+  const yr = bars.slice(-252), hi = Math.max(...yr.map((b) => b[2])), lo = Math.min(...yr.map((b) => b[3]));
+  const hiDay = yr.find((b) => b[2] === hi)[0], loDay = yr.find((b) => b[3] === lo)[0];
+  const cell = (v) => `<span class="${cls(v)}">${fmt.pct(v)}</span>`;
+
+  // 事件：公告的提交日或事件发生日，落在某个交易日当天或前一个交易日，都算「对得上」
+  const dates = bars.map((b) => b[0]);
+  const idxOnOrAfter = (day) => dates.findIndex((x) => x >= day);
+  const events = (BOOK.events || []).map((e) => ({ ...e, i: idxOnOrAfter(e.event_date <= e.date ? e.event_date : e.date) })).filter((e) => e.i >= 0);
+  const near = (i) => events.filter((e) => { const a = idxOnOrAfter(e.event_date), b = idxOnOrAfter(e.date); return [a, a + 1, b, b + 1].includes(i); });
+  const show = bars.slice(-252), off = bars.length - show.length;
+  const marks = [
+    ...d.earnings_dates.map((day) => ({ i: idxOnOrAfter(day) - off, kind: "earnings" })),
+    ...events.filter((e) => !e.items.includes("2.02")).map((e) => ({ i: e.i - off, kind: "event" })),
+  ].filter((m) => m.i >= 0 && m.i < show.length);
+
+  // 最近半年的大波动日
+  const moves = [];
+  for (let i = Math.max(1, bars.length - 126); i < bars.length; i++) moves.push({ i, day: bars[i][0], r: close[i] / close[i - 1] - 1 });
+  const top = moves.sort((a, b) => Math.abs(b.r) - Math.abs(a.r)).slice(0, 8).sort((a, b) => (a.day < b.day ? 1 : -1));
+  const moveRows = top.map((m) => { const ev = near(m.i);
+    return [m.day, cell(m.r), fmt.price(close[m.i]), ev.length
+      ? ev.map((e) => `<a href="${e.url}" target="_blank" rel="noopener">${e.note || e.label}</a><br><small class="src">${e.note ? e.label + " · " : ""}公告 ${e.date}</small>`).join("<br>")
+      : '<small class="src">这一天前后没有公司公告</small>']; });
+  const matched = top.filter((m) => near(m.i).length).length;
+
+  $("live").innerHTML = `
+    <h2>现在在哪</h2>
+    ${table(["", "数值", ""], [
+      ["现价", `${fmt.price(now)} 美元`, q ? `对昨收 ${cell(q.price / q.prev_close - 1)}` : ""],
+      ["一年内最高", `${fmt.price(hi)} 美元`, `${hiDay}，现价比它低 ${fmt.plainPct(1 - now / hi)}`],
+      ["一年内最低", `${fmt.price(lo)} 美元`, `${loDay}，现价比它高 ${fmt.plainPct(now / lo - 1)}`],
+    ], "kv")}
+    <h2>各个区间的涨跌</h2>
+    ${table(["5 个交易日", "1 个月", "3 个月", "今年以来", "1 年"], [[cell(back(5)), cell(back(21)), cell(back(63)), cell(ytd), cell(back(252))]], "wide")}
+    <h2>过去一年的走势</h2>
+    ${lineChart(show.map((b) => b[4]), { height: 200, marks, labels: [show[0][0], show.at(-1)[0]] })}
+    <p><small class="src">复权收盘价。竖虚线是财报日，圆点是其它公司公告（高管变动、重大协议等）。</small></p>
+    <h2>最近半年波动最大的 ${top.length} 天</h2>
+    ${table(["日期", "当日涨跌", "收盘价", "这一天前后的公司公告"], moveRows, "events")}
+    <p>这 ${top.length} 天里，有 <strong>${matched} 天</strong>对得上公司自己的公告，${top.length - matched} 天对不上。</p>
+    <p><small class="src">「对得上」只表示时间挨着，不等于因果。公告的类别是按美国证监会的表格项目翻译的；带具体说明的几条，说明来自前面已经核对过的章节。</small></p>
+    ${d.news.length ? `<h2>最近的新闻标题</h2><ul>${d.news.slice(0, 6).map((x) => `<li>${fmt.et(x.time)} · ${x.headline.replace(/</g, "&lt;")} <small class="src">（${x.source}）</small></li>`).join("")}</ul>
+    <p><small class="src">新闻标题是第三方内容，原样列出，没有核实，也不代表这本书的看法。</small></p>` : ""}
+    <div class="note"><p>现价 ${fmt.price(now)} 美元，比一年内高点低 ${fmt.plainPct(1 - now / hi)}；最近半年波动最大的 ${top.length} 天里，${matched} 天对得上公司公告。</p></div>`;
+})();
+</script>

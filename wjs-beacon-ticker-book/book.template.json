@@ -1,0 +1,38 @@
+{
+  "_怎么用": "建筑师把这份模板填成 books/<TICKER>/book.json。带「填」字的地方必须按这家公司的实际情况改写；章节的 no / title / kind / question 是固定骨架，不要改；每章的 brief 要写成针对这家公司的具体提示，不要照抄括号里的通用说明。填完删掉所有以下划线开头的键。",
+
+  "ticker": "填：股票代码，如 NVDA",
+  "code": "填：app 里的完整代码，由任务给出，如 usNVDA.OQ",
+  "title": "填：<公司中文常用名>：一个代码的十二次追问",
+  "subtitle": "从它是干什么的讲起，价格最后才看",
+  "tagline": "费曼式写法 · 由 AI 代理撰写并独立评审 · 数字全部来自监管披露",
+  "disclaimer": "这本书是研究笔记，不是投资建议。不给评级、不给目标价、不预测股价。数字来自公司向美国证监会提交的文件，引用处标了文件和提交日期；标「未核实」的数字没有可靠出处。",
+  "as_of": "填：事实档案的采集日期 yyyy-mm-dd（facts.json 的 collected_at）",
+  "tint": "#ece4d2",
+  "dark": "#48709e",
+  "through_question": "填：贯穿全书的那个问题，读者读完能回答。例如「这门生意凭什么这么赚钱，这份赚钱能力靠得住吗？」",
+
+  "_peers说明": "同行：3–6 家，必须是年报「竞争」一节点名的、在美国上市、主业可比的公司，用它们的美股代码。供应商、客户、主业不可比的大集团不要放。报表不是美元的公司不要放。",
+  "peers": ["填"],
+  "names": {"填：本公司代码": "填：中文常用名", "填：同行代码": "填：中文常用名"},
+  "peers_note": "填：一两句话说明同行是怎么选的、哪些看起来相关的公司没有放进来以及为什么。",
+
+  "_event_notes说明": "可选。只给 data/events.json 里的日期写说明，且只写原文里核实过的事实，一句话。没有把握就留空对象，页面会显示公告的类别。",
+  "event_notes": {},
+
+  "chapters": [
+    {"no": 0, "title": "一页体检表", "kind": "summary", "question": "十二项检查，各自过没过？", "brief": "汇总每章末尾的那一行结论，放在书首当仪表盘。", "status": "planned"},
+    {"no": 1, "title": "这是哪家公司", "kind": "written", "question": "填：<代码> 这个代码背后是家什么公司？", "brief": "填（公司全名、在哪上市、归在哪个行业、多大——看市值不看股价。财年和日历年是否错位。历史上拆过股没有。行业标签和它实际做的事对不对得上——这决定后面拿谁来比。）", "sources": ["facts.json", "10k-business.txt"], "status": "planned"},
+    {"no": 2, "title": "它靠什么赚钱", "kind": "written", "question": "能不能一句话向外行讲清它靠什么赚钱？", "brief": "填（收入结构：几条业务线、各占多少、这几年怎么变的。卖的到底是什么。是一次性买卖还是重复性收入。钱最终从谁的口袋出来。）", "sources": ["facts.json", "10k-business.txt", "10k-mdna.txt"], "status": "planned"},
+    {"no": 3, "title": "谁在给它付钱", "kind": "written", "question": "谁在付钱，还能付多久？", "brief": "填（客户是谁、有多集中、直接客户和最终客户的区别。地域分布。需求是「瘾」还是「风」：客户自己的预算能持续多久，客户会不会变成对手。）", "sources": ["facts.json", "10k-business.txt", "10k-risk.txt", "10k-mdna.txt", "10q-mdna.txt"], "status": "planned"},
+    {"no": 4, "title": "为什么别人抢不走", "kind": "written", "question": "护城河是什么，在变宽还是变窄？", "brief": "填（用四种护城河逐个检验：网络效应、转换成本、成本与规模优势、无形资产。硬检验是多年毛利率——故事和数字冲突时信数字。然后专门找裂缝。大多数公司没有护城河，没有就如实写没有。）", "sources": ["facts.json", "10k-business.txt", "10k-risk.txt"], "status": "planned"},
+    {"no": 5, "title": "公司自己怎么说", "kind": "written", "question": "年报的三个房间里，公司自己承认了什么？", "brief": "填（年报只看三个房间：业务描述、风险因素、管理层讨论。先读风险因素里具体的那几条，再读管理层怎么解释这一年的变化。专门记「和预期不一样的地方」。对照最新的季报和财报新闻稿，看公司的说法变了没有。）", "sources": ["10k-risk.txt", "10k-mdna.txt", "10k-business.txt", "10q-mdna.txt"], "status": "planned"},
+    {"no": 6, "title": "数字自洽吗", "kind": "written", "question": "利润表、现金流量表、资产负债表互相对得上吗？", "brief": "填（利润表盯四行：收入、毛利率、净利润、每股收益，看五年趋势。现金流量表当验钞机：经营现金流跟不跟得上净利润。资产负债表看三格：现金、有息债务、存货和应收是不是涨得比收入快。三个独立指标互相印证才算数。）", "sources": ["facts.json", "10k-mdna.txt", "10q-mdna.txt", "10q-full.txt"], "status": "planned"},
+    {"no": 7, "title": "它会先死掉吗", "kind": "written", "question": "先确认它死不了：钱够不够，债压不压人？", "brief": "填（现金加有价证券对一年内到期的债务；有息债务的规模和期限；利息保障倍数；烧钱的公司算现金跑道。再看表外的承诺：采购承诺、租约、担保。钱往哪去：回购、分红、对外投资。）", "sources": ["facts.json", "10k-mdna.txt", "10k-full.txt", "10q-full.txt"], "status": "planned"},
+    {"no": 8, "title": "便宜还是贵", "kind": "live", "question": "跟同行、跟自己的历史比，现在在什么位置？", "brief": "实时章节：当前市盈率、市销率，同行对比，历史区间。只下三档判断。", "status": "planned"},
+    {"no": 9, "title": "谁在掌舵，钱跟谁走", "kind": "written", "question": "管理层的利益和股东一致吗？", "brief": "填（创始人和高管持多少股、薪酬怎么和业绩挂钩——看委托书。公司把赚到的钱怎么分：回购、分红、股权激励稀释了多少。最近的董事和高管变动——看临时公告。有没有关联交易之类的一票否决项。）", "sources": ["proxy.txt", "facts.json", "10k-full.txt"], "status": "planned"},
+    {"no": 10, "title": "别人怎么看它", "kind": "live", "question": "内部人、机构、期权市场和空头在做什么？", "brief": "实时章节：内部人买卖、机构持仓、期权隐含波动、空头数据、历次财报预期与实际。", "status": "planned"},
+    {"no": 11, "title": "红旗", "kind": "written", "question": "有没有该直接说不的理由？", "brief": "填（逐条过红旗清单：审计意见、财务重述、现金流长期跟不上利润、应收和存货异常、客户或供应商过度集中、高管和审计师异常离职、关联交易、大比例股权质押、监管与诉讼。每条给出「查了什么、结果是什么」。最后一条隐形红旗：你看得懂这门生意吗。）", "sources": ["10k-risk.txt", "10k-full.txt", "10q-full.txt", "proxy.txt", "facts.json"], "status": "planned"},
+    {"no": 12, "title": "最近表现", "kind": "live", "question": "先看生意变没变，再解释价格。", "brief": "实时章节：区间涨跌、一年走势、大波动日对公司公告。", "status": "planned"}
+  ]
+}
