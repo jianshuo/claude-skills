@@ -50,7 +50,8 @@ def main():
     out = ROOT / "out" / "books" / ticker
     if not (out / "index.html").exists():
         sys.exit(f"{out} 里没有渲染结果，先跑 build.py {ticker}")
-    files = [(f, f"{ticker}/{f.name}") for f in sorted(out.iterdir()) if f.is_file()]
+    # 连子目录一起传（日报在 d/ 下）
+    files = [(f, f"{ticker}/{f.relative_to(out).as_posix()}") for f in sorted(out.rglob("*")) if f.is_file()]
 
     if not pages_only:
         src = ROOT / "books" / ticker

@@ -110,6 +110,160 @@ def page(book, title, body):
             f'<footer>{html.escape(book.get("disclaimer", ""))}<br>数据截至 {book.get("as_of", "")}。</footer></div></body></html>')
 
 
+# ---------------------------------------------------------------------------
+# 日报：每个交易日追加一篇。数据表由当日事实直接排出来，正文是代理写的短评。
+# ---------------------------------------------------------------------------
+
+def _n(v, d=2):
+    return "—" if v is None else f"{v:,.{d}f}"
+
+
+def _big(v):
+    if v is None:
+        return "—"
+    a, s = abs(v), "−" if v < 0 else ""
+    if a >= 1e8:
+        return f"{s}{a / 1e8:,.2f} 亿"
+    if a >= 1e4:
+        return f"{s}{a / 1e4:,.0f} 万"
+    return f"{s}{a:,.0f}"
+
+
+def _pct(v):
+    if v is None:
+        return "—"
+    cls = "up" if v > 0 else "down" if v < 0 else ""
+    return f'<span class="{cls}">{v:+.2f}%</span>'
+
+
+def daily_tables(f, names):
+    """当日事实 → 数据表。这里的每个数字都直接来自 facts，不经过写手。"""
+    esc = html.escape
+    p = f["price"]
+    out = ['<h2>当天的数字</h2>',
+           '<table class="kv"><tbody>',
+           f'<tr><td>收盘</td><td>{_n(p["close"])}</td><td>{_pct(p["change_pct"])}，前一交易日收 {_n(p["prev_close"])}</td></tr>',
+           f'<tr><td>开 / 高 / 低</td><td>{_n(p["open"])} / {_n(p["high"])} / {_n(p["low"])}</td><td>全天振幅 {_n(p.get("range_pct"))}%</td></tr>',
+           f'<tr><td>成交量</td><td>{_big(p["volume"])} 股</td><td>是前 20 个交易日均量的 {_n(p.get("volume_vs_avg20"))} 倍</td></tr>']
+    if p.get("premarket"):
+        out.append(f'<tr><td>盘前</td><td>{_n(p["premarket"]["close"])}</td><td>较前收 {_pct(p["premarket"]["change_pct"])}</td></tr>')
+    if p.get("afterhours"):
+        out.append(f'<tr><td>盘后</td><td>{_n(p["afterhours"]["close"])}</td><td>较当日收盘 {_pct(p["afterhours"]["change_pct"])}</td></tr>')
+    out.append('</tbody></table>')
+
+    if f.get("compare"):
+        rows = "".join(f'<tr><td>{esc(names.get(t) or {"SPY": "标普 500（SPY）", "QQQ": "纳指 100（QQQ）"}.get(t, t))}'
+                       f'{"" if t in ("SPY", "QQQ") or not names.get(t) else f" <small class=src>{esc(t)}</small>"}</td>'
+                       f'<td>{_n(m["close"])}</td><td>{_pct(m["change_pct"])}</td></tr>' for t, m in f["compare"].items())
+        out.append(f'<h3>和大盘、同行比</h3><table><thead><tr><th></th><th>收盘</th><th>当日涨跌</th></tr></thead><tbody>'
+                   f'<tr><td><strong>{esc(names.get(f["ticker"]) or f["ticker"])}</strong></td><td>{_n(p["close"])}</td><td>{_pct(p["change_pct"])}</td></tr>{rows}</tbody></table>')
+
+    if f.get("history"):
+        rows = "".join(f'<tr><td>{h["date"]}</td><td>{_n(h["close"])}</td><td>{_pct(h["change_pct"])}</td><td>{_big(h["volume"])}</td></tr>'
+                       for h in reversed(f["history"]))
+        out.append(f'<h3>最近十个交易日</h3><table><thead><tr><th>日期</th><th>收盘</th><th>涨跌</th><th>成交量</th></tr></thead><tbody>{rows}</tbody></table>')
+
+    o = f.get("options")
+    if o:
+        out.append('<h3>期权</h3><table class="kv"><tbody>'
+                   f'<tr><td>看涨 / 看跌成交</td><td>{_big(o["call_volume"])} / {_big(o["put_volume"])} 张</td>'
+                   f'<td>看跌 ÷ 看涨 = {_n(o.get("put_call_ratio"))}；合计是 30 日均量的 {_n(o.get("volume_vs_avg30"))} 倍</td></tr>'
+                   f'<tr><td>看涨 / 看跌权利金</td><td>{_big(o["call_premium"])} / {_big(o["put_premium"])} 美元</td>'
+                   f'<td>净买入权利金：看涨 {_big(o.get("net_call_premium"))}，看跌 {_big(o.get("net_put_premium"))}</td></tr>'
+                   + (f'<tr><td>隐含波动率</td><td>{_n(o["implied_volatility_pct"], 1)}%</td>'
+                      f'<td>在过去一年里排第 {_n(o.get("iv_rank_1y"), 0)} 百分位；前一日 {_n(o.get("prev_implied_volatility_pct"), 1)}%</td></tr>'
+                      if o.get("implied_volatility_pct") is not None else "")
+                   + '</tbody></table>')
+    if f.get("flow_alerts"):
+        rows = "".join(f'<tr><td>{a["time_et"]}</td><td>{"看涨" if a["type"] == "call" else "看跌"} {_n(a["strike"], 0)}</td><td>{a["expiry"]}</td>'
+                       f'<td>{_big(a["premium"])}</td><td>{_big(a["volume"])} / {_big(a["open_interest"])}</td></tr>' for a in f["flow_alerts"])
+        out.append(f'<h3>当天最大的几笔异常期权成交</h3><table><thead><tr><th>美东时间</th><th>合约</th><th>到期</th><th>权利金（美元）</th><th>成交 / 未平仓</th></tr></thead><tbody>{rows}</tbody></table>')
+
+    d = f.get("darkpool")
+    if d and d.get("trades"):
+        rows = "".join(f'<tr><td>{x["time_et"]}</td><td>{_n(x["price"])}</td><td>{_big(x["shares"])}</td><td>{_big(x["notional"])}</td></tr>' for x in d["largest"])
+        out.append(f'<h3>暗池大单</h3><p>单笔 100 万美元以上的暗池成交{"至少" if d.get("capped") else ""} {d["trades"]} 笔，合计 {_big(d["shares"])} 股、{_big(d["notional"])} 美元。最大的几笔：</p>'
+                   f'<table><thead><tr><th>美东时间</th><th>价格</th><th>股数</th><th>金额（美元）</th></tr></thead><tbody>{rows}</tbody></table>')
+
+    s = f.get("short")
+    if s:
+        out.append(f'<h3>卖空成交</h3><p>当天成交里卖空占 {_n(s["short_ratio_pct"], 1)}%（{_big(s["short_volume"])} ÷ {_big(s["total_volume"])} 股），'
+                   f'前 20 个交易日平均 {_n(s.get("avg20_short_ratio_pct"), 1)}%。</p>')
+
+    if f.get("filings") or f.get("insiders"):
+        out.append('<h3>公告与内部人申报</h3>')
+        if f.get("filings"):
+            out.append("<ul>" + "".join(f'<li>{x["filing_date"]} 提交 {esc(str(x["form"]))}</li>' for x in f["filings"]) + "</ul>")
+        if f.get("insiders"):
+            rows = "".join(f'<tr><td>{x["transaction_date"]}</td><td>{esc(str(x["owner"]))}<br><small class="src">{esc(str(x.get("title") or ""))}</small></td>'
+                           f'<td>{esc(str(x["code"]))}{"（预设计划）" if x.get("planned_10b5_1") else ""}</td><td>{_big(x["shares"])}</td><td>{_n(x["price"])}</td></tr>' for x in f["insiders"])
+            out.append(f'<table class="events"><thead><tr><th>交易日</th><th>谁</th><th>类型</th><th>股数</th><th>价格</th></tr></thead><tbody>{rows}</tbody></table>'
+                       '<p><small class="src">类型是申报表上的交易代码：S 卖出、P 买入、M 行权、F 缴税扣股、A 授予、G 赠与。</small></p>')
+
+    if f.get("news"):
+        rows = "".join(f'<li><small class="src">{esc(n["time_et"])} · {esc(str(n["source"]))}</small> {esc(n["headline"])}</li>' for n in reversed(f["news"]))
+        out.append(f'<h3>这一天的新闻标题</h3><ul>{rows}</ul><p><small class="src">只是标题，没有核实内容；时间是美东时间。</small></p>')
+    out.append(f'<p><small class="src">{esc(f.get("source", ""))} 采集于 {esc(str(f.get("collected_at", ""))[:16].replace("T", " "))}（世界协调时）。</small></p>')
+    return "".join(out)
+
+
+def build_daily(book, src, out, draft=False):
+    """渲染日报：out/d/<日期>.html、out/daily.html（列表）、out/daily.json。返回过审的日报列表（新的在前）。"""
+    ddir = src / "daily"
+    days = []
+    if ddir.exists():
+        for ff in sorted(ddir.glob("*.facts.json"), reverse=True):
+            date = ff.name[:10]
+            body_f, note_f, rev_f = ddir / f"{date}.html", ddir / f"{date}.note.json", ddir / f"{date}.review.json"
+            if not body_f.exists() or not note_f.exists():
+                continue
+            ok = False
+            if rev_f.exists():
+                rev = json.loads(rev_f.read_text())
+                h = hashlib.sha256()
+                for f in (body_f, note_f, ff):
+                    h.update(f.read_bytes()); h.update(b"\0")
+                ok = rev.get("verdict") == "pass" and rev.get("reviewed_fingerprint") == h.hexdigest()[:16]
+            if not ok and not draft:
+                continue
+            days.append({"date": date, "facts": json.loads(ff.read_text()), "note": json.loads(note_f.read_text()),
+                         "body": body_f.read_text(), "ok": ok})
+    (out / "d").mkdir(exist_ok=True)
+    for stale in (out / "d").glob("*.html"):
+        stale.unlink()
+    names = book.get("names", {})
+    titles = {c["no"]: c["title"] for c in book["chapters"]}
+    listing = []
+    for i, d in enumerate(days):
+        f, note = d["facts"], d["note"]
+        body = re.sub(r"(?is)^\s*<article[^>]*>|</article>\s*$", "", d["body"].strip())
+        related = "".join(f'<a class="pill" href="../{int(n):02d}.html">第 {int(n)} 章 {html.escape(titles.get(int(n), ""))}</a> '
+                          for n in note.get("chapters", []) if int(n) in titles)
+        banner = "" if d["ok"] else '<div class="banner">这篇日报还没有通过评审，数字和说法可能有误。</div>'
+        flag = (f'<div class="banner">这一天的事可能动摇书里的结论：{html.escape(str(note["recheck"]))}</div>' if note.get("recheck") else "")
+        nav = '<div class="nav">'
+        nav += (f'<a href="{days[i + 1]["date"]}.html">前一篇<b>{days[i + 1]["date"]}</b></a>' if i + 1 < len(days) else '<a href="../daily.html">日报<b>全部日报</b></a>')
+        nav += (f'<a class="next" href="{days[i - 1]["date"]}.html">后一篇<b>{days[i - 1]["date"]}</b></a>' if i else '<a class="next" href="../daily.html">日报<b>全部日报</b></a>')
+        nav += "</div>"
+        content = (f'<div class="crumb"><a href="../index.html">{html.escape(book["title"])}</a> · <a href="../daily.html">日报</a></div>'
+                   f'<h1>{d["date"]}</h1><div class="q">{html.escape(str(note.get("headline", "")))}</div>{banner}{flag}'
+                   f'<article>{body}{("<p>和书里这几章有关：" + related + "</p>") if related else ""}{daily_tables(f, names)}</article>{nav}')
+        (out / "d" / f'{d["date"]}.html').write_text(page(book, f'{d["date"]} 日报 — {book["title"]}', content))
+        listing.append({"date": d["date"], "headline": note.get("headline", ""), "close": f["price"]["close"],
+                        "change_pct": f["price"]["change_pct"], "recheck": bool(note.get("recheck"))})
+    rows = "".join(f'<a class="row" href="d/{x["date"]}.html"><span class="no" style="min-width:5.6em">{x["date"][5:]}</span>'
+                   f'<span class="t"><b>{html.escape(str(x["headline"]))}</b><span>收 {_n(x["close"])}，{_pct(x["change_pct"])}</span></span>'
+                   + ('<span class="pill">要重看</span>' if x["recheck"] else "") + '</a>' for x in listing)
+    index = (f'<div class="crumb"><a href="index.html">{html.escape(book["title"])}</a> · 日报</div><h1>日报</h1>'
+             f'<p class="sub">每个交易日收盘后追加一篇：这一天发生了什么，和书里哪一章有关。</p>'
+             f'<div class="disc">日报只记录和解释，不预测明天，不给买卖建议。数据表里的数字由程序直接从行情数据排出；短评由 AI 代理撰写并核对。</div>'
+             f'<div class="toc">{rows or "<p class=loading>还没有日报。</p>"}</div>'
+             f'<div class="nav"><a href="index.html">目录<b>回到目录</b></a></div>')
+    (out / "daily.html").write_text(page(book, f'日报 — {book["title"]}', index))
+    (out / "daily.json").write_text(json.dumps({"ticker": book["ticker"], "days": listing}, ensure_ascii=False))
+    return listing
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     draft, status_only = "--draft" in sys.argv, "--status" in sys.argv
@@ -168,7 +322,7 @@ def main():
         notes = book.get("event_notes", {})
         events = [{**e, "note": notes.get(e["date"])} for e in json.loads(ev_file.read_text())["events"]]
     live_cfg = {"ticker": ticker, "names": book.get("names", {}), "peers_note": book.get("peers_note", ""), "events": events}
-    (out / "live.json").write_text(json.dumps({"ticker": ticker, "peers": book.get("peers", [])}))
+    (out / "live.json").write_text(json.dumps({"ticker": ticker, "peers": book.get("peers", []), "names": book.get("names", {})}, ensure_ascii=False))
     live_head = ("<script>const BOOK = " + json.dumps(live_cfg, ensure_ascii=False).replace("</", "<\\/") + ";\n"
                  + (LIVE / "common.js").read_text() + "</script>")
 
@@ -237,10 +391,19 @@ def main():
         if ch["kind"] == "live" and no not in visible:
             inner = inner.replace(">实时<", ">实时 · 待接入<")
         toc += (f'<a class="row" href="{link(no)}">{inner}</a>' if no in visible else f'<div class="row off">{inner}</div>')
+    # ---- 日报（追加类章节）----
+    dailies = build_daily(book, src, out, draft)
+    daily_toc = ""
+    if dailies:
+        daily_toc = "<h3>日报 · 每个交易日收盘后追加</h3>" + "".join(
+            f'<a class="row" href="d/{x["date"]}.html"><span class="no" style="min-width:3.4em">{x["date"][5:]}</span>'
+            f'<span class="t"><b>{html.escape(str(x["headline"]))}</b><span>收 {_n(x["close"])}，{_pct(x["change_pct"])}</span></span></a>'
+            for x in dailies[:5]) + (f'<a class="row" href="daily.html"><span class="no" style="min-width:3.4em">…</span>'
+                                     f'<span class="t"><b>全部日报</b><span>共 {len(dailies)} 篇</span></span></a>' if len(dailies) > 5 else "")
     index = (f'<div class="crumb">{html.escape(book["ticker"])} · 股票书</div><h1>{html.escape(book["title"])}</h1>'
              f'<p class="sub">{html.escape(book["subtitle"])}</p><p class="tag">{html.escape(book["tagline"])}</p>'
              f'<div class="q">{html.escape(book["through_question"])}</div>'
-             f'<div class="disc">{html.escape(book["disclaimer"])}</div><div class="toc"><h3>目录</h3>{toc}</div>')
+             f'<div class="disc">{html.escape(book["disclaimer"])}</div><div class="toc"><h3>目录</h3>{toc}{daily_toc}</div>')
     (out / "index.html").write_text(page(book, book["title"], index))
     # 书目信息和写作进度：代理读这两个文件（书目清单由代理汇总各书的 meta.json，不在这里生成）
     written = [c["no"] for c in book["chapters"] if c["kind"] == "written"]
@@ -248,6 +411,7 @@ def main():
     (out / "meta.json").write_text(json.dumps({
         "ticker": ticker, "code": book.get("code", ""), "title": book["title"], "subtitle": book.get("subtitle", ""),
         "as_of": book.get("as_of", ""), "chapters": len(order), "url": f"https://beacon.jianshuo.dev/books/{ticker}/",
+        "daily_count": len(dailies), "daily_latest": dailies[0] if dailies else None,
     }, ensure_ascii=False))
     (out / "progress.json").write_text(json.dumps({
         "ticker": ticker, "written_total": len(written), "written_done": len(passed),
@@ -256,6 +420,7 @@ def main():
 
     done = sum(1 for s in state.values() if s == "done")
     live_n = sum(1 for s in state.values() if s == "live")
+    print(f"{ticker}: 日报 {len(dailies)} 篇" + (f"，最新 {dailies[0]['date']}" if dailies else ""))
     print(f"{ticker}: 渲染 {len(order)} 章到 {out.relative_to(ROOT)}（过审 {done - 1} 章，实时 {live_n} 章，{'含未过审草稿' if draft else '仅过审'}）")
 
 
