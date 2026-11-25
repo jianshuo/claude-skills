@@ -10,12 +10,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- **`wjs-beacon-ticker-book`** — new skill: turns a US stock ticker into a 13-chapter "stock book" (9 written chapters + 3 live chapters + a one-page health checklist) published to `beacon.jianshuo.dev` and surfaced in the Beacon app's "Analysis" tab. A writer agent drafts each chapter; an independent reviewer audits every number before it goes live. The server runs fully unattended via `RUNBOOK.md`; `install.sh` self-updates from GitHub before each run. Ships with `scripts/fetch_facts.py`, `scripts/fetch_events.py`, `scripts/build.py`, `scripts/stamp_review.py`, `scripts/upload.py`, three live-chapter page templates (`live/`), `book.template.json`, `WRITING.md`, and `publish.sh`.
+- **`wjs-beacon-ticker-book`** — new skill: turns a US stock ticker into a 13-chapter "stock book" (9 written chapters + 3 live chapters + a one-page health checklist) published to `beacon.jianshuo.dev` and surfaced in the Beacon app's "Analysis" tab. A writer agent drafts each chapter; an independent reviewer audits every number before it goes live. The server runs fully unattended via `RUNBOOK.md`; `install.sh` self-updates from GitHub before each run. Ships with `scripts/fetch_facts.py`, `scripts/fetch_events.py`, `scripts/fetch_daily.py`, `scripts/build.py`, `scripts/stamp_review.py`, `scripts/upload.py`, three live-chapter page templates (`live/`), `book.template.json`, `WRITING.md`, and `publish.sh`.
 
 ### Changed
 
-- **`wjs-voicedrop-creating-motion-book`** — one more art style usage recorded (2026-11-23, after the previous daily docs refresh):
-  - `reflexivity` → **banknote**
+- **`wjs-beacon-ticker-book`** — daily report feature added (`scripts/fetch_daily.py`) plus multiple refinements: `live/common.js`, live chapter templates, `scripts/stamp_review.py`, `scripts/build.py`, `book.template.json`, `WRITING.md`, `RUNBOOK.md`, `install.sh`, and `publish.sh` updated.
+- **`wjs-voicedrop-creating-motion-book`** — three more art style usages recorded:
+  - `reflexivity` → **banknote** (2026-11-23, after the previous daily docs refresh)
+  - `ai-waves` → **nouveau** (2026-11-25)
+  - `crwv` → **nouveau** (2026-11-25)
 - **`.gitignore`** — added `__pycache__` to avoid committing Python bytecode from the new beacon-ticker-book scripts.
 
 ## [2026-11-23]
