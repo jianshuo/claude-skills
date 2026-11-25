@@ -128,6 +128,35 @@ BEACON_RESULT {"ok":true,"ticker":"<TICKER>","chapters":<过审的章数>,"note"
    BEACON_RESULT {"ok":true,"ticker":"<TICKER>","audit":true,"checked":<这次总共核对的数字个数>,"fixed":<改了多少处>,"note":"<一句话：这本书的体检结论>"}
    ```
 
+## 日报（任务说「追加某个交易日的日报」时，只做这一节）
+
+书已经写完。任务会给你 `TICKER` 和 `DATE`（一个交易日，格式 `2026-11-24`）。你只追加这一天的日报，**不改任何一章正文、不重新采集年报**。写法在 `WRITING.md` 的「日报的写法」一节，先读。
+
+1. **取当日事实**：
+   ```bash
+   export BEACON_BOOK_ROOT=/opt/claude-agent/workspace/beacon-books; cd $BEACON_BOOK_ROOT
+   ls books/<TICKER>/book.json && python3 skill/scripts/fetch_daily.py <TICKER> <DATE>
+   ```
+   - 输出以 `NO_TRADING` 开头：这一天休市或数据还没出来。**立刻停**，最后一条消息只输出：
+     `BEACON_RESULT {"ok":true,"skipped":true,"reason":"<NO_TRADING 后面那句>"}`
+   - 没有 `book.json`，或取数报错（重试一次仍不行）：停，输出 `BEACON_RESULT {"ok":false,"reason":"<原因>"}`。
+2. **读**：`books/<TICKER>/daily/<DATE>.facts.json` 全文；这本书各章的 `notes/NN.json`（书里已有的结论）；最近五篇日报的 `daily/*.note.json`（前几天说过什么）。需要时再翻相关章节的正文。
+3. **写**：按「日报的写法」写 `daily/<DATE>.html` 和 `daily/<DATE>.note.json`。
+4. **评**：按「日报的评审」逐个数字核对，写 `daily/<DATE>.review.json`，改到 `pass`，然后盖章：
+   ```bash
+   python3 skill/scripts/stamp_review.py <TICKER> daily <DATE>
+   ```
+   盖章之后不要再动这三个文件；动了就要重评、重新盖章。
+5. **发**：
+   ```bash
+   python3 skill/scripts/build.py <TICKER> && python3 skill/scripts/upload.py <TICKER>
+   ```
+   看 `build.py` 的输出里「日报 N 篇，最新 <DATE>」确认这一篇发出去了——没有出现说明评审没过或没盖章，回第 4 步。
+6. 最后一条消息只输出一行：
+   ```
+   BEACON_RESULT {"ok":true,"ticker":"<TICKER>","daily":"<DATE>","headline":"<note.json 里的那句话>","recheck":<true|false>}
+   ```
+
 ## 红线
 
 - 不给评级、目标价、买卖建议。
