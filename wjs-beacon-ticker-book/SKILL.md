@@ -18,7 +18,8 @@ description: Use when the user wants a stock ticker turned into a "book" for the
 | `book.template.json` | 全书大纲模板，建筑师填成 `book.json` |
 | `scripts/fetch_facts.py` | 从美国证监会采集事实档案：结构化财务 + 年报、季报、临时公告、委托书原文 |
 | `scripts/fetch_events.py` | 采集公司事件（临时公告），给「最近表现」一章对大波动日 |
-| `scripts/build.py` | 只把过审的章节渲染成网页；体检表从各章笔记自动汇总 |
+| `scripts/fetch_daily.py` | 取某个交易日的「当日事实」（价格、对比、期权、暗池、卖空、新闻标题、公告），给日报用 |
+| `scripts/build.py` | 只把过审的章节和日报渲染成网页；体检表从各章笔记自动汇总；日报的数据表从当日事实直接排出 |
 | `scripts/upload.py` | 把渲染结果和源稿发布到 beacon.jianshuo.dev |
 | `live/` | 三章实时章节的页面模板（便宜还是贵 / 别人怎么看 / 最近表现），打开时现取现算 |
 | `install.sh` | 在服务器上从 GitHub 安装或更新本 skill，校验通过才启用 |
@@ -33,6 +34,10 @@ description: Use when the user wants a stock ticker turned into a "book" for the
 | 00 一页体检表 | 十二项检查各自过没过 | 自动汇总各章末尾的一行结论 |
 | 01–07、09、11 | 哪家公司 / 靠什么赚钱 / 谁在付钱 / 护城河 / 公司自己怎么说 / 数字自洽吗 / 会先死吗 / 谁在掌舵 / 红旗 | **写**：写手 → 独立评审逐个核对数字 → 不过重写，过审才发 |
 | 08、10、12 | 便宜还是贵 / 别人怎么看 / 最近表现 | **实时**：没有人写正文，网页打开时向代理取数现算 |
+
+| 日报 | 今天发生了什么，和书里哪个结论有关 | **追加**：每个交易日收盘后一篇。数据表由程序排出，短评由代理写、逐个数字核对后才发 |
+
+三类章节：**写一次**的（长期不变）、**实时**的（打开时现算）、**追加**的（日报，按日期一篇篇攒下去，在 `books/<TICKER>/daily/`，网页在 `d/<日期>.html`，列表在 `daily.html`）。
 
 不给评级、不给目标价、不预测股价。估值只下三档：明显贵 / 明显便宜 / 说不清。
 
@@ -52,6 +57,12 @@ KEY=$(cat ~/.beacon-signing/app-key)
 curl -s -X POST -H "X-Beacon-Key: $KEY" -H "Content-Type: application/json" \
   -d '{"code":"usAAPL.OQ"}' https://beacon.jianshuo.dev/api/book/AAPL/request
 curl -s -H "X-Beacon-Key: $KEY" https://beacon.jianshuo.dev/api/book/AAPL/status
+```
+
+**日报**不用人管：代理每个交易日美东 18:30 之后，给每一本写完的书各交一个日报任务（`RUNBOOK.md` 的「日报」一节），休市日代理发现没有行情会自己跳过。手动补某一天：
+
+```bash
+curl -s -X POST -H "X-Beacon-Key: $KEY" "https://beacon.jianshuo.dev/api/book/AAPL/daily?date=2026-11-24"
 ```
 
 目前只支持向美国证监会提交 10-K 年报的公司。A 股、港股和交 20-F 的外国公司还没有对应的事实采集。
